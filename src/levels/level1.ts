@@ -1,0 +1,23 @@
+import { LevelConfig } from '../types/game';
+
+export const level1: LevelConfig = {
+  id: 1,
+  gridSize: 5,
+  initialRobotPosition: { x: 0, y: 0 },
+  initialRobotDirection: 'EAST',
+  boxes: [
+    { x: 2, y: 2 },
+    { x: 4, y: 0 },
+    { x: 1, y: 4 },
+  ],
+  colors: {
+    robot: '#2563EB',
+    box: '#60A5FA',
+  },
+  hints: [
+    'Tente usar mover() para chegar até a primeira caixa.',
+    'Lembre-se de usar virar_direita() ou virar_esquerda() para mudar a direção.',
+    'Use pegar() quando estiver exatamente em cima de uma caixa.',
+    'Você pode combinar vários comandos para coletar todas as caixas de uma vez!',
+  ],
+};
