@@ -6,8 +6,15 @@ import { level1 } from '../levels/level1';
 
 const strict = ({ children }: { children: ReactNode }) => createElement(StrictMode, null, children);
 
-const setup = (onEvent = vi.fn<(e: StepEvent) => void>(), maxErrors = 10) =>
-  renderHook(() => useProgramRunner(level1, 'pt', maxErrors, onEvent), { wrapper: strict });
+const setup = (onEvent = vi.fn<(e: StepEvent) => void>(), maxErrors = 10, lvl = level1) =>
+  renderHook(() => useProgramRunner(lvl, 'pt', maxErrors, onEvent), { wrapper: strict });
+
+// Nível pequeno com as 3 caixas originais, para testar a vitória de forma fixa.
+const miniLevel = {
+  ...level1,
+  gridSize: 5,
+  boxes: [{ x: 2, y: 2 }, { x: 4, y: 0 }, { x: 1, y: 4 }],
+};
 
 // Avança o relógio em blocos de 100 ms, cada um num act próprio, para que o React
 // processe os efeitos (que reagendam o passo seguinte) entre cada passo, como num browser.
@@ -72,10 +79,11 @@ describe('useProgramRunner', () => {
   it('para no primeiro erro e não avança mais linhas', () => {
     const onEvent = vi.fn();
     const { result } = setup(onEvent);
-    act(() => result.current.run('mover()\nmover()\nmover()\nmover()\nmover()'));
+    const six = Array(6).fill('mover()').join('\n');
+    act(() => result.current.run(six));
     runFor(600 * 10);
     expect(result.current.state.error).toBeTruthy();
-    expect(result.current.state.robotPosition).toEqual({ x: 4, y: 0 });
+    expect(result.current.state.robotPosition).toEqual({ x: level1.gridSize - 1, y: 0 });
     expect(result.current.isExecuting).toBe(false);
     expect(onEvent).toHaveBeenCalledWith('error');
   });
@@ -102,9 +110,9 @@ describe('useProgramRunner', () => {
     expect(result.current.state.robotPosition.x).toBe(1);
   });
 
-  it('recolher as três caixas do nível 1 dá vitória', () => {
+  it('recolher todas as caixas (mini-nível 5×5) dá vitória', () => {
     const onEvent = vi.fn();
-    const { result } = setup(onEvent);
+    const { result } = setup(onEvent, 10, miniLevel);
     // Robô em (0,0) virado a Este. Caixas em (2,2), (4,0) e (1,4).
     const program = [
       'mover()', 'mover()',               // (2,0)

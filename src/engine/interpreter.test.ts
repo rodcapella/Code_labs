@@ -51,10 +51,11 @@ describe('executeCommand (pt)', () => {
   });
 
   it('mover() para fora do grelha dá erro e NÃO conta o comando', () => {
-    const state = base({ robotPosition: { x: 4, y: 0 } });
+    const edge = level1.gridSize - 1;
+    const state = base({ robotPosition: { x: edge, y: 0 } });
     const next = executeCommand(state, 'mover()', 'pt');
     expect(next.error).toBeTruthy();
-    expect(next.robotPosition).toEqual({ x: 4, y: 0 });
+    expect(next.robotPosition).toEqual({ x: edge, y: 0 });
     expect(next.commandCount).toBe(0);
   });
 

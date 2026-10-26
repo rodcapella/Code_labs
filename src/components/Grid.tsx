@@ -4,9 +4,8 @@ import { Robot } from './Robot';
 import { Box } from './Box';
 import { AnimatePresence, motion } from 'motion/react';
 
-// Geometria do tabuleiro: células de 64px, espaçamento gap-2 (8px), padding p-4 (16px).
-const CELL = 64;
-const PITCH = 72;
+// Geometria do tabuleiro: espaçamento gap-2 (8px) e padding p-4 (16px).
+const GAP = 8;
 const PAD = 16;
 import { Sparkles } from 'lucide-react';
 
@@ -29,6 +28,10 @@ export const Grid: React.FC<GridProps> = ({
   boxColor,
   commandCount,
 }) => {
+  // Grelhas grandes usam células menores para caber no ecrã.
+  const CELL = size > 8 ? 48 : 64;
+  const PITCH = CELL + GAP;
+
   const onCollectedBox = boxes.some(
     b => b.collected && b.position.x === robotPosition.x && b.position.y === robotPosition.y,
   );
@@ -56,8 +59,8 @@ export const Grid: React.FC<GridProps> = ({
           return (
             <div
               key={`${cell.x}-${cell.y}`}
-              className="w-16 h-16 rounded-lg grid-cell flex items-center justify-center relative border-b-4 border-white/10"
-              style={{ transformStyle: 'preserve-3d' }}
+              className="rounded-lg grid-cell flex items-center justify-center relative border-b-4 border-white/10"
+              style={{ width: CELL, height: CELL, transformStyle: 'preserve-3d' }}
             >
               {/* Floor Pattern */}
               <div className="absolute inset-0 opacity-5 pointer-events-none">
