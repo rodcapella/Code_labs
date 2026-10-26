@@ -5,13 +5,14 @@ import { Grid } from '../components/Grid';
 import { LevelComplete } from '../components/LevelComplete';
 import { CodeEditor } from '../components/CodeEditor';
 import { Tooltip } from '../components/Tooltip';
-import { Language, LeaderboardEntry } from '../types/game';
+import { Language } from '../types/game';
 import { level1 } from '../levels/level1';
 import { level2 } from '../levels/level2';
 import { level3 } from '../levels/level3';
 import { UserConfig, TRANSLATIONS } from '../constants/translations';
 import { useProgramRunner, StepEvent } from '../hooks/useProgramRunner';
-import { addEntry, formatPlayerName, loadLeaderboard, saveLeaderboard } from '../engine/leaderboard';
+import { formatPlayerName } from '../engine/leaderboard';
+import { submitEntry } from '../services/leaderboardApi';
 import { MAX_ERRORS_BY_LEVEL } from '../engine/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../utils/audio';
 
@@ -175,8 +176,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       onUpdateConfig({ completedLevels: [...userConfig.completedLevels, level.id] });
     }
 
-    const entry: LeaderboardEntry = {
-      id: Date.now().toString(),
+    const entry = {
       name: formatPlayerName(userConfig.name),
       levelId: level.id,
       commands: gameState.commandCount,
@@ -185,7 +185,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       date: new Date().toISOString().split('T')[0],
       robotColor: userConfig.robotColor,
     };
-    saveLeaderboard(addEntry(loadLeaderboard(), entry));
+    void submitEntry(entry);
   }, [gameState.victory]);
 
   const finishTutorial = () => {

@@ -4,6 +4,7 @@ import { Trophy, ArrowLeft, Medal, Timer, Hash, User } from 'lucide-react';
 import { LeaderboardEntry } from '../types/game';
 import { TRANSLATIONS, UserConfig } from '../constants/translations';
 import { loadLeaderboard, compareEntries } from '../engine/leaderboard';
+import { fetchLeaderboard } from '../services/leaderboardApi';
 
 interface LeaderboardScreenProps {
   onBack: () => void;
@@ -13,7 +14,17 @@ interface LeaderboardScreenProps {
 export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, userConfig }) => {
   const t = TRANSLATIONS[userConfig.language];
   
-  const [entries] = React.useState<LeaderboardEntry[]>(() => loadLeaderboard());
+  const [entries, setEntries] = React.useState<LeaderboardEntry[]>(() => loadLeaderboard());
+
+  React.useEffect(() => {
+    let active = true;
+    fetchLeaderboard().then(data => {
+      if (active) setEntries(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const sortedEntries = [...entries].sort(compareEntries);
 

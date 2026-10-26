@@ -1,8 +1,9 @@
 import { LeaderboardEntry } from '../types/game';
 import { ERROR_PENALTY } from './rules';
+import { LEADERBOARD_SIZE } from './leaderboardRules';
 
 export const LEADERBOARD_KEY = 'codebot_leaderboard';
-export const LEADERBOARD_SIZE = 10;
+export { LEADERBOARD_SIZE };
 
 export const formatPlayerName = (name: string): string =>
   name.trim().toUpperCase().slice(0, 10);
