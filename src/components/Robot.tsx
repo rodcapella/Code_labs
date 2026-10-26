@@ -17,17 +17,19 @@ export const Robot: React.FC<RobotProps> = ({ color, direction, commandCount }) 
 
   return (
     <motion.div
-      animate={{ 
-        rotate: rotation,
-        y: [0, -10, 0]
-      }}
-      key={commandCount}
-      transition={{ 
-        rotate: { type: 'spring', stiffness: 260, damping: 20 },
-        y: { duration: 0.3, ease: "easeOut" }
-      }}
+      animate={{ rotate: rotation }}
+      transition={{ type: 'spring', stiffness: 220, damping: 22 }}
       className="relative w-full h-full flex items-center justify-center"
     >
+      {/* Salto a cada comando: só este wrapper é reiniciado, a rotação não. */}
+      <motion.div
+        key={commandCount}
+        className="w-full h-full flex items-center justify-center"
+        initial={{ y: 0, scaleX: 1, scaleY: 1 }}
+        animate={{ y: [0, -16, 0], scaleX: [1, 0.96, 1.03, 1], scaleY: [1, 1.04, 0.97, 1] }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        style={{ originY: 1 }}
+      >
       <svg
         viewBox="0 0 100 100"
         className="w-full h-full robot-shadow"
@@ -69,6 +71,7 @@ export const Robot: React.FC<RobotProps> = ({ color, direction, commandCount }) 
         {/* Detail */}
         <rect x="40" y="65" width="20" height="4" rx="2" fill="white" opacity="0.2" />
       </svg>
+      </motion.div>
       {/* Shadow */}
       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-2 bg-brand-ink/10 rounded-full blur-sm" />
     </motion.div>
