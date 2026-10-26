@@ -3,11 +3,11 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import {
   LEADERBOARD_SIZE, LEVEL_IDS, encodeScore, keyFor, validateSubmission,
-} from '../src/engine/leaderboardRules';
-import { replayAttempt, isTimePlausible } from '../src/engine/replay';
-import { LAYOUTS } from '../src/levels/layouts';
-import { formatPlayerName } from '../src/engine/leaderboard';
-import { scoreOf } from '../src/engine/rules';
+} from '../src/features/leaderboard/domain/leaderboardRules';
+import { replayAttempt, isTimePlausible } from '../src/features/game/engine/replay';
+import { LAYOUTS } from '../src/features/game/levels/layouts';
+import { formatPlayerName } from '../src/features/leaderboard/domain/leaderboard';
+import { scoreOf } from '../src/shared/config/rules';
 
 /**
  * GET  /api/leaderboard              → top de todos os níveis

@@ -23,10 +23,37 @@ npm run dev      # http://localhost:3000
 
 ## Estrutura
 
-- `src/engine/interpreter.ts`: regras do jogo (movimento, rotação, recolha, vitória), sem dependências de UI
-- `src/levels/`: configuração dos níveis (dados)
-- `src/screens/`: ecrãs (onboarding, jogo, ranking)
-- `src/constants/translations.ts`: textos em português e inglês
+Organizado por área. Cada feature contém a sua UI, lógica e testes.
+
+```
+api/                              Função serverless do ranking (Vercel)
+src/
+  app/                            Entrada da aplicação, CSS global
+  shared/                         Partilhado entre áreas
+    components/                   Logo, Tooltip
+    config/rules.ts               Limites e penalizações do jogo
+    i18n/translations.ts          Textos em português e inglês
+    types/game.ts                 Tipos (Layout, Level, GameState, ...)
+    utils/audio.ts                Sons sintetizados
+    assets/                       Logótipo e imagens de fundo
+  features/
+    home/                         Ecrã inicial
+    onboarding/                   Configuração do utilizador
+    game/
+      GameScreen.tsx              Orquestra o nível (ecrã de jogo)
+      components/                 Tabuleiro, robô, caixa, editor, overlays
+      hooks/useProgramRunner.ts   Execução do programa (passo a passo)
+      engine/                     Motor puro: interpreter, program, replay
+      levels/                     Layouts (usados também pelo servidor) e níveis
+    leaderboard/
+      LeaderboardScreen.tsx       Ecrã do ranking
+      leaderboardApi.ts           Cliente da API (com cópia local)
+      domain/                     Pontuação, ordenação e validação (partilhadas com a API)
+```
+
+A regra de dependência: `features/*` pode importar de `shared/`, mas não de outras features
+(exceto `game` → `leaderboard/domain`, para submeter resultados). `api/` importa de `features/*/engine`
+e `features/*/domain`, nunca de componentes de UI.
 
 ## Ranking (Redis no Vercel)
 
