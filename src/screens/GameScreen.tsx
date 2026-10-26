@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Pause, RotateCcw, ChevronLeft, AlertCircle, Trophy, Terminal, Undo2, Timer, Gauge, Settings, Lightbulb, Hash, ChevronUp, RotateCw, Hand, Eraser } from 'lucide-react';
 import { Grid } from '../components/Grid';
+import { LevelComplete } from '../components/LevelComplete';
 import { CodeEditor } from '../components/CodeEditor';
 import { Tooltip } from '../components/Tooltip';
 import { Language, LeaderboardEntry } from '../types/game';
@@ -560,14 +561,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
             {gameState.victory && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 className="absolute inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-6"
               >
-                <div className="bg-brand-navy p-8 rounded-3xl shadow-2xl border border-white/10 text-center max-w-sm w-full">
-                  <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <LevelComplete />
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}
+                  className="relative bg-brand-navy p-8 rounded-3xl shadow-2xl border border-white/10 text-center max-w-sm w-full"
+                >
+                  <motion.div
+                    initial={{ scale: 0, rotate: -25 }}
+                    animate={{ scale: [0, 1.25, 1], rotate: [-25, 8, 0] }}
+                    transition={{ duration: 0.7, ease: 'easeOut', delay: 0.25 }}
+                    className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(52,211,153,0.5)]"
+                  >
                     <Trophy className="w-10 h-10" />
-                  </div>
+                  </motion.div>
                   <h3 className="text-2xl font-bold text-brand-ice mb-2">{t.victoryTitle}</h3>
                   <p className="text-brand-ice/80 mb-8">{t.victoryDesc(gameState.commandCount, timer)}</p>
                   <div className="flex flex-col gap-3">
@@ -590,7 +602,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                       {currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
                     </button>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
