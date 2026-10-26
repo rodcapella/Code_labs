@@ -204,7 +204,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       style={
         level.backgroundImage
           ? {
-              backgroundImage: `linear-gradient(rgba(0,21,71,0.82), rgba(0,21,71,0.92)), url(${level.backgroundImage})`,
+              backgroundImage: `linear-gradient(rgba(0,21,71,0.9), rgba(0,21,71,0.96)), url(${level.backgroundImage})`,
             }
           : undefined
       }
@@ -251,7 +251,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                           className={`py-2 rounded-xl font-bold border-2 transition-all ${
                             userConfig.language === lang 
                               ? 'border-brand-blue bg-brand-blue/15 text-brand-cyan' 
-                              : 'border-white/10 text-brand-ice/50'
+                              : 'border-white/10 text-brand-ice/75'
                           }`}
                         >
                           {lang === 'pt' ? 'Português' : 'English'}
@@ -324,19 +324,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
               playClickSound();
               onBack();
             }}
-            className="p-2 hover:bg-brand-navy rounded-lg transition-colors text-brand-ice/60"
+            className="p-2 hover:bg-brand-navy rounded-lg transition-colors text-brand-ice/80"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
             <h2 className="font-bold text-brand-ice">{t.level} {level.id}</h2>
-            <p className="text-xs text-brand-ice/60 font-medium uppercase tracking-wider">{t.challenge}</p>
+            <p className="text-xs text-brand-ice/80 font-medium uppercase tracking-wider">{t.challenge}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] text-brand-ice/50 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
+            <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
               <Timer className="w-3 h-3" />
               {t.timeLabel}
             </p>
@@ -345,14 +345,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             </div>
           </div>
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] text-brand-ice/50 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
+            <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
               <Hash className="w-3 h-3" />
               {t.commands}
             </p>
             <p className="text-lg font-mono font-bold text-brand-ice/85">{gameState.commandCount}</p>
           </div>
           <div className="text-right hidden sm:block" title={t.errorPenaltyHint}>
-            <p className="text-[10px] text-brand-ice/50 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
+            <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
               <AlertCircle className="w-3 h-3" />
               {t.errorsLabel}
             </p>
@@ -431,7 +431,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                   playClickSound();
                   setTutorialStep(0);
                 }}
-                className="p-2 hover:bg-brand-navy rounded-xl transition-all text-brand-ice/50"
+                className="p-2 hover:bg-brand-navy rounded-xl transition-all text-brand-ice/75"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -442,7 +442,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left: Grid Area */}
-        <div className="flex-1 relative flex items-center justify-center bg-brand-navy/50 p-4 min-h-[400px]">
+        <div className="flex-1 relative flex items-center justify-center bg-brand-ink/80 backdrop-blur-[2px] p-4 min-h-[400px]">
           {/* Robot Speech Bubble */}
           <AnimatePresence>
             {robotMessage && (
@@ -533,7 +533,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                     <AlertCircle className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-bold text-brand-ice mb-2">{t.gameOverTitle}</h3>
-                  <p className="text-brand-ice/60 mb-8">{t.gameOverDesc(maxErrors)}</p>
+                  <p className="text-brand-ice/80 mb-8">{t.gameOverDesc(maxErrors)}</p>
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => {
@@ -569,7 +569,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                     <Trophy className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-bold text-brand-ice mb-2">{t.victoryTitle}</h3>
-                  <p className="text-brand-ice/60 mb-8">{t.victoryDesc(gameState.commandCount, timer)}</p>
+                  <p className="text-brand-ice/80 mb-8">{t.victoryDesc(gameState.commandCount, timer)}</p>
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => {
@@ -599,7 +599,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
         {/* Right: Editor Area */}
         <div className="w-full lg:w-[450px] bg-brand-navy border-l border-white/10 p-6 flex flex-col gap-6">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-4 text-brand-ice/50">
+            <div className="flex items-center gap-2 mb-4 text-brand-ice/75">
               <Terminal className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-widest">{t.consoleTitle}</span>
               <button
@@ -626,7 +626,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
           <div className="bg-brand-ink rounded-2xl p-4 border border-white/10">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-brand-ice/50 uppercase tracking-widest flex items-center gap-2">
+              <h4 className="text-xs font-bold text-brand-ice/75 uppercase tracking-widest flex items-center gap-2">
                 <Gauge className="w-3 h-3" />
                 {t.speedLabel}
               </h4>
@@ -643,7 +643,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                     className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
                       executionSpeed === speed 
                         ? 'bg-brand-blue text-white shadow-md shadow-brand-blue/20' 
-                        : 'bg-brand-navy text-brand-ice/60 border border-white/10 hover:border-brand-cyan/50'
+                        : 'bg-brand-navy text-brand-ice/80 border border-white/10 hover:border-brand-cyan/50'
                     }`}
                   >
                     {(speed / 1000).toFixed(1)}s
@@ -654,7 +654,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
           </div>
 
           <div className="bg-brand-ink rounded-2xl p-4 border border-white/10">
-            <h4 className="text-xs font-bold text-brand-ice/50 uppercase tracking-widest mb-3">{t.availableCommands}</h4>
+            <h4 className="text-xs font-bold text-brand-ice/75 uppercase tracking-widest mb-3">{t.availableCommands}</h4>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: t.cmdMove, icon: <ChevronUp className="w-4 h-4" /> },
@@ -667,14 +667,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                   onClick={() => addCommand(cmd.label)}
                   className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-white/10 font-mono text-xs text-brand-ice/85 hover:border-brand-cyan/60 hover:bg-brand-blue/15 transition-all shadow-sm"
                 >
-                  <div className="p-1 bg-brand-ink rounded-md text-brand-ice/50 group-hover:text-brand-blue">
+                  <div className="p-1 bg-brand-ink rounded-md text-brand-ice/75 group-hover:text-brand-blue">
                     {cmd.icon}
                   </div>
                   {cmd.label}
                 </button>
               ))}
             </div>
-            <p className="mt-3 text-[10px] text-brand-ice/50 text-center italic">
+            <p className="mt-3 text-[10px] text-brand-ice/75 text-center italic">
               {t.commandPaletteHint}
             </p>
           </div>

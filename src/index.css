@@ -73,3 +73,42 @@ h1, h2 {
 .command-btn:active {
   transform: scale(0.95);
 }
+
+/* Efeitos animados nos botões (desativados se o sistema pedir movimento reduzido) */
+button {
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.25s ease,
+    opacity 0.2s ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(10, 132, 255, 0.45);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 2px 6px -2px rgba(10, 132, 255, 0.35);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-brand-cyan);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  button:not(:disabled):hover,
+  button:not(:disabled):active {
+    transition: none;
+    transform: none;
+  }
+}
