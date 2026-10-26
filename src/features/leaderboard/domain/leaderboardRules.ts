@@ -4,7 +4,8 @@ import { scoreOf as rulesScoreOf } from '../../../shared/config/rules';
 
 /** Partilhado entre o cliente e a API (api/leaderboard.ts). */
 export const LEADERBOARD_SIZE = 10;
-export const LEVEL_IDS = [1, 2, 3] as const;
+export { LEVEL_IDS } from '../../../shared/config/rules';
+import { LEVEL_IDS as LEVELS } from '../../../shared/config/rules';
 export const MAX_COMMANDS = 10000;
 export const MAX_ERRORS = 10000;
 export const MAX_TIME_SECONDS = 86400;
@@ -51,7 +52,8 @@ export const validateSubmission = (body: unknown): ValidationResult => {
   const name = b.name.trim();
   if (!/^[\p{L}\p{N} ._-]{1,10}$/u.test(name)) return { ok: false, error: 'nome inválido' };
 
-  if (!isInt(b.levelId, 1, 3)) return { ok: false, error: 'nível inválido' };
+  const levelId = typeof b.levelId === 'number' && (LEVELS as readonly number[]).includes(b.levelId) ? b.levelId : null;
+  if (levelId === null) return { ok: false, error: 'nível inválido' };
   if (!isInt(b.time, 0, MAX_TIME_SECONDS)) return { ok: false, error: 'tempo inválido' };
 
   if (typeof b.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(b.date)) {
@@ -90,7 +92,7 @@ export const validateSubmission = (body: unknown): ValidationResult => {
       robotColor: b.robotColor,
       date: b.date,
       time: b.time,
-      levelId: b.levelId,
+      levelId,
       knowledgeLevel: b.knowledgeLevel,
       language: b.language,
       runs,

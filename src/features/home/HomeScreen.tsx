@@ -4,6 +4,7 @@ import { Play, Code2, LogOut, CheckCircle2, Trophy } from 'lucide-react';
 
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { Logo } from '../../shared/components/Logo';
+import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
   onStart: () => void;
@@ -82,7 +83,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
             {t.labProgress}
           </h3>
           <div className="flex items-center gap-4 justify-center">
-            {[1, 2, 3].map(lvlId => (
+            {LEVEL_IDS.map(lvlId => (
               <div 
                 key={lvlId}
                 className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-bold transition-all ${

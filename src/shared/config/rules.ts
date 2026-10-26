@@ -29,3 +29,6 @@ export const MIN_STEP_MS = 300;
 export const MAX_RUNS = 50;
 export const MAX_LINES_PER_RUN = 200;
 export const MAX_LINE_LENGTH = 40;
+
+/** Níveis existentes. Acrescentar um nível: adicionar aqui, no layout e no ficheiro do nível. */
+export const LEVEL_IDS = [1, 2, 3, 4] as const;

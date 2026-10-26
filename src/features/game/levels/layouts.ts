@@ -30,4 +30,15 @@ export const LAYOUTS: Record<number, LayoutConfig> = {
       { x: 5, y: 8 }, { x: 8, y: 6 }, { x: 1, y: 2 }, { x: 6, y: 1 },
     ],
   },
+  4: {
+    gridSize: 12,
+    initialRobotPosition: { x: 6, y: 6 },
+    initialRobotDirection: 'NORTH',
+    boxes: [
+      { x: 0, y: 0 }, { x: 11, y: 0 }, { x: 0, y: 11 }, { x: 11, y: 11 },
+      { x: 6, y: 0 }, { x: 6, y: 11 }, { x: 0, y: 6 }, { x: 11, y: 6 },
+      { x: 3, y: 3 }, { x: 8, y: 3 }, { x: 3, y: 8 }, { x: 8, y: 8 },
+      { x: 5, y: 2 }, { x: 9, y: 5 }, { x: 2, y: 9 }, { x: 7, y: 10 },
+    ],
+  },
 };

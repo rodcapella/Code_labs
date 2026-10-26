@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
+import { level4 } from './level4';
 import { LevelConfig } from '../../../shared/types/game';
 
 const levels: [string, LevelConfig, number, number][] = [
   ['nível 1', level1, 6, 6],
   ['nível 2', level2, 8, 8],
   ['nível 3', level3, 10, 12],
+  ['nível 4', level4, 12, 16],
 ];
 
 describe('configuração dos níveis', () => {
