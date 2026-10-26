@@ -34,7 +34,7 @@ export const Grid: React.FC<GridProps> = ({
   return (
     <div className="relative perspective-1000 flex items-center justify-center p-12">
       <div 
-        className="grid gap-2 bg-slate-300 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8 border-slate-400"
+        className="grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8 border-white/20"
         style={{ 
           gridTemplateColumns: `repeat(${size}, 1fr)`,
           transform: 'rotateX(45deg) rotateZ(-45deg)',
@@ -48,13 +48,13 @@ export const Grid: React.FC<GridProps> = ({
           return (
             <div
               key={`${cell.x}-${cell.y}`}
-              className="w-16 h-16 rounded-lg grid-cell flex items-center justify-center relative border-b-4 border-slate-200"
+              className="w-16 h-16 rounded-lg grid-cell flex items-center justify-center relative border-b-4 border-white/10"
               style={{ transformStyle: 'preserve-3d' }}
             >
               {/* Floor Pattern */}
               <div className="absolute inset-0 opacity-5 pointer-events-none">
-                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-black" />
-                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-black" />
+                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-brand-ink" />
+                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-brand-ink" />
               </div>
 
               <AnimatePresence>

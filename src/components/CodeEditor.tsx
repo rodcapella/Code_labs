@@ -4,30 +4,29 @@ import { Play } from 'lucide-react';
 
 interface CodeEditorProps {
   code: string;
-  onChange: (code: string) => void;
   isExecuting: boolean;
   currentLine: number;
   placeholder: string;
   error: string | null;
 }
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecuting, currentLine, placeholder, error }) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({ code, isExecuting, currentLine, placeholder, error }) => {
   const lines = code.split('\n');
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 rounded-xl overflow-hidden shadow-xl border border-slate-800">
-      <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 border-b border-slate-700">
+    <div className="flex flex-col h-full bg-brand-navy rounded-xl overflow-hidden shadow-xl border border-white/10">
+      <div className="flex items-center gap-2 px-4 py-2 bg-brand-navy border-b border-white/10">
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-amber-500/80" />
           <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
         </div>
-        <span className="text-xs font-mono text-slate-400 ml-2 uppercase tracking-widest">editor.js</span>
+        <span className="text-xs font-mono text-brand-ice/50 ml-2 uppercase tracking-widest">editor.js</span>
       </div>
       
       <div className="relative flex-1 flex font-mono text-sm leading-6 overflow-hidden">
         {/* Line Numbers */}
-        <div className="w-10 bg-slate-900/50 text-slate-600 text-right pr-3 select-none py-4 border-right border-slate-800">
+        <div className="w-10 bg-brand-navy/50 text-brand-ice/75 text-right pr-3 select-none py-4 border-right border-white/10">
           {lines.map((_, i) => {
             const isActive = isExecuting && currentLine === i;
             const isError = !!error && currentLine === i;
@@ -49,7 +48,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
                   >
-                    <Play className="w-2 h-2 fill-blue-400 text-blue-400" />
+                    <Play className="w-2 h-2 fill-brand-cyan text-brand-cyan" />
                   </motion.div>
                 )}
                 {i + 1}
@@ -60,14 +59,19 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
 
         {/* Textarea */}
         <div className="relative flex-1">
-          <textarea
-            value={code}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={isExecuting}
-            spellCheck={false}
-            className="absolute inset-0 bg-transparent text-slate-300 p-4 outline-none resize-none h-full w-full z-20"
-            placeholder={placeholder}
-          />
+          {/* Somente leitura: o código é construído apenas com os botões de comando. */}
+          <div
+            role="textbox"
+            aria-readonly="true"
+            aria-label="editor.js"
+            className="absolute inset-0 text-brand-ice/85 p-4 whitespace-pre overflow-hidden select-none z-20"
+          >
+            {code === '' ? (
+              <span className="text-brand-ice/40">{placeholder}</span>
+            ) : (
+              code
+            )}
+          </div>
           {/* Active Line Text Highlight */}
           {isExecuting && currentLine < lines.length && (
             <div 
@@ -77,7 +81,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
                 height: '24px'
               }}
             >
-              <div className="h-full w-full bg-blue-500/5 blur-sm" />
+              <div className="h-full w-full bg-brand-blue/5 blur-sm" />
             </div>
           )}
         </div>
@@ -91,7 +95,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute left-10 right-0 bg-blue-500/15 border-l-2 border-blue-500 pointer-events-none z-10"
+              className="absolute left-10 right-0 bg-brand-blue/15 border-l-2 border-brand-blue pointer-events-none z-10"
               style={{ 
                 top: `${currentLine * 24 + 16}px`,
                 height: '24px'
@@ -101,14 +105,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
               <motion.div 
                 animate={{ opacity: [0.3, 0.6, 0.3] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="absolute inset-0 bg-blue-400/10"
+                className="absolute inset-0 bg-brand-blue/10"
               />
               {/* Brief flash on enter */}
               <motion.div 
                 initial={{ opacity: 1 }}
                 animate={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="absolute inset-0 bg-blue-300/40"
+                className="absolute inset-0 bg-brand-cyan/40"
               />
               {/* Scan line effect */}
               <motion.div 
@@ -131,7 +135,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, isExecut
             }}
           >
             <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-md shadow-lg flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
-              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              <div className="w-1.5 h-1.5 bg-brand-navy rounded-full animate-pulse" />
               {error}
             </div>
           </div>

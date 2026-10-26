@@ -18,10 +18,11 @@ export interface GameState {
   robotPosition: Position;
   robotDirection: Direction;
   boxes: Box[];
-  isExecuting: boolean;
+  /** Índice (0-based) da linha que acabou de ser executada, para destaque no editor. */
   currentLine: number;
   error: string | null;
   victory: boolean;
+  /** Número de comandos executados com sucesso. Comandos que falham não contam. */
   commandCount: number;
 }
 
@@ -36,15 +37,18 @@ export interface LevelConfig {
     box: string;
   };
   hints: string[];
+  /** Imagem de fundo do nível (URL importada). Opcional. */
+  backgroundImage?: string;
 }
-
-export type Command = 'mover()' | 'virar_esquerda()' | 'virar_direita()' | 'pegar()';
 
 export interface LeaderboardEntry {
   id: string;
   name: string;
   levelId: number;
+  /** Comandos executados com sucesso. */
   commands: number;
+  /** Erros cometidos na tentativa vencedora. */
+  errors: number;
   time: number;
   date: string;
   robotColor: string;

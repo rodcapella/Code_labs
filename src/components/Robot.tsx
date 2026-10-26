@@ -70,7 +70,7 @@ export const Robot: React.FC<RobotProps> = ({ color, direction, commandCount }) 
         <rect x="40" y="65" width="20" height="4" rx="2" fill="white" opacity="0.2" />
       </svg>
       {/* Shadow */}
-      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-2 bg-black/10 rounded-full blur-sm" />
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-2 bg-brand-ink/10 rounded-full blur-sm" />
     </motion.div>
   );
 };

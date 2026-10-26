@@ -31,23 +31,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-ink">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 p-8"
+        className="w-full max-w-lg bg-brand-navy rounded-3xl shadow-2xl border border-white/10 p-8"
       >
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
+          <div className="p-3 bg-brand-blue/20 text-brand-cyan rounded-2xl">
             <User className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">{t.onboardingTitle}</h2>
+          <h2 className="text-2xl font-bold text-brand-ice">{t.onboardingTitle}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Language Selection */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">
+            <label className="flex items-center gap-2 text-sm font-bold text-brand-ice/50 uppercase tracking-widest mb-3">
               <Globe className="w-4 h-4" />
               {t.languageLabel}
             </label>
@@ -59,8 +59,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                   onClick={() => setLanguage(lang)}
                   className={`py-3 rounded-xl font-semibold transition-all border-2 ${
                     language === lang
-                      ? 'bg-blue-50 border-blue-600 text-blue-600'
-                      : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                      ? 'bg-brand-blue/15 border-brand-blue text-brand-cyan'
+                      : 'bg-brand-navy border-white/10 text-brand-ice/50 hover:border-white/10'
                   }`}
                 >
                   {lang === 'pt' ? 'Português' : 'English'}
@@ -72,7 +72,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           {/* Name & Age */}
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-sm font-bold text-brand-ice/50 uppercase tracking-widest mb-2">
                 {t.nameLabel}
               </label>
               <input
@@ -80,12 +80,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 bg-brand-ink border border-white/10 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none transition-all"
                 placeholder={t.namePlaceholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-sm font-bold text-brand-ice/50 uppercase tracking-widest mb-2">
                 {t.ageLabel}
               </label>
               <input
@@ -95,14 +95,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                 max="120"
                 value={age}
                 onChange={(e) => setAge(parseInt(e.target.value) || 0)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 bg-brand-ink border border-white/10 rounded-xl focus:ring-2 focus:ring-brand-blue outline-none transition-all"
               />
             </div>
           </div>
 
           {/* Knowledge Level */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">
+            <label className="flex items-center gap-2 text-sm font-bold text-brand-ice/50 uppercase tracking-widest mb-3">
               <BrainCircuit className="w-4 h-4" />
               {t.knowledgeLabel}
             </label>
@@ -114,12 +114,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                   onClick={() => setLevel(lvl)}
                   className={`px-4 py-3 rounded-xl font-semibold text-left transition-all border-2 flex items-center justify-between ${
                     level === lvl
-                      ? 'bg-blue-50 border-blue-600 text-blue-600'
-                      : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                      ? 'bg-brand-blue/15 border-brand-blue text-brand-cyan'
+                      : 'bg-brand-navy border-white/10 text-brand-ice/50 hover:border-white/10'
                   }`}
                 >
                   {t[lvl]}
-                  {level === lvl && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
+                  {level === lvl && <div className="w-2 h-2 bg-brand-blue rounded-full" />}
                 </button>
               ))}
             </div>
@@ -127,7 +127,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
           {/* Robot Color Selection */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">
+            <label className="flex items-center gap-2 text-sm font-bold text-brand-ice/50 uppercase tracking-widest mb-3">
               <Bot className="w-4 h-4" />
               {t.robotColorLabel}
             </label>
@@ -139,14 +139,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                   onClick={() => setRobotColor(color.value)}
                   className={`aspect-square rounded-xl border-4 transition-all flex items-center justify-center ${
                     robotColor === color.value
-                      ? 'border-slate-900 scale-110 shadow-lg'
+                      ? 'border-white/15 scale-110 shadow-lg'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                   style={{ backgroundColor: color.value }}
                   title={color.name}
                 >
                   {robotColor === color.value && (
-                    <div className="w-2 h-2 bg-white rounded-full shadow-sm" />
+                    <div className="w-2 h-2 bg-brand-navy rounded-full shadow-sm" />
                   )}
                 </button>
               ))}
@@ -157,7 +157,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 bg-brand-navy text-white font-bold rounded-2xl shadow-xl hover:bg-brand-navy transition-all flex items-center justify-center gap-2"
           >
             {t.continue}
             <ArrowRight className="w-5 h-5" />

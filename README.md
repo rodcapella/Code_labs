@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# SapienteAI CodeBot Lab
 
-# Run and deploy your AI Studio app
+Jogo educativo para aprender lógica de programação: controla um robô numa grelha isométrica, escrevendo comandos (`mover()`, `virar_direita()`, `virar_esquerda()`, `pegar()`) para recolher todas as caixas.
 
-This contains everything you need to run your app locally.
+## Requisitos
 
-View your app in AI Studio: https://ai.studio/apps/fc29c597-9022-4233-98ca-4e920ee6c12e
+- Node.js 18 ou superior
 
-## Run Locally
+## Executar localmente
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev      # http://localhost:3000
+```
 
+## Scripts
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- `npm run dev`: servidor de desenvolvimento
+- `npm run build`: build de produção em `dist/`
+- `npm run preview`: pré-visualizar o build
+- `npm run lint`: verificação de tipos (`tsc --noEmit`)
+- `npm test`: testes unitários do motor de comandos
+
+## Estrutura
+
+- `src/engine/interpreter.ts`: regras do jogo (movimento, rotação, recolha, vitória), sem dependências de UI
+- `src/levels/`: configuração dos níveis (dados)
+- `src/screens/`: ecrãs (onboarding, jogo, ranking)
+- `src/constants/translations.ts`: textos em português e inglês

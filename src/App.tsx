@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { HomeScreen } from './screens/HomeScreen';
 import { GameScreen } from './screens/GameScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
@@ -55,6 +55,7 @@ export default function App() {
   if (!isLoaded) return null;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen overflow-hidden">
       <AnimatePresence mode="wait">
         {currentScreen === 'ONBOARDING' && (
@@ -118,5 +119,6 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }

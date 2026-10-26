@@ -1,6 +1,8 @@
+import levelBackground from '../assets/backgrounds/level2.jpg';
 import { LevelConfig } from '../types/game';
 
 export const level2: LevelConfig = {
+  backgroundImage: levelBackground,
   id: 2,
   gridSize: 6,
   initialRobotPosition: { x: 0, y: 5 },
