@@ -36,7 +36,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const [robotMessage, setRobotMessage] = useState('');
 
   const getInitialHints = () => {
-    const baseHints = level.hints.length;
+    const baseHints = level.hints[userConfig.language].length;
     if (userConfig.level === 'beginner') return baseHints;
     if (userConfig.level === 'intermediate') return Math.max(1, Math.floor(baseHints * 0.6));
     return Math.max(0, Math.floor(baseHints * 0.3));
@@ -45,6 +45,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const [hintsRemaining, setHintsRemaining] = useState(getInitialHints);
   const [activeHint, setActiveHint] = useState<string | null>(null);
 
+  // Timers de dicas e de fala: guardados em refs para poderem ser cancelados.
+  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const robotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (hintTimer.current) clearTimeout(hintTimer.current);
+      if (robotTimer.current) clearTimeout(robotTimer.current);
+    };
+  }, []);
+
   // Robot commentary: a fala é escolhida aleatoriamente de uma lista traduzida.
   const speak = (type: 'idle' | 'success' | 'error' | 'victory') => {
     const messages = t[`robot${type.charAt(0).toUpperCase() + type.slice(1)}` as keyof typeof t] as string[];
@@ -52,7 +63,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       const msg = messages[Math.floor(Math.random() * messages.length)];
       setRobotMessage(msg);
       playBeepBoopSound();
-      setTimeout(() => setRobotMessage(''), 3000);
+      if (robotTimer.current) clearTimeout(robotTimer.current);
+      robotTimer.current = setTimeout(() => setRobotMessage(''), 3000);
     }
   };
 
@@ -136,12 +148,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const showHint = () => {
     if (hintsRemaining > 0 && !activeHint) {
-      const hintIndex = level.hints.length - hintsRemaining;
-      setActiveHint(level.hints[hintIndex]);
+      const list = level.hints[userConfig.language];
+      const hintIndex = list.length - hintsRemaining;
+      setActiveHint(list[hintIndex]);
       setHintsRemaining(prev => prev - 1);
       playClickSound();
 
-      setTimeout(() => {
+      if (hintTimer.current) clearTimeout(hintTimer.current);
+      hintTimer.current = setTimeout(() => {
         setActiveHint(null);
       }, 8000);
     }

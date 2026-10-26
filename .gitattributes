@@ -1,0 +1,6 @@
+# Normaliza fins de linha: o repositório guarda LF; o Git converte no checkout.
+* text=auto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

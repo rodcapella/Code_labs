@@ -36,7 +36,8 @@ export interface LevelConfig {
     robot: string;
     box: string;
   };
-  hints: string[];
+  /** Dicas por idioma; a lista usada depende da língua do utilizador. */
+  hints: Record<Language, string[]>;
   /** Imagem de fundo do nível (URL importada). Opcional. */
   backgroundImage?: string;
 }

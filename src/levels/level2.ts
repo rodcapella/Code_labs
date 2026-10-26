@@ -21,9 +21,16 @@ export const level2: LevelConfig = {
     robot: '#7C3AED',
     box: '#A78BFA',
   },
-  hints: [
+  hints: {
+    pt: [
     'Este nível é um pouco maior! Planeje seus movimentos.',
     'Você começa no canto inferior esquerdo virado para o Norte.',
     'Tente coletar as caixas na ordem mais próxima para economizar comandos.',
-  ],
+    ],
+    en: [
+    'This level is a bit bigger! Plan your moves.',
+    'You start in the bottom-left corner facing North.',
+    'Try collecting the boxes in the closest order to save commands.',
+    ],
+  },
 };

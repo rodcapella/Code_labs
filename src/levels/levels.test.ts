@@ -28,3 +28,11 @@ describe('configuração dos níveis', () => {
     }
   });
 });
+
+describe('dicas por idioma', () => {
+  it.each(levels)('%s tem dicas em pt e en, com o mesmo número de itens', (_name, level) => {
+    expect(level.hints.pt.length).toBeGreaterThan(0);
+    expect(level.hints.en).toHaveLength(level.hints.pt.length);
+    expect(level.hints.en.every(h => h.trim().length > 0)).toBe(true);
+  });
+});
