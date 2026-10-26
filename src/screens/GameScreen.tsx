@@ -378,6 +378,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             <p className={`text-lg font-mono font-bold ${errors >= maxErrors - 1 ? 'text-red-600' : 'text-brand-ice/85'}`}>
               {errors}/{maxErrors}
             </p>
+            {errors === maxErrors - 1 && (
+              <p className="text-[10px] font-bold text-red-400">{t.lastErrorWarning}</p>
+            )}
+          </div>
+          <div className="text-right hidden sm:block" aria-live="polite">
+            <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest">{t.boxesLabel}</p>
+            <p className="text-lg font-mono font-bold text-brand-ice/85">
+              {gameState.boxes.filter(b => b.collected).length}/{gameState.boxes.length}
+            </p>
           </div>
           <div className="flex gap-2">
             <Tooltip text={t.tooltipUndo} position="bottom">

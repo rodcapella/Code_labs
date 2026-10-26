@@ -134,6 +134,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, isExecuting, curre
               height: '24px'
             }}
           >
+              <span className="absolute -left-9 top-1/2 -translate-y-1/2 text-red-400 font-bold text-sm" aria-hidden="true">
+                ✖
+              </span>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-md shadow-lg flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
               <div className="w-1.5 h-1.5 bg-brand-navy rounded-full animate-pulse" />
               {error}
