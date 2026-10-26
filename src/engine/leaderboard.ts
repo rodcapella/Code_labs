@@ -1,5 +1,5 @@
 import { LeaderboardEntry } from '../types/game';
-import { ERROR_PENALTY } from './rules';
+import { scoreOf as rulesScoreOf } from './rules';
 import { LEADERBOARD_SIZE } from './leaderboardRules';
 
 export const LEADERBOARD_KEY = 'codebot_leaderboard';
@@ -8,9 +8,9 @@ export { LEADERBOARD_SIZE };
 export const formatPlayerName = (name: string): string =>
   name.trim().toUpperCase().slice(0, 10);
 
-/** Pontuação: comandos mais uma penalização por cada erro. Menor é melhor. */
+/** Pontuação: comandos, erros e tempo. Menor é melhor. */
 export const scoreOf = (entry: LeaderboardEntry): number =>
-  entry.commands + entry.errors * ERROR_PENALTY;
+  rulesScoreOf(entry.commands, entry.errors, entry.time);
 
 /** Ordena por pontuação e, em empate, por tempo. */
 export const compareEntries = (a: LeaderboardEntry, b: LeaderboardEntry): number => {

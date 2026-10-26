@@ -60,7 +60,23 @@ describe('encodeScore', () => {
   });
 
   it('pontuação com penalização: 3 comandos + 2 erros é pior que 5 limpos', () => {
-    expect(scoreOf(3, 2)).toBeGreaterThan(scoreOf(5, 0));
+    expect(scoreOf(3, 2, 0)).toBeGreaterThan(scoreOf(5, 0, 0));
+  });
+
+  it('o tempo conta na pontuação: cada 10 s soma 1 ponto', () => {
+    expect(scoreOf(5, 0, 0)).toBe(5);
+    expect(scoreOf(5, 0, 9)).toBe(5);
+    expect(scoreOf(5, 0, 10)).toBe(6);
+    expect(scoreOf(5, 0, 30)).toBe(8);
+  });
+
+  it('menos tempo ganha quando comandos e erros são iguais', () => {
+    expect(encodeScore(e(4, 0, 12))).toBeLessThan(encodeScore(e(4, 0, 99)));
+  });
+
+  it('um erro pesa mais que 10 s, mas um comando pesa menos que um erro', () => {
+    expect(scoreOf(4, 1, 0)).toBeGreaterThan(scoreOf(4, 0, 19));
+    expect(scoreOf(5, 0, 0)).toBeLessThan(scoreOf(4, 1, 0));
   });
 
   it('ordena pelo score codificado da mesma forma que compareEntries', () => {
@@ -70,9 +86,6 @@ describe('encodeScore', () => {
     expect(byEncoded).toEqual(byCompare);
   });
 
-  it('o tempo nunca passa a pontuação (desempate apenas)', () => {
-    expect(encodeScore(e(4, 0, 99999))).toBeLessThan(encodeScore(e(5, 0, 0)));
-  });
 });
 
 describe('keyFor', () => {

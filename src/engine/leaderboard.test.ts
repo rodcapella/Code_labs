@@ -12,12 +12,13 @@ const entry = (id: string, commands: number, time = 10, errors = 0): Leaderboard
 describe('ranking', () => {
   beforeEach(() => localStorage.clear());
 
-  it('ordena por menos comandos e, em empate, por menos tempo', () => {
-    const sorted = [entry('a', 5, 30), entry('b', 3, 50), entry('c', 5, 10)].sort(compareEntries);
-    expect(sorted.map(e => e.id)).toEqual(['b', 'c', 'a']);
+  it('ordena pela pontuação (comandos, erros e tempo) e, em empate, pelo tempo', () => {
+    // a: 5 cmd, t=5 → 5 | b: 3 cmd, t=50 → 8 | c: 5 cmd, t=1 → 5
+    const sorted = [entry('a', 5, 5), entry('b', 3, 50), entry('c', 5, 1)].sort(compareEntries);
+    expect(sorted.map(e => e.id)).toEqual(['c', 'a', 'b']);
   });
 
-  it('penaliza erros na pontuação (cada erro soma ERROR_PENALTY comandos)', () => {
+  it('penaliza erros na pontuação (cada erro soma ERROR_PENALTY pontos)', () => {
     // 3 comandos + 2 erros (=4) fica pior que 5 comandos sem erros
     const sorted = [entry('erros', 3, 10, 2), entry('limpo', 5, 10)].sort(compareEntries);
     expect(sorted.map(e => e.id)).toEqual(['limpo', 'erros']);

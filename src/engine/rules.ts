@@ -12,3 +12,13 @@ export const MAX_ERRORS_BY_LEVEL: Record<KnowledgeLevel, number> = {
 
 /** Cada erro acrescenta este número de comandos à pontuação do ranking. */
 export const ERROR_PENALTY = 2;
+
+/** A cada quantos segundos o tempo soma 1 ponto à pontuação. */
+export const SECONDS_PER_POINT = 10;
+
+/**
+ * Pontuação do ranking (menor é melhor):
+ * comandos + penalização por erro + penalização por tempo.
+ */
+export const scoreOf = (commands: number, errors: number, timeSeconds: number): number =>
+  commands + errors * ERROR_PENALTY + Math.floor(Math.max(timeSeconds, 0) / SECONDS_PER_POINT);

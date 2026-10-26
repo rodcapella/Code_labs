@@ -1,5 +1,5 @@
 import { LeaderboardEntry } from '../types/game';
-import { ERROR_PENALTY } from './rules';
+import { scoreOf as rulesScoreOf } from './rules';
 
 /** Partilhado entre o cliente e a API (api/leaderboard.ts). */
 export const LEADERBOARD_SIZE = 10;
@@ -10,16 +10,15 @@ export const MAX_TIME_SECONDS = 86400;
 
 export const keyFor = (levelId: number): string => `leaderboard:level:${levelId}`;
 
-/** Pontuação: comandos + penalização por erro. Menor é melhor. */
-export const scoreOf = (commands: number, errors: number): number =>
-  commands + errors * ERROR_PENALTY;
+/** Pontuação (comandos, erros e tempo). Menor é melhor. */
+export const scoreOf = rulesScoreOf;
 
 /**
- * Score numérico para o sorted set do Redis: pontuação primeiro, tempo em
- * segundos como desempate (tempo limitado a 99999 s para não invadir a pontuação).
+ * Score numérico para o sorted set do Redis: pontuação primeiro, e o tempo
+ * exato como desempate (limitado a 99999 s para não invadir a pontuação).
  */
 export const encodeScore = (e: Pick<LeaderboardEntry, 'commands' | 'errors' | 'time'>): number =>
-  scoreOf(e.commands, e.errors) * 100000 + Math.min(Math.max(e.time, 0), 99999);
+  scoreOf(e.commands, e.errors, e.time) * 100000 + Math.min(Math.max(e.time, 0), 99999);
 
 export type EntryInput = Omit<LeaderboardEntry, 'id'>;
 
