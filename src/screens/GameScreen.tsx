@@ -99,7 +99,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const runner = useProgramRunner(level, userConfig.language, maxErrors, handleStepEvent);
   const {
     state: gameState, errors, isGameOver, isExecuting, isPaused, started,
-    speed: executionSpeed, historyLength,
+    speed: executionSpeed, historyLength, runs,
   } = runner;
 
   useEffect(() => {
@@ -185,7 +185,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       date: new Date().toISOString().split('T')[0],
       robotColor: userConfig.robotColor,
     };
-    void submitEntry(entry);
+    void submitEntry(entry, {
+      knowledgeLevel: userConfig.level,
+      language: userConfig.language,
+      runs,
+    });
   }, [gameState.victory]);
 
   const finishTutorial = () => {

@@ -1,56 +1,63 @@
 import { describe, it, expect } from 'vitest';
-import { validateEntry, encodeScore, keyFor, scoreOf } from './leaderboardRules';
+import { validateSubmission, encodeScore, keyFor, scoreOf } from './leaderboardRules';
 import { compareEntries } from './leaderboard';
 import { LeaderboardEntry } from '../types/game';
 
 const valid = {
   name: 'Rui',
-  levelId: 2,
-  commands: 10,
-  errors: 1,
-  time: 42,
-  date: '2026-10-26',
   robotColor: '#2563EB',
+  date: '2026-10-26',
+  time: 42,
+  levelId: 2,
+  knowledgeLevel: 'beginner',
+  language: 'pt',
+  runs: [['mover()', 'pegar()']],
 };
 
-describe('validateEntry', () => {
-  it('aceita uma entrada válida e devolve-a sem campos extra', () => {
-    const r = validateEntry({ ...valid, id: 'hack', extra: 1 });
+describe('validateSubmission', () => {
+  it('aceita um envio válido', () => {
+    const r = validateSubmission(valid);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.entry).toEqual(valid);
+  });
+
+  it('ignora campos que o cliente não devia enviar (comandos, erros, id)', () => {
+    const r = validateSubmission({ ...valid, commands: 0, errors: 0, id: 'x' });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.submission).not.toHaveProperty('commands');
   });
 
   it('rejeita corpo que não é objeto', () => {
-    expect(validateEntry(null).ok).toBe(false);
-    expect(validateEntry('x').ok).toBe(false);
+    expect(validateSubmission(null).ok).toBe(false);
+    expect(validateSubmission('x').ok).toBe(false);
   });
 
-  it('rejeita nome vazio, grande demais ou com caracteres perigosos', () => {
-    expect(validateEntry({ ...valid, name: '' }).ok).toBe(false);
-    expect(validateEntry({ ...valid, name: 'a'.repeat(11) }).ok).toBe(false);
-    expect(validateEntry({ ...valid, name: '<script>' }).ok).toBe(false);
+  it('rejeita nome inválido, vazio ou com caracteres perigosos', () => {
+    expect(validateSubmission({ ...valid, name: '' }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, name: 'a'.repeat(11) }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, name: '<script>' }).ok).toBe(false);
   });
 
   it('aceita nomes com acentos', () => {
-    expect(validateEntry({ ...valid, name: 'João' }).ok).toBe(true);
+    expect(validateSubmission({ ...valid, name: 'João' }).ok).toBe(true);
   });
 
-  it('rejeita nível fora de 1–3', () => {
-    expect(validateEntry({ ...valid, levelId: 0 }).ok).toBe(false);
-    expect(validateEntry({ ...valid, levelId: 4 }).ok).toBe(false);
-    expect(validateEntry({ ...valid, levelId: 1.5 }).ok).toBe(false);
+  it('rejeita nível, tempo, data e cor inválidos', () => {
+    expect(validateSubmission({ ...valid, levelId: 4 }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, time: -1 }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, date: '26/10/2026' }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, robotColor: 'red' }).ok).toBe(false);
   });
 
-  it('rejeita números negativos, não inteiros ou fora dos limites', () => {
-    expect(validateEntry({ ...valid, commands: -1 }).ok).toBe(false);
-    expect(validateEntry({ ...valid, errors: 10001 }).ok).toBe(false);
-    expect(validateEntry({ ...valid, time: 86401 }).ok).toBe(false);
-    expect(validateEntry({ ...valid, time: '42' }).ok).toBe(false);
+  it('rejeita nível de conhecimento e idioma fora do conjunto conhecido', () => {
+    expect(validateSubmission({ ...valid, knowledgeLevel: 'expert' }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, language: 'fr' }).ok).toBe(false);
   });
 
-  it('rejeita data e cor mal formadas', () => {
-    expect(validateEntry({ ...valid, date: '26/10/2026' }).ok).toBe(false);
-    expect(validateEntry({ ...valid, robotColor: 'red' }).ok).toBe(false);
+  it('limita o tamanho do envio', () => {
+    expect(validateSubmission({ ...valid, runs: [] }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, runs: Array(51).fill(['mover()']) }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, runs: [Array(201).fill('mover()')] }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, runs: [['x'.repeat(41)]] }).ok).toBe(false);
   });
 });
 

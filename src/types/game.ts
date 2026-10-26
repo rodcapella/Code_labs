@@ -26,12 +26,16 @@ export interface GameState {
   commandCount: number;
 }
 
-export interface LevelConfig {
-  id: number;
+/** Geometria do nível: a parte que o servidor também precisa para validar jogadas. */
+export interface LayoutConfig {
   gridSize: number;
   initialRobotPosition: Position;
   initialRobotDirection: Direction;
   boxes: Position[];
+}
+
+export interface LevelConfig extends LayoutConfig {
+  id: number;
   colors: {
     robot: string;
     box: string;

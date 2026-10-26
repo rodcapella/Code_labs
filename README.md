@@ -54,13 +54,36 @@ Sem API disponível, o jogo continua a funcionar e usa o ranking guardado no bro
 
 ### Contrato da API
 
-- `GET /api/leaderboard` → `{ entries: [...] }` (top 10 de cada nível)
+- `GET /api/leaderboard` → `{ entries: [...] }` (top 10 de cada nível), limite de 60 pedidos/min por IP
 - `GET /api/leaderboard?level=2` → só o nível 2
-- `POST /api/leaderboard` com `{ name, levelId, commands, errors, time, date, robotColor }`
-  → `201` ou `400` com a razão da rejeição
+- `POST /api/leaderboard` → `201 { ok, score }` ou `400` / `422` / `429` com a razão
 
-### Limitações conhecidas
+O `POST` envia as **execuções** do jogador, não a pontuação:
 
-- As pontuações são enviadas pelo cliente. Quem souber a API pode enviar valores falsos.
-  Para o ranking ser à prova de batota, o servidor teria de re-executar a sequência de comandos.
-- Não há limite de pedidos por IP. Se for preciso, adiciona-se `@upstash/ratelimit`.
+```json
+{
+  "name": "Rui", "robotColor": "#2563EB", "date": "2026-10-26", "time": 42,
+  "levelId": 1, "knowledgeLevel": "beginner", "language": "pt",
+  "runs": [["mover()", "mover()", "pegar()"]]
+}
+```
+
+### Como o servidor valida uma vitória
+
+1. **Re-executa** cada execução com o mesmo motor do jogo (`src/engine/replay.ts`).
+   Comandos, erros e passos são calculados no servidor.
+2. Só a **última** execução pode vencer, e o nível tem de ficar completo.
+3. Os erros têm de ficar abaixo do limite do nível de conhecimento enviado.
+4. O **tempo** declarado tem de ser possível: pelo menos `passos × 0,3 s`,
+   que é a velocidade mais rápida do jogo.
+5. Há um limite de **5 submissões por minuto por IP** (`@upstash/ratelimit`, no mesmo Redis).
+
+### Limitações que restam
+
+- O tempo só tem um limite inferior. Um jogador pode demorar mais do que o real,
+  o que só o prejudica, mas pode reduzir o tempo até ao mínimo possível.
+- O servidor não sabe se as jogadas vieram de uma pessoa ou de um script
+  que resolve o nível. Quem automatizar uma solução pode aparecer no ranking.
+  Isto é aceitável para um ranking de jogo, mas não para prémios em dinheiro.
+- O limite por IP usa o cabeçalho `x-forwarded-for`, que é fiável no Vercel.
+  Em ligações partilhadas (escola, empresa), várias pessoas partilham o mesmo limite.

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, Language, LevelConfig } from '../types/game';
 import { executeCommand } from '../engine/interpreter';
+import { createInitialState, parseProgram } from '../engine/program';
+
+export { createInitialState, parseProgram };
 
 export type StepEvent = 'move' | 'turn' | 'pick' | 'step' | 'error' | 'victory' | 'gameover';
 type Status = 'idle' | 'running' | 'paused';
@@ -9,20 +12,6 @@ interface Snapshot {
   state: GameState;
   pc: number;
 }
-
-export const parseProgram = (code: string): string[] =>
-  code.split('\n').map(l => l.trim()).filter(l => l !== '');
-
-export const createInitialState = (level: LevelConfig): GameState => ({
-  gridSize: level.gridSize,
-  robotPosition: level.initialRobotPosition,
-  robotDirection: level.initialRobotDirection,
-  boxes: level.boxes.map((p, i) => ({ id: `box-${i}`, position: p, collected: false })),
-  currentLine: 0,
-  error: null,
-  victory: false,
-  commandCount: 0,
-});
 
 const classify = (prev: GameState, next: GameState): StepEvent => {
   if (next.error) return 'error';
@@ -53,6 +42,8 @@ export function useProgramRunner(
 ) {
   const [state, setState] = useState<GameState>(() => createInitialState(level));
   const [program, setProgram] = useState<string[]>([]);
+  // Cada execução iniciada (sem contar retomas): o servidor re-executa-as para validar.
+  const [runs, setRuns] = useState<string[][]>([]);
   const [pc, setPc] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
   const [started, setStarted] = useState(false);
@@ -70,6 +61,7 @@ export function useProgramRunner(
   const reset = useCallback(() => {
     setState(createInitialState(level));
     setProgram([]);
+    setRuns([]);
     setPc(0);
     setStatus('idle');
     setStarted(false);
@@ -129,6 +121,7 @@ export function useProgramRunner(
       // Cada execução começa o robô de novo; os erros da tentativa mantêm-se.
       setState(createInitialState(level));
       setProgram(lines);
+      setRuns(r => [...r, lines]);
       setPc(0);
       setHistory([]);
       setStarted(true);
@@ -160,6 +153,7 @@ export function useProgramRunner(
     speed,
     setSpeed,
     historyLength: history.length,
+    runs,
     run,
     pause,
     undo,

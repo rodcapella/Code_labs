@@ -22,3 +22,10 @@ export const SECONDS_PER_POINT = 10;
  */
 export const scoreOf = (commands: number, errors: number, timeSeconds: number): number =>
   commands + errors * ERROR_PENALTY + Math.floor(Math.max(timeSeconds, 0) / SECONDS_PER_POINT);
+
+/** Duração mínima de um passo: a velocidade mais rápida do jogo. */
+export const MIN_STEP_MS = 300;
+/** Limites de tamanho do envio, para o servidor não re-executar algo enorme. */
+export const MAX_RUNS = 50;
+export const MAX_LINES_PER_RUN = 200;
+export const MAX_LINE_LENGTH = 40;
