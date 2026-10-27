@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, Language, LevelConfig } from '../../../shared/types/game';
 import { executeCommand } from '../engine/interpreter';
-import { createInitialState, parseProgram } from '../engine/program';
+import {
+  createInitialState, parseProgram, compileProgram, compileErrorMessage, hasBoxHere, Instruction,
+} from '../engine/program';
 
 export { createInitialState, parseProgram };
 
@@ -25,23 +27,25 @@ const classify = (prev: GameState, next: GameState): StepEvent => {
 };
 
 /**
- * Executa o programa uma linha de cada vez, com limite de erros por tentativa.
+ * Executa o programa uma instrução de cada vez, com limite de erros por tentativa.
+ *
+ * O programa é compilado antes de começar (ver compileProgram): `repetir` é expandido,
+ * por isso aqui só há instruções lineares. Erros de compilação não começam a execução
+ * e não contam como erros de jogo.
  *
  * Erros acumulam entre execuções até ao reset do nível. Ao atingir `maxErrors`,
  * `isGameOver` fica verdadeiro e não se pode executar mais até reiniciar.
- *
- * O estado de execução fica em React state e cada passo é agendado por um efeito,
- * por isso a velocidade nova aplica-se logo no passo seguinte e não há efeitos
- * colaterais dentro de atualizadores de setState.
  */
 export function useProgramRunner(
   level: LevelConfig,
   language: Language,
   maxErrors: number,
   onEvent: (event: StepEvent) => void,
+  allowLoops = false,
+  allowConditionals = false,
 ) {
   const [state, setState] = useState<GameState>(() => createInitialState(level));
-  const [program, setProgram] = useState<string[]>([]);
+  const [program, setProgram] = useState<Instruction[]>([]);
   // Cada execução iniciada (sem contar retomas): o servidor re-executa-as para validar.
   const [runs, setRuns] = useState<string[][]>([]);
   const [pc, setPc] = useState(0);
@@ -81,8 +85,16 @@ export function useProgramRunner(
       return;
     }
 
+    const instr = program[pc];
     const id = setTimeout(() => {
-      const next = executeCommand(state, program[pc], language);
+      if (instr.kind === 'check') {
+        // Teste de se_caixa: não é um comando, não conta e não gasta erros.
+        setHistory(h => [...h, { state, pc }]);
+        setPc(hasBoxHere(state) ? pc + 1 : instr.skipTo);
+        setState({ ...state, currentLine: instr.sourceLine });
+        return;
+      }
+      const next = executeCommand(state, instr.text, language);
       const event = classify(state, next);
 
       if (!next.error) {
@@ -91,7 +103,8 @@ export function useProgramRunner(
       } else {
         setErrors(e => e + 1);
       }
-      setState({ ...next, currentLine: pc });
+      // A linha destacada é a do editor (não a instrução expandida).
+      setState({ ...next, currentLine: instr.sourceLine });
       onEventRef.current(event);
     }, speed);
 
@@ -118,16 +131,27 @@ export function useProgramRunner(
       const lines = parseProgram(code);
       if (lines.length === 0) return;
 
+      const compiled = compileProgram(lines, language, { allowLoops, allowConditionals });
+      if (compiled.ok === false) {
+        setState({
+          ...createInitialState(level),
+          error: compileErrorMessage(compiled.error, language),
+          currentLine: compiled.error.line,
+        });
+        setStatus('idle');
+        return;
+      }
+
       // Cada execução começa o robô de novo; os erros da tentativa mantêm-se.
       setState(createInitialState(level));
-      setProgram(lines);
+      setProgram(compiled.instructions);
       setRuns(r => [...r, lines]);
       setPc(0);
       setHistory([]);
       setStarted(true);
       setStatus('running');
     },
-    [status, level, isGameOver],
+    [status, level, isGameOver, language, allowLoops, allowConditionals],
   );
 
   const pause = useCallback(() => {

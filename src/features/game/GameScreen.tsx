@@ -100,7 +100,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   };
 
   const maxErrors = MAX_ERRORS_BY_LEVEL[userConfig.level];
-  const runner = useProgramRunner(level, userConfig.language, maxErrors, handleStepEvent);
+  const allowLoops = userConfig.level !== 'beginner';
+  const allowConditionals = userConfig.level === 'advanced';
+  const runner = useProgramRunner(level, userConfig.language, maxErrors, handleStepEvent, allowLoops, allowConditionals);
   const {
     state: gameState, errors, isGameOver, isExecuting, isPaused, started,
     speed: executionSpeed, historyLength, runs,
@@ -513,6 +515,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             setCode('');
           }}
           onAddCommand={addCommand}
+          showLoops={allowLoops}
+          showConditionals={allowConditionals}
         />
       </main>
     </div>

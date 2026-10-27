@@ -32,3 +32,7 @@ export const MAX_LINE_LENGTH = 40;
 
 /** Níveis existentes. Acrescentar um nível: adicionar aqui, no layout e no ficheiro do nível. */
 export const LEVEL_IDS = [1, 2, 3, 4] as const;
+
+/** Limites do compilador de programas (repetir). */
+export const MAX_REPEAT = 9;
+export const MAX_INSTRUCTIONS = 500;

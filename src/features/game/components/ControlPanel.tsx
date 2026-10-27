@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Eraser, Gauge, ChevronUp, RotateCcw, RotateCw, Hand } from 'lucide-react';
+import { Terminal, Eraser, Gauge, ChevronUp, RotateCcw, RotateCw, Hand, Repeat, CornerDownLeft, GitBranch } from 'lucide-react';
 import { CodeEditor } from './CodeEditor';
 import { Tooltip } from '../../../shared/components/Tooltip';
 import { Translations } from './GameHeader';
@@ -16,12 +16,14 @@ export interface ControlPanelProps {
   onSpeedChange: (speed: number) => void;
   onClear: () => void;
   onAddCommand: (command: string) => void;
+  showLoops: boolean;
+  showConditionals: boolean;
 }
 
 /** Painel direito: console (somente leitura), velocidade e paleta de comandos. */
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   t, code, isExecuting, currentLine, error, executionSpeed,
-  onSpeedChange, onClear, onAddCommand,
+  onSpeedChange, onClear, onAddCommand, showLoops, showConditionals,
 }) => {
   const commands = [
     { label: t.cmdMove, icon: <ChevronUp className="w-4 h-4" /> },
@@ -84,6 +86,28 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       <div className="bg-brand-ink rounded-2xl p-4 border border-white/10">
         <h4 className="text-xs font-bold text-brand-ice/75 uppercase tracking-widest mb-3">{t.availableCommands}</h4>
         <div className="grid grid-cols-2 gap-2">
+          {showConditionals && (
+            <button onClick={() => onAddCommand(t.cmdIfBox)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
+              <GitBranch className="w-4 h-4" />
+              {t.cmdIfBox}
+            </button>
+          )}
+          {showLoops && (
+            <>
+              <button onClick={() => onAddCommand(t.cmdRepeat(2))} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-cyan/40 font-mono text-xs text-brand-cyan hover:bg-brand-blue/15 transition-all shadow-sm">
+                <Repeat className="w-4 h-4" />
+                {t.cmdRepeat(2)}
+              </button>
+              <button onClick={() => onAddCommand(t.cmdRepeat(3))} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-cyan/40 font-mono text-xs text-brand-cyan hover:bg-brand-blue/15 transition-all shadow-sm">
+                <Repeat className="w-4 h-4" />
+                {t.cmdRepeat(3)}
+              </button>
+              <button onClick={() => onAddCommand(t.cmdBlockEnd)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-cyan/40 font-mono text-xs text-brand-cyan hover:bg-brand-blue/15 transition-all shadow-sm">
+                <CornerDownLeft className="w-4 h-4" />
+                {t.cmdBlockEnd}
+              </button>
+            </>
+          )}
           {commands.map(cmd => (
             <button
               key={cmd.label}

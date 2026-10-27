@@ -166,6 +166,78 @@ describe('useProgramRunner', () => {
     expect(result.current.errors).toBe(0);
   });
 
+  it('repetir executa o corpo o número de vezes indicado', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true),
+      { wrapper: strict },
+    );
+    act(() => result.current.run('repetir(3) {\nmover()\n}'));
+    runFor(600 * 4);
+    expect(result.current.state.robotPosition).toEqual({ x: 3, y: 0 });
+    expect(result.current.state.commandCount).toBe(3);
+  });
+
+  it('bloco sem fecho mostra erro de compilação, não começa e não conta como erro', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true),
+      { wrapper: strict },
+    );
+    act(() => result.current.run('repetir(2) {\nmover()'));
+    expect(result.current.isExecuting).toBe(false);
+    expect(result.current.state.error).toBeTruthy();
+    expect(result.current.state.currentLine).toBe(0);
+    expect(result.current.errors).toBe(0);
+    expect(result.current.runs).toHaveLength(0);
+  });
+
+  it('nível iniciante (sem ciclos) rejeita repetir com erro de compilação', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), false),
+      { wrapper: strict },
+    );
+    act(() => result.current.run('repetir(2) {\nmover()\n}'));
+    expect(result.current.isExecuting).toBe(false);
+    expect(result.current.state.error).toBeTruthy();
+  });
+
+  it('se_caixa executa o bloco só quando há caixa na posição atual', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true, true),
+      { wrapper: strict },
+    );
+    // Sem caixa em (2,0): o bloco é saltado e o comando pegar() não conta.
+    act(() => result.current.run('mover()\nmover()\nse_caixa() {\npegar()\n}'));
+    runFor(600 * 6);
+    expect(result.current.state.commandCount).toBe(2);
+    expect(result.current.state.boxes.filter(b => b.collected)).toHaveLength(0);
+  });
+
+  it('se_caixa recolhe a caixa quando ela existe na posição', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true, true),
+      { wrapper: strict },
+    );
+    // Caminho até à caixa (2,2): dois passos para Este, virar à direita, dois para Sul.
+    const program = [
+      'mover()', 'mover()', 'virar_direita()', 'mover()', 'mover()',
+      'se_caixa() {', 'pegar()', '}',
+    ].join('\n');
+    act(() => result.current.run(program));
+    runFor(600 * 15);
+    expect(result.current.state.boxes.filter(b => b.collected)).toHaveLength(1);
+    expect(result.current.state.commandCount).toBe(6);
+  });
+
+  it('se_caixa não está disponível fora do nível avançado', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true, false),
+      { wrapper: strict },
+    );
+    act(() => result.current.run('se_caixa() {\npegar()\n}'));
+    expect(result.current.isExecuting).toBe(false);
+    expect(result.current.state.error).toBeTruthy();
+  });
+
   it('reset repõe o estado inicial do nível', () => {
     const { result } = setup();
     act(() => result.current.run('mover()'));

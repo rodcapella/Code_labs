@@ -80,6 +80,34 @@ describe('replayAttempt', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('repetir é aceite no nível intermédio e recalcula os comandos', () => {
+    // Robô em (0,0) virado a Este; 3 repetições de mover() chegam a (3,0)
+    const r = replayAttempt(L1, [['repetir(3) {', 'mover()', '}', 'pegar()']], 'pt', 'intermediate');
+    expect(r.ok).toBe(false); // sem recolher todas as caixas: não é vitória
+    const r2 = replayAttempt(L1, [winning], 'pt', 'intermediate');
+    expect(r2.ok).toBe(true);
+  });
+
+  it('repetir é rejeitado no nível iniciante', () => {
+    const r = replayAttempt(L1, [['repetir(2) {', 'mover()', '}']], 'pt', 'beginner');
+    expect(r.ok).toBe(false);
+  });
+
+  it('se_caixa no nível avançado: a solução com cada pegar() dentro de se_caixa é aceite', () => {
+    // Cada pegar() só ocorre sobre uma caixa, por isso o bloco nunca é saltado.
+    const withCondition = winning.flatMap(line =>
+      line === TRANSLATIONS.pt.cmdPick ? ['se_caixa() {', line, '}'] : [line],
+    );
+    const r = replayAttempt(L1, [withCondition], 'pt', 'advanced');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.commands).toBe(winning.length);
+  });
+
+  it('se_caixa é rejeitado no nível intermédio', () => {
+    const r = replayAttempt(L1, [['se_caixa() {', 'pegar()', '}']], 'pt', 'intermediate');
+    expect(r.ok).toBe(false);
+  });
+
   it('sem execuções é rejeitado', () => {
     expect(replayAttempt(L1, [], 'pt', 'beginner').ok).toBe(false);
   });

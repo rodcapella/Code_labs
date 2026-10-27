@@ -114,3 +114,18 @@ O `POST` envia as **execuções** do jogador, não a pontuação:
   Isto é aceitável para um ranking de jogo, mas não para prémios em dinheiro.
 - O limite por IP usa o cabeçalho `x-forwarded-for`, que é fiável no Vercel.
   Em ligações partilhadas (escola, empresa), várias pessoas partilham o mesmo limite.
+
+## Linguagem do jogo
+
+| Comando | Níveis | Efeito |
+|---|---|---|
+| `mover()` | todos | Anda uma casa na direção atual |
+| `virar_esquerda()` / `virar_direita()` | todos | Roda 90° |
+| `pegar()` | todos | Recolhe a caixa em que está |
+| `repetir(n) {` … `}` | intermédio e avançado | Repete o bloco `n` vezes (1–9) |
+| `se_caixa() {` … `}` | avançado | Executa o bloco só se houver caixa por recolher na posição do robô |
+
+`repetir` é expandido antes de executar (compilador em `features/game/engine/program.ts`).
+`se_caixa` é decidido durante a execução: se não houver caixa, o bloco é saltado. O teste não é um comando, não conta e não gasta erros.
+Um programa tem no máximo 500 instruções expandidas. Blocos aninhados são permitidos.
+Erros de sintaxe não começam a execução e não contam como erros do jogo.
