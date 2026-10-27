@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Pause, AlertCircle, Lightbulb } from 'lucide-react';
 import { Grid } from './components/Grid';
 import { GameHeader } from './components/GameHeader';
+import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 import { ControlPanel } from './components/ControlPanel';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { VictoryOverlay } from './components/VictoryOverlay';
@@ -491,11 +492,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
               </motion.div>
             )}
 
-            {!ready && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-brand-ink/70 text-brand-ice/85 font-bold">
-                {t.preparingLevel}
-              </div>
-            )}
+            {!ready && <ArcadeLoader label={t.preparingLevel} />}
             {isGameOver && !gameState.victory && (
               <GameOverOverlay
                 title={t.gameOverTitle}

@@ -112,3 +112,46 @@ button:disabled {
     transform: none;
   }
 }
+
+/* Carregamento estilo arcade */
+.arcade-loader {
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85);
+}
+
+.arcade-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+}
+
+.arcade-blink {
+  animation: arcade-blink 1s steps(2, start) infinite;
+}
+
+@keyframes arcade-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.arcade-block {
+  animation: arcade-block 1.2s steps(2, start) infinite;
+  box-shadow: 0 0 8px var(--color-brand-cyan);
+}
+
+@keyframes arcade-block {
+  0% { opacity: 0.15; }
+  50% { opacity: 1; }
+  100% { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-blink,
+  .arcade-block {
+    animation: none;
+  }
+  .arcade-block {
+    opacity: 1;
+  }
+}
