@@ -1,11 +1,9 @@
 import levelBackground from '../../../shared/assets/backgrounds/level1.jpg';
-import { LevelConfig } from '../../../shared/types/game';
-import { LAYOUTS } from './layouts';
+import { LevelMeta } from '../../../shared/types/game';
 
-export const level1: LevelConfig = {
+export const level1: LevelMeta = {
   backgroundImage: levelBackground,
   id: 1,
-  ...LAYOUTS[1],
   colors: {
     robot: '#2563EB',
     box: '#60A5FA',

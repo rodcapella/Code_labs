@@ -4,6 +4,7 @@ import { compareEntries } from './leaderboard';
 import { LeaderboardEntry } from '../../../shared/types/game';
 
 const valid = {
+  attemptId: '3f2b1c4e-5d6a-4b7c-8e9f-0a1b2c3d4e5f',
   name: 'Rui',
   robotColor: '#2563EB',
   date: '2026-10-26',
@@ -24,6 +25,11 @@ describe('validateSubmission', () => {
     const r = validateSubmission({ ...valid, commands: 0, errors: 0, id: 'x' });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.submission).not.toHaveProperty('commands');
+  });
+
+  it('exige um attemptId válido (uuid)', () => {
+    expect(validateSubmission({ ...valid, attemptId: undefined }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, attemptId: 'x' }).ok).toBe(false);
   });
 
   it('rejeita corpo que não é objeto', () => {

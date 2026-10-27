@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Pause, AlertCircle, Lightbulb } from 'lucide-react';
 import { Grid } from './components/Grid';
@@ -16,7 +16,8 @@ import { level4 } from './levels/level4';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { formatPlayerName } from '../leaderboard/domain/leaderboard';
-import { submitEntry } from '../leaderboard/leaderboardApi';
+import { submitEntry, fetchAttempt, AttemptTicket } from '../leaderboard/leaderboardApi';
+import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
@@ -31,7 +32,26 @@ interface GameScreenProps {
 export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUpdateConfig }) => {
   const t = TRANSLATIONS[userConfig.language];
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
-  const level = LEVELS[currentLevelIdx];
+  // Cada partida tem uma tentativa: o servidor escolhe a semente, e a semente define o layout.
+  // `round` sobe ao tentar outra vez ou jogar de novo, para o layout mudar.
+  const [round, setRound] = useState(0);
+  const [ticket, setTicket] = useState<(AttemptTicket & { levelIdx: number; round: number }) | null>(null);
+  const ready = ticket !== null && ticket.levelIdx === currentLevelIdx && ticket.round === round;
+  const seed = ready && ticket ? ticket.seed : 0;
+  const level = useMemo(
+    () => ({ ...LEVELS[currentLevelIdx], ...generateLayout(LEVELS[currentLevelIdx].id, seed) }),
+    [currentLevelIdx, seed],
+  );
+
+  useEffect(() => {
+    let active = true;
+    fetchAttempt(LEVELS[currentLevelIdx].id).then(tk => {
+      if (active) setTicket({ ...tk, levelIdx: currentLevelIdx, round });
+    });
+    return () => {
+      active = false;
+    };
+  }, [currentLevelIdx, round]);
   const [code, setCode] = useState('');
   const [tutorialStep, setTutorialStep] = useState<number | null>(() => {
     const completed = localStorage.getItem('tutorial_completed');
@@ -124,7 +144,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     setTimer(0);
     setHintsRemaining(getInitialHints());
     setActiveHint(null);
-  }, [currentLevelIdx]);
+  }, [currentLevelIdx, round]);
 
   const resetGame = () => {
     runner.reset();
@@ -144,7 +164,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const undo = () => runner.undo();
 
-  const runCode = () => runner.run(code);
+  const runCode = () => {
+    if (ready) runner.run(code);
+  };
+
+  // Nova partida: layout novo (nova tentativa no servidor).
+  const newAttempt = () => {
+    setRound(r => r + 1);
+  };
 
   const pauseGame = () => {
     runner.pause();
@@ -195,6 +222,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       knowledgeLevel: userConfig.level,
       language: userConfig.language,
       runs,
+      attemptId: ready && ticket ? ticket.attemptId : null,
     });
   }, [gameState.victory]);
 
@@ -463,6 +491,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
               </motion.div>
             )}
 
+            {!ready && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-brand-ink/70 text-brand-ice/85 font-bold">
+                {t.preparingLevel}
+              </div>
+            )}
             {isGameOver && !gameState.victory && (
               <GameOverOverlay
                 title={t.gameOverTitle}
@@ -471,7 +504,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 backLabel={t.back}
                 onRetry={() => {
                   playClickSound();
-                  resetGame();
+                  newAttempt();
                 }}
                 onBack={() => {
                   playClickSound();
@@ -488,7 +521,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
                 onPlayAgain={() => {
                   playClickSound();
-                  resetGame();
+                  newAttempt();
                 }}
                 onNext={() => {
                   playClickSound();

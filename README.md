@@ -129,3 +129,18 @@ O `POST` envia as **execuções** do jogador, não a pontuação:
 `se_caixa` é decidido durante a execução: se não houver caixa, o bloco é saltado. O teste não é um comando, não conta e não gasta erros.
 Um programa tem no máximo 500 instruções expandidas. Blocos aninhados são permitidos.
 Erros de sintaxe não começam a execução e não contam como erros do jogo.
+
+## Layouts aleatórios e tentativas
+
+Cada partida tem um layout diferente: posição e direção iniciais do robô e posição das caixas.
+O número de caixas e o tamanho da grelha são fixos por nível (`features/game/levels/generator.ts`).
+
+- **Servidor:** `GET /api/leaderboard?attempt=N` cria uma tentativa com uma semente aleatória,
+  guardada no Redis durante 30 minutos.
+- **Cliente:** gera o layout a partir da semente (mesmo gerador determinístico do servidor).
+- **Submissão:** o `POST` inclui o `attemptId`. A tentativa é consumida (`GETDEL`), por isso
+  cada partida só pode ser submetida uma vez. O servidor recalcula o layout e re-executa as jogadas.
+- **Sem servidor** (`npm run dev` sem `vercel dev`): o jogo usa uma semente local e o resultado
+  fica só na cópia local, sem ir para o ranking.
+
+Reiniciar mantém o layout. Tentar novamente e jogar de novo pedem uma tentativa nova.

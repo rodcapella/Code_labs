@@ -3,9 +3,10 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import {
   LEADERBOARD_SIZE, LEVEL_IDS, encodeScore, keyFor, validateSubmission,
+  attemptKey, ATTEMPT_TTL_SECONDS,
 } from '../src/features/leaderboard/domain/leaderboardRules';
 import { replayAttempt, isTimePlausible } from '../src/features/game/engine/replay';
-import { LAYOUTS } from '../src/features/game/levels/layouts';
+import { generateLayout } from '../src/features/game/levels/generator';
 import { formatPlayerName } from '../src/features/leaderboard/domain/leaderboard';
 import { scoreOf } from '../src/shared/config/rules';
 
@@ -37,6 +38,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { success } = await limit.limit(clientIp(req));
       if (!success) return res.status(429).json({ error: 'demasiados pedidos' });
 
+      // Nova tentativa: o servidor escolhe a semente, o cliente não.
+      if (req.query.attempt !== undefined) {
+        const levelId = Number(req.query.attempt);
+        if (!(LEVEL_IDS as readonly number[]).includes(levelId)) {
+          return res.status(400).json({ error: 'nível inválido' });
+        }
+        const attemptId = crypto.randomUUID();
+        const seed = crypto.getRandomValues(new Uint32Array(1))[0];
+        await redis.set(attemptKey(attemptId), JSON.stringify({ levelId, seed }), { ex: ATTEMPT_TTL_SECONDS });
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(200).json({ attemptId, levelId, seed });
+      }
+
       const raw = req.query.level;
       const requested = raw === undefined ? [...LEVEL_IDS] : [Number(raw)];
       if (requested.some(l => !(LEVEL_IDS as readonly number[]).includes(l))) {
@@ -61,16 +75,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (parsed.ok === false) return res.status(400).json({ error: parsed.error });
       const sub = parsed.submission;
 
-      // 1) Re-executar as jogadas com o motor do jogo.
-      const replay = replayAttempt(LAYOUTS[sub.levelId], sub.runs, sub.language, sub.knowledgeLevel);
+      // 1) Consumir a tentativa (uma só submissão por tentativa) e recuperar a semente.
+      const stored = await redis.getdel<unknown>(attemptKey(sub.attemptId));
+      if (!stored) return res.status(422).json({ error: 'tentativa inválida ou expirada' });
+      const record = (typeof stored === 'string' ? JSON.parse(stored) : stored) as { levelId: number; seed: number };
+      if (record.levelId !== sub.levelId) return res.status(422).json({ error: 'nível não corresponde à tentativa' });
+
+      // 2) Re-executar as jogadas sobre o layout que o servidor gerou para essa semente.
+      const layout = generateLayout(record.levelId, record.seed);
+      const replay = replayAttempt(layout, sub.runs, sub.language, sub.knowledgeLevel);
       if (replay.ok === false) return res.status(422).json({ error: replay.reason });
 
-      // 2) O tempo declarado tem de ser possível para os passos executados.
+      // 3) O tempo declarado tem de ser possível para os passos executados.
       if (!isTimePlausible(sub.time, replay.steps)) {
         return res.status(422).json({ error: 'tempo impossível para as jogadas enviadas' });
       }
 
-      // 3) Gravar o resultado calculado aqui, nunca o que veio do cliente.
+      // 4) Gravar o resultado calculado aqui, nunca o que veio do cliente.
       const entry = {
         id: crypto.randomUUID(),
         name: formatPlayerName(sub.name),

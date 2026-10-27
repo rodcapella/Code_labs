@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { executeCommand, getNextPosition, rotateLeft, rotateRight } from './interpreter';
 import { createInitialState } from '../hooks/useProgramRunner';
-import { level1 } from '../levels/level1';
+import { fixedLevel as level1 } from '../testing/fixtures';
 import { GameState } from '../../../shared/types/game';
 
 const base = (overrides: Partial<GameState> = {}): GameState => ({

@@ -1,11 +1,9 @@
 import levelBackground from '../../../shared/assets/backgrounds/level2.jpg';
-import { LevelConfig } from '../../../shared/types/game';
-import { LAYOUTS } from './layouts';
+import { LevelMeta } from '../../../shared/types/game';
 
-export const level2: LevelConfig = {
+export const level2: LevelMeta = {
   backgroundImage: levelBackground,
   id: 2,
-  ...LAYOUTS[2],
   colors: {
     robot: '#7C3AED',
     box: '#A78BFA',
@@ -18,7 +16,7 @@ export const level2: LevelConfig = {
     ],
     en: [
     'This level is a bit bigger! Plan your moves.',
-    'You start in the bottom-left corner facing North.',
+    'Check which way the robot is facing before you plan the route.',
     'Try collecting the boxes in the closest order to save commands.',
     ],
   },

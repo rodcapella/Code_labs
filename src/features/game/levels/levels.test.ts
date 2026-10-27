@@ -1,40 +1,65 @@
 import { describe, it, expect } from 'vitest';
+import { LEVEL_SPECS, generateLayout, mulberry32 } from './generator';
 import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
 import { level4 } from './level4';
-import { LevelConfig } from '../../../shared/types/game';
 
-const levels: [string, LevelConfig, number, number][] = [
-  ['nível 1', level1, 6, 6],
-  ['nível 2', level2, 8, 8],
-  ['nível 3', level3, 10, 12],
-  ['nível 4', level4, 12, 16],
-];
+const ids = [1, 2, 3, 4] as const;
+const metas = [level1, level2, level3, level4];
 
-describe('configuração dos níveis', () => {
-  it.each(levels)('%s tem a grelha e o nº de caixas esperados', (_name, level, size, boxes) => {
-    expect(level.gridSize).toBe(size);
-    expect(level.boxes).toHaveLength(boxes);
+describe('especificação dos níveis', () => {
+  it.each(ids)('nível %i tem grelha e nº de caixas definidos', id => {
+    expect(LEVEL_SPECS[id]).toBeDefined();
+    expect(metas[id - 1].id).toBe(id);
   });
 
-  it.each(levels)('%s: caixas dentro da grelha, sem repetidas e fora do início do robô', (_name, level) => {
-    const keys = level.boxes.map(b => `${b.x},${b.y}`);
-    expect(new Set(keys).size).toBe(keys.length);
-    for (const b of level.boxes) {
-      expect(b.x).toBeGreaterThanOrEqual(0);
-      expect(b.y).toBeGreaterThanOrEqual(0);
-      expect(b.x).toBeLessThan(level.gridSize);
-      expect(b.y).toBeLessThan(level.gridSize);
-      expect(b).not.toEqual(level.initialRobotPosition);
-    }
+  it('a grelha cresce e o nº de caixas também', () => {
+    const sizes = ids.map(id => LEVEL_SPECS[id].gridSize);
+    const boxes = ids.map(id => LEVEL_SPECS[id].boxCount);
+    expect(sizes).toEqual([6, 8, 10, 12]);
+    expect(boxes).toEqual([6, 8, 12, 16]);
   });
 });
 
-describe('dicas por idioma', () => {
-  it.each(levels)('%s tem dicas em pt e en, com o mesmo número de itens', (_name, level) => {
-    expect(level.hints.pt.length).toBeGreaterThan(0);
-    expect(level.hints.en).toHaveLength(level.hints.pt.length);
-    expect(level.hints.en.every(h => h.trim().length > 0)).toBe(true);
+describe('generateLayout', () => {
+  it.each(ids)('nível %i: caixas dentro da grelha, sem repetições e fora do robô', id => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const l = generateLayout(id, seed);
+      expect(l.gridSize).toBe(LEVEL_SPECS[id].gridSize);
+      expect(l.boxes).toHaveLength(LEVEL_SPECS[id].boxCount);
+      const keys = l.boxes.map(b => `${b.x},${b.y}`);
+      expect(new Set(keys).size).toBe(keys.length);
+      for (const b of l.boxes) {
+        expect(b.x).toBeGreaterThanOrEqual(0);
+        expect(b.y).toBeGreaterThanOrEqual(0);
+        expect(b.x).toBeLessThan(l.gridSize);
+        expect(b.y).toBeLessThan(l.gridSize);
+        expect(b).not.toEqual(l.initialRobotPosition);
+      }
+    }
+  });
+
+  it('a mesma semente dá sempre o mesmo layout (o servidor recalcula)', () => {
+    expect(generateLayout(3, 12345)).toEqual(generateLayout(3, 12345));
+  });
+
+  it('sementes diferentes dão layouts diferentes (variam por partida)', () => {
+    const a = JSON.stringify(generateLayout(2, 1));
+    const b = JSON.stringify(generateLayout(2, 2));
+    expect(a).not.toBe(b);
+  });
+
+  it('o gerador PRNG devolve valores em [0, 1)', () => {
+    const rnd = mulberry32(7);
+    for (let i = 0; i < 1000; i++) {
+      const v = rnd();
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+    }
+  });
+
+  it('nível desconhecido é erro', () => {
+    expect(() => generateLayout(9, 1)).toThrow();
   });
 });

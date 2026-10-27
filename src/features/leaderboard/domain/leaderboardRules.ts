@@ -12,6 +12,10 @@ export const MAX_TIME_SECONDS = 86400;
 
 export const keyFor = (levelId: number): string => `leaderboard:level:${levelId}`;
 
+/** Tentativa emitida pelo servidor (semente do layout). Consumida ao submeter. */
+export const attemptKey = (attemptId: string): string => `attempt:${attemptId}`;
+export const ATTEMPT_TTL_SECONDS = 30 * 60;
+
 /** Pontuação (comandos, erros e tempo). Menor é melhor. */
 export const scoreOf = rulesScoreOf;
 
@@ -26,6 +30,7 @@ export type EntryInput = Omit<LeaderboardEntry, 'id'>;
 
 /** Envio de uma vitória: o servidor recalcula comandos e erros a partir das execuções. */
 export interface Submission {
+  attemptId: string;
   name: string;
   robotColor: string;
   date: string;
@@ -67,6 +72,10 @@ export const validateSubmission = (body: unknown): ValidationResult => {
   }
   if (b.language !== 'pt' && b.language !== 'en') return { ok: false, error: 'idioma inválido' };
 
+  if (typeof b.attemptId !== 'string' || !/^[0-9a-f-]{36}$/.test(b.attemptId)) {
+    return { ok: false, error: 'tentativa inválida' };
+  }
+
   if (!Array.isArray(b.runs) || b.runs.length === 0 || b.runs.length > MAX_RUNS) {
     return { ok: false, error: 'execuções inválidas' };
   }
@@ -88,6 +97,7 @@ export const validateSubmission = (body: unknown): ValidationResult => {
   return {
     ok: true,
     submission: {
+      attemptId: b.attemptId,
       name,
       robotColor: b.robotColor,
       date: b.date,

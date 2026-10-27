@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { StrictMode, createElement, ReactNode } from 'react';
 import { useProgramRunner, StepEvent, parseProgram } from './useProgramRunner';
-import { level1 } from '../levels/level1';
+import { fixedLevel as level1 } from '../testing/fixtures';
 
 const strict = ({ children }: { children: ReactNode }) => createElement(StrictMode, null, children);
 

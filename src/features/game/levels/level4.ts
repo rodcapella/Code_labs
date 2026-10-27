@@ -1,11 +1,9 @@
 import levelBackground from '../../../shared/assets/backgrounds/level4.jpg';
-import { LevelConfig } from '../../../shared/types/game';
-import { LAYOUTS } from './layouts';
+import { LevelMeta } from '../../../shared/types/game';
 
-export const level4: LevelConfig = {
+export const level4: LevelMeta = {
   backgroundImage: levelBackground,
   id: 4,
-  ...LAYOUTS[4],
   colors: {
     robot: '#DB2777',
     box: '#F472B6',
@@ -13,12 +11,12 @@ export const level4: LevelConfig = {
   hints: {
     pt: [
       'Último nível! O tabuleiro é o maior de todos: planeje a rota antes de executar.',
-      'Comece no centro virado para o Norte e percorra as caixas em ordem de proximidade.',
+      'Observe onde o robô começa e para onde está virado antes de planejar a rota.',
       'Muitos erros acabam o nível: confirme cada grupo de comandos antes de seguir em frente.',
     ],
     en: [
       'Last level! This is the biggest board: plan your route before running.',
-      'Start in the centre facing North and visit the boxes in order of proximity.',
+      'Look at where the robot starts and which way it faces before planning your route.',
       'Many errors end the level: check each group of commands before moving on.',
     ],
   },

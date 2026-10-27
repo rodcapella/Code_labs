@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { replayAttempt, isTimePlausible } from './replay';
-import { LAYOUTS } from '../levels/layouts';
+import { FIXED_LAYOUT } from '../testing/fixtures';
+import { generateLayout } from '../levels/generator';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { LayoutConfig, Language } from '../../../shared/types/game';
 
@@ -38,7 +39,7 @@ const solve = (layout: LayoutConfig, lang: Language): string[] => {
   throw new Error('sem solução');
 };
 
-const L1 = LAYOUTS[1];
+const L1 = FIXED_LAYOUT;
 const winning = solve(L1, 'pt');
 
 describe('replayAttempt', () => {
@@ -101,6 +102,21 @@ describe('replayAttempt', () => {
     const r = replayAttempt(L1, [withCondition], 'pt', 'advanced');
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.commands).toBe(winning.length);
+  });
+
+  it('aceita vitórias em layouts gerados por semente (cada partida é diferente)', () => {
+    for (const seed of [11, 222, 3333]) {
+      const layout = generateLayout(1, seed);
+      const solution = solve(layout, 'pt');
+      const r = replayAttempt(layout, [solution], 'pt', 'beginner');
+      expect(r.ok).toBe(true);
+    }
+  });
+
+  it('a mesma solução não serve noutro layout (a semente muda o resultado)', () => {
+    const solution = solve(generateLayout(1, 11), 'pt');
+    const other = generateLayout(1, 222);
+    expect(replayAttempt(other, [solution], 'pt', 'beginner').ok).toBe(false);
   });
 
   it('se_caixa é rejeitado no nível intermédio', () => {

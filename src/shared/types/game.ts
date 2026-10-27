@@ -34,7 +34,8 @@ export interface LayoutConfig {
   boxes: Position[];
 }
 
-export interface LevelConfig extends LayoutConfig {
+/** Metadados do nível (estáticos). O layout (posições) é gerado por partida. */
+export interface LevelMeta {
   id: number;
   colors: {
     robot: string;
@@ -45,6 +46,9 @@ export interface LevelConfig extends LayoutConfig {
   /** Imagem de fundo do nível (URL importada). Opcional. */
   backgroundImage?: string;
 }
+
+/** Nível pronto a jogar: metadados mais o layout gerado para esta partida. */
+export type LevelConfig = LevelMeta & LayoutConfig;
 
 export interface LeaderboardEntry {
   id: string;
