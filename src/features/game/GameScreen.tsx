@@ -4,6 +4,7 @@ import { Pause, AlertCircle, Lightbulb } from 'lucide-react';
 import { Grid } from './components/Grid';
 import { GameHeader } from './components/GameHeader';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
+import { LevelTimer } from './components/LevelTimer';
 import { ControlPanel } from './components/ControlPanel';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { VictoryOverlay } from './components/VictoryOverlay';
@@ -406,7 +407,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       <GameHeader
         t={t}
         levelId={level.id}
-        timer={timer}
         commandCount={gameState.commandCount}
         errors={errors}
         maxErrors={maxErrors}
@@ -525,6 +525,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
               </motion.div>
             )}
 
+            {started && (
+              <LevelTimer
+                seconds={timer}
+                running={!isPaused && !gameState.victory}
+                label={t.timeLabel}
+              />
+            )}
             {!ready && <ArcadeLoader label={t.preparingLevel} />}
             {isGameOver && !gameState.victory && (
               <GameOverOverlay

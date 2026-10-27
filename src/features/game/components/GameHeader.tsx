@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, Timer, Hash, AlertCircle, Undo2, RotateCcw, Pause, Play, Lightbulb, Settings } from 'lucide-react';
+import { ChevronLeft, Hash, AlertCircle, Undo2, RotateCcw, Pause, Play, Lightbulb, Settings } from 'lucide-react';
 import { Tooltip } from '../../../shared/components/Tooltip';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 
@@ -8,7 +8,6 @@ export type Translations = (typeof TRANSLATIONS)['pt'];
 export interface GameHeaderProps {
   t: Translations;
   levelId: number;
-  timer: number;
   commandCount: number;
   errors: number;
   maxErrors: number;
@@ -31,7 +30,7 @@ export interface GameHeaderProps {
 
 /** Cabeçalho do nível: estatísticas (tempo, comandos, erros, caixas) e ações. */
 export const GameHeader: React.FC<GameHeaderProps> = ({
-  t, levelId, timer, commandCount, errors, maxErrors, boxesCollected, boxesTotal,
+  t, levelId, commandCount, errors, maxErrors, boxesCollected, boxesTotal,
   isExecuting, isPaused, isGameOver, victory, undoDisabled, hintsRemaining,
   onBack, onUndo, onReset, onPause, onExecuteOrResume, onHint, onSettings,
 }) => (
@@ -51,15 +50,6 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
     </div>
 
     <div className="flex items-center gap-6">
-      <div className="text-right hidden sm:block">
-        <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
-          <Timer className="w-3 h-3" />
-          {t.timeLabel}
-        </p>
-        <div className="flex items-center gap-1.5 justify-end">
-          <p className="text-lg font-mono font-bold text-brand-ice/85">{timer}s</p>
-        </div>
-      </div>
       <div className="text-right hidden sm:block">
         <p className="text-[10px] text-brand-ice/75 uppercase font-bold tracking-widest flex items-center gap-1 justify-end">
           <Hash className="w-3 h-3" />
