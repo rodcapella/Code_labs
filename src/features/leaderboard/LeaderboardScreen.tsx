@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { Trophy, ArrowLeft, Medal, Timer, Hash, User } from 'lucide-react';
 import { LeaderboardEntry } from '../../shared/types/game';
 import { TRANSLATIONS, UserConfig } from '../../shared/i18n/translations';
-import { loadLeaderboard, compareEntries } from './domain/leaderboard';
+import { loadLeaderboard, compareEntries, scoreOf } from './domain/leaderboard';
+import { LEVEL_IDS } from '../../shared/config/rules';
 import { fetchLeaderboard } from './leaderboardApi';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 
@@ -31,7 +32,12 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
     };
   }, []);
 
-  const sortedEntries = [...entries].sort(compareEntries);
+  // Um separador por nível: pontuações só são comparáveis dentro do mesmo nível.
+  const [levelId, setLevelId] = React.useState<number>(LEVEL_IDS[0]);
+  const sortedEntries = entries
+    .filter(e => e.levelId === levelId)
+    .sort(compareEntries)
+    .slice(0, 10);
 
   return (
     <div className="relative min-h-screen bg-brand-ink text-white p-6 brand-page overflow-y-auto">
@@ -55,11 +61,30 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
           <div className="w-12" />
         </div>
 
+        <div className="flex flex-wrap justify-center gap-3 mb-8" role="tablist">
+          {LEVEL_IDS.map(id => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={levelId === id}
+              onClick={() => setLevelId(id)}
+              className={`px-4 py-2 text-[10px] rounded-xl border transition-all ${
+                levelId === id
+                  ? 'bg-brand-blue text-white border-brand-blue shadow-lg shadow-brand-blue/20'
+                  : 'bg-brand-navy text-brand-ice/80 border-white/10 hover:border-brand-cyan/50'
+              }`}
+            >
+              {t.level} {id}
+            </button>
+          ))}
+        </div>
+
         <div className="bg-brand-navy/50 border-4 border-brand-navy rounded-none p-4 md:p-8 shadow-[0_0_30px_rgba(30,58,138,0.5)]">
-          <div className="grid grid-cols-5 gap-4 mb-8 pb-4 border-b-2 border-brand-navy text-[8px] md:text-[10px] text-brand-cyan">
+          <div className="grid grid-cols-6 gap-4 mb-8 pb-4 border-b-2 border-brand-navy text-[8px] md:text-[10px] text-brand-cyan">
             <div className="flex items-center gap-2"><Hash className="w-3 h-3" /> {t.rank}</div>
             <div className="flex items-center gap-2 col-span-2"><User className="w-3 h-3" /> {t.pilot}</div>
-            <div className="flex items-center gap-2"><Trophy className="w-3 h-3" /> {t.cmds}</div>
+            <div className="flex items-center gap-2"><Trophy className="w-3 h-3" /> {t.points}</div>
+            <div className="flex items-center gap-2"><Hash className="w-3 h-3" /> {t.cmds}</div>
             <div className="flex items-center gap-2"><Timer className="w-3 h-3" /> {t.time}</div>
           </div>
 
@@ -70,7 +95,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className={`grid grid-cols-5 gap-4 items-center text-[8px] md:text-xs ${
+                className={`grid grid-cols-6 gap-4 items-center text-[8px] md:text-xs ${
                   index === 0 ? 'text-yellow-400' : index === 1 ? 'text-brand-ice/40' : index === 2 ? 'text-amber-600' : 'text-brand-cyan'
                 }`}
               >
@@ -85,7 +110,8 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
                   />
                   <span className="truncate">{entry.name}</span>
                 </div>
-                <div>{entry.commands}</div>
+                <div>{scoreOf(entry)}</div>
+                <div>{entry.commands}{entry.errors > 0 ? ` (+${entry.errors} ✖)` : ''}</div>
                 <div>{entry.time}s</div>
               </motion.div>
             ))}
