@@ -5,6 +5,7 @@ import { LeaderboardEntry } from '../../shared/types/game';
 import { TRANSLATIONS, UserConfig } from '../../shared/i18n/translations';
 import { loadLeaderboard, compareEntries } from './domain/leaderboard';
 import { fetchLeaderboard } from './leaderboardApi';
+import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 
 interface LeaderboardScreenProps {
   onBack: () => void;
@@ -15,11 +16,15 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
   const t = TRANSLATIONS[userConfig.language];
   
   const [entries, setEntries] = React.useState<LeaderboardEntry[]>(() => loadLeaderboard());
+  // Enquanto o servidor não responde, mostra o carregamento arcade (fallback: cópia local).
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     let active = true;
     fetchLeaderboard().then(data => {
-      if (active) setEntries(data);
+      if (!active) return;
+      setEntries(data);
+      setLoading(false);
     });
     return () => {
       active = false;
@@ -29,7 +34,8 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
   const sortedEntries = [...entries].sort(compareEntries);
 
   return (
-    <div className="min-h-screen bg-brand-ink text-white p-6 brand-page overflow-y-auto">
+    <div className="relative min-h-screen bg-brand-ink text-white p-6 brand-page overflow-y-auto">
+      {loading && <ArcadeLoader label={t.loadingRanking} />}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
