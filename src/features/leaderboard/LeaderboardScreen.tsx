@@ -4,7 +4,7 @@ import { Trophy, ArrowLeft, Medal, Timer, Hash, User } from 'lucide-react';
 import { LeaderboardEntry } from '../../shared/types/game';
 import { TRANSLATIONS, UserConfig } from '../../shared/i18n/translations';
 import { loadLeaderboard, compareEntries, scoreOf } from './domain/leaderboard';
-import { LEVEL_IDS } from '../../shared/config/rules';
+import { LEVEL_IDS, DEMO_RETURN_MS } from '../../shared/config/rules';
 import { fetchLeaderboard } from './leaderboardApi';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 
@@ -38,6 +38,31 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
     .filter(e => e.levelId === levelId)
     .sort(compareEntries)
     .slice(0, 10);
+
+  // Modo demonstração: sem resultados no nível, volta ao início após DEMO_RETURN_MS.
+  // Qualquer toque ou tecla cancela a volta para esta visita.
+  const [interacted, setInteracted] = React.useState(false);
+  const onBackRef = React.useRef(onBack);
+  React.useEffect(() => {
+    onBackRef.current = onBack;
+  });
+
+  React.useEffect(() => {
+    const markInteracted = () => setInteracted(true);
+    window.addEventListener('pointerdown', markInteracted);
+    window.addEventListener('keydown', markInteracted);
+    return () => {
+      window.removeEventListener('pointerdown', markInteracted);
+      window.removeEventListener('keydown', markInteracted);
+    };
+  }, []);
+
+  const demoActive = !loading && sortedEntries.length === 0 && !interacted;
+  React.useEffect(() => {
+    if (!demoActive) return;
+    const id = setTimeout(() => onBackRef.current(), DEMO_RETURN_MS);
+    return () => clearTimeout(id);
+  }, [demoActive, levelId]);
 
   return (
     <div className="relative min-h-screen bg-brand-ink text-white p-6 brand-page overflow-y-auto">
@@ -118,8 +143,9 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ onBack, us
           </div>
 
           {sortedEntries.length === 0 && (
-            <div className="text-center py-12 text-brand-ice/75 animate-pulse text-[10px]">
-              {t.noData}
+            <div className="text-center py-12 text-brand-ice/75 animate-pulse text-[10px] space-y-4">
+              <p>{t.noData}</p>
+              {demoActive && <p className="text-brand-ice/60">{t.demoTapToStay}</p>}
             </div>
           )}
         </div>

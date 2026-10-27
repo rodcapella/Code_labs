@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, cleanup, act } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { fetchLeaderboard } from './leaderboardApi';
 import { LeaderboardScreen } from './LeaderboardScreen';
@@ -40,5 +40,61 @@ describe('LeaderboardScreen', () => {
     fireEvent.click(screen.getByRole('tab', { name: /^\S+ 2$/ }));
     expect(screen.getByText('P2-5')).toBeTruthy();
     expect(screen.queryByText(/^P1-/)).toBeNull();
+  });
+
+  describe('modo demonstração', () => {
+    it('sem resultados no nível, volta ao início após 5 segundos', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(fetchLeaderboard).mockResolvedValue([]);
+        const onBack = vi.fn();
+        render(<LeaderboardScreen onBack={onBack} userConfig={config} />);
+        await act(async () => {
+          await Promise.resolve();
+          await Promise.resolve();
+        });
+        act(() => { vi.advanceTimersByTime(4900); });
+        expect(onBack).not.toHaveBeenCalled();
+        act(() => { vi.advanceTimersByTime(200); });
+        expect(onBack).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('um toque cancela a volta automática', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(fetchLeaderboard).mockResolvedValue([]);
+        const onBack = vi.fn();
+        render(<LeaderboardScreen onBack={onBack} userConfig={config} />);
+        await act(async () => {
+          await Promise.resolve();
+          await Promise.resolve();
+        });
+        act(() => { window.dispatchEvent(new Event('pointerdown')); });
+        act(() => { vi.advanceTimersByTime(10000); });
+        expect(onBack).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('com resultados no nível, não volta sozinho', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(fetchLeaderboard).mockResolvedValue([entry(1, 1, 12)]);
+        const onBack = vi.fn();
+        render(<LeaderboardScreen onBack={onBack} userConfig={config} />);
+        await act(async () => {
+          await Promise.resolve();
+          await Promise.resolve();
+        });
+        act(() => { vi.advanceTimersByTime(10000); });
+        expect(onBack).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

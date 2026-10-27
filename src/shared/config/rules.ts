@@ -36,3 +36,6 @@ export const LEVEL_IDS = [1, 2, 3, 4] as const;
 /** Limites do compilador de programas (repetir). */
 export const MAX_REPEAT = 9;
 export const MAX_INSTRUCTIONS = 500;
+
+/** Modo demonstração: sem resultados no nível, o ranking volta ao início após este tempo. */
+export const DEMO_RETURN_MS = 5000;
