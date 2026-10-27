@@ -146,3 +146,20 @@ O número de caixas e o tamanho da grelha são fixos por nível (`features/game/
   fica só na cópia local, sem ir para o ranking.
 
 Reiniciar mantém o layout. Tentar novamente e jogar de novo pedem uma tentativa nova.
+
+## Contas (opcionais)
+
+Jogar não exige conta. Com conta, o ranking usa o nome da conta e o jogador não escolhe o nome ao vencer.
+
+- **Criar conta / entrar:** painel na página inicial. Nome de conta: 3 a 10 caracteres. Palavra-passe: 8 a 128.
+- **Armazenamento:** `user:{nome em minúsculas}` no Redis, com a palavra-passe em `scrypt` (sal aleatório).
+  Nunca em texto.
+- **Sessão:** cookie `codebot_session`, `HttpOnly`, `SameSite=Lax`, válido 30 dias. Assinado com HMAC-SHA256.
+  Não há tabela de sessões no servidor.
+- **Rotas:** `GET /api/auth?action=me`, `POST /api/auth?action=register|login|logout`.
+  Entrar e criar conta têm limite de 10 pedidos por minuto por IP.
+- **Variável obrigatória para contas:** `AUTH_SECRET` (mínimo 32 caracteres, aleatório). Sem ela, as rotas
+  de conta respondem `503` e o jogo continua anónimo. Gerar com `openssl rand -base64 48`.
+
+Um nome de conta é único, sem distinguir maiúsculas. Um resultado enviado com sessão ativa fica com o nome da conta,
+mesmo que o cliente envie outro.

@@ -4,9 +4,12 @@ import { HomeScreen } from '../features/home/HomeScreen';
 import { GameScreen } from '../features/game/GameScreen';
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen';
 import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen';
+import { MyResultsScreen } from '../features/auth/MyResultsScreen';
+import { TRANSLATIONS } from '../shared/i18n/translations';
 import { UserConfig } from '../shared/i18n/translations';
+import { AccountProvider } from '../features/auth/AccountContext';
 
-type Screen = 'ONBOARDING' | 'HOME' | 'GAME' | 'LEADERBOARD';
+type Screen = 'ONBOARDING' | 'HOME' | 'GAME' | 'LEADERBOARD' | 'RESULTS';
 
 const STORAGE_KEY = 'codebot_lab_user_config';
 
@@ -56,6 +59,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+    <AccountProvider>
     <div className="min-h-screen overflow-hidden">
       <AnimatePresence mode="wait">
         {currentScreen === 'ONBOARDING' && (
@@ -81,6 +85,7 @@ export default function App() {
             <HomeScreen 
               onStart={() => setCurrentScreen('GAME')} 
               onLeaderboard={() => setCurrentScreen('LEADERBOARD')}
+              onResults={() => setCurrentScreen('RESULTS')}
               userConfig={userConfig}
               onReset={handleResetProfile}
             />
@@ -103,6 +108,12 @@ export default function App() {
           </motion.div>
         )}
 
+        {currentScreen === 'RESULTS' && userConfig && (
+          <MyResultsScreen
+            onBack={() => setCurrentScreen('HOME')}
+            messages={myResultsMessages(userConfig.language)}
+          />
+        )}
         {currentScreen === 'LEADERBOARD' && userConfig && (
           <motion.div
             key="leaderboard"
@@ -119,6 +130,17 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+    </AccountProvider>
     </MotionConfig>
   );
 }
+
+const myResultsMessages = (lang: 'pt' | 'en') => {
+  const t = TRANSLATIONS[lang];
+  return {
+    title: t.myResultsTitle, back: t.back, empty: t.myResultsEmpty, loading: t.loadingRanking,
+    unavailable: t.myResultsUnavailable, level: t.level, points: t.points, commands: t.cmds,
+    errors: t.errorsLabel, time: t.time, date: t.myResultsDate, status: t.myResultsStatus,
+    inRanking: t.myResultsIn, notInRanking: t.myResultsOut, rank: t.myResultsRank,
+  };
+};

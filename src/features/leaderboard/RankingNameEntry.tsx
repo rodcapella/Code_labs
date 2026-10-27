@@ -6,6 +6,8 @@ export type RankingStatus = 'checking' | 'enter' | 'out' | 'sending' | 'sent' | 
 interface RankingNameEntryProps {
   status: RankingStatus;
   name: string;
+  /** Com conta, o nome é o da conta e não se pode alterar. */
+  locked?: boolean;
   onNameChange: (name: string) => void;
   onConfirm: () => void;
   messages: {
@@ -22,7 +24,7 @@ interface RankingNameEntryProps {
 }
 
 /** Bloco do ranking no ecrã de vitória: pede o nome só se o resultado entrar no top. */
-export const RankingNameEntry: React.FC<RankingNameEntryProps> = ({ status, name, onNameChange, onConfirm, messages }) => {
+export const RankingNameEntry: React.FC<RankingNameEntryProps> = ({ status, name, locked = false, onNameChange, onConfirm, messages }) => {
   if (status === 'checking') return <p className="text-brand-ice/70 text-sm">{messages.checking}</p>;
   if (status === 'out') return <p className="text-brand-ice/70 text-sm">{messages.out}</p>;
   if (status === 'rejected') return <p className="text-brand-ice/70 text-sm">{messages.rejected}</p>;
@@ -42,6 +44,7 @@ export const RankingNameEntry: React.FC<RankingNameEntryProps> = ({ status, name
         <input
           value={name}
           maxLength={PLAYER_NAME_MAX}
+          readOnly={locked}
           onChange={e => onNameChange(e.target.value)}
           aria-label={messages.qualify}
           disabled={status === 'sending'}

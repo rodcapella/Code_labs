@@ -20,6 +20,7 @@ import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptCont
 import { qualifiesForTop, formatPlayerName } from '../leaderboard/domain/leaderboard';
 import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
 import { RankingNameEntry, RankingStatus } from '../leaderboard/RankingNameEntry';
+import { useAccount } from '../auth/AccountContext';
 import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
@@ -201,6 +202,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   // Ranking na vitória: verificar o top, pedir o nome e só então submeter.
   const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
   const [rankName, setRankName] = useState('');
+  const { account } = useAccount();
   const pendingRef = useRef<{
     base: { levelId: number; commands: number; errors: number; time: number; date: string; robotColor: string };
     attempt: AttemptContext;
@@ -252,7 +254,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       },
     };
     setRankStatus('checking');
-    setRankName(userConfig.name);
+    setRankName(account ? account.username : userConfig.name);
     fetchLeaderboard().then(list => {
       setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
     });
@@ -551,6 +553,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                   <RankingNameEntry
                     status={rankStatus}
                     name={rankName}
+                    locked={account !== null}
                     onNameChange={setRankName}
                     onConfirm={confirmRanking}
                     messages={{

@@ -4,16 +4,27 @@ import { Play, Code2, LogOut, CheckCircle2, Trophy } from 'lucide-react';
 
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { Logo } from '../../shared/components/Logo';
+import { AccountPanel, ResetPasswordPanel } from '../auth/AccountPanel';
 import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
   onStart: () => void;
   onLeaderboard: () => void;
+  onResults: () => void;
   userConfig: UserConfig;
   onReset: () => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, userConfig, onReset }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, onResults, userConfig, onReset }) => {
+  // Link de recuperação do email: ?reset=token abre o ecrã de nova palavra-passe.
+  const [resetToken, setResetToken] = React.useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('reset'),
+  );
+  const finishReset = () => {
+    window.history.replaceState({}, '', window.location.pathname);
+    setResetToken(null);
+  };
+
   const t = TRANSLATIONS[userConfig.language];
 
   return (
@@ -101,6 +112,59 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="mt-10">
+          {resetToken && (
+            <div className="mb-6">
+              <ResetPasswordPanel
+                token={resetToken}
+                onDone={finishReset}
+                messages={{
+                  title: t.resetTitle,
+                  password: t.accountPassword,
+                  save: t.resetSave,
+                  done: t.resetDone,
+                  invalid: t.accountInvalid,
+                  expired: t.resetExpired,
+                  rules: t.accountRules,
+                }}
+              />
+            </div>
+          )}
+          <AccountPanel
+            onResults={onResults}
+            messages={{
+              login: t.accountLogin,
+              register: t.accountRegister,
+              logout: t.accountLogout,
+              username: t.accountUsername,
+              password: t.accountPassword,
+              rules: t.accountRules,
+              hint: t.accountHint,
+              loggedIn: name => t.accountLoggedIn(name),
+              badCredentials: t.accountBadCredentials,
+              taken: t.accountTaken,
+              invalid: t.accountInvalid,
+              unavailable: t.accountUnavailable,
+              email: t.accountEmail,
+              emailOptional: t.accountEmailOptional,
+              emailTaken: t.accountEmailTaken,
+              forgot: t.accountForgot,
+              forgotSent: t.accountForgotSent,
+              forgotHelp: t.accountForgotHelp,
+              sendLink: t.accountSendLink,
+              myResults: t.accountMyResults,
+              addEmail: t.accountAddEmail,
+              emailOnAccount: (e: string) => t.accountEmailOn(e),
+              noEmail: t.accountNoEmail,
+              deleteAccount: t.accountDelete,
+              deleteConfirm: t.accountDeleteConfirm,
+              deleteDone: t.accountDeleted,
+              wrongPassword: t.accountWrongPassword,
+              back: t.back,
+            }}
+          />
         </div>
 
         <div className="mt-16 flex items-center justify-center gap-2 text-brand-ice/50 text-sm font-medium uppercase tracking-widest">

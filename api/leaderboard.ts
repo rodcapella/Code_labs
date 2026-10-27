@@ -9,6 +9,7 @@ import { replayAttempt, isTimePlausible } from '../src/features/game/engine/repl
 import { generateLayout } from '../src/features/game/levels/generator';
 import { formatPlayerName } from '../src/features/leaderboard/domain/leaderboard';
 import { scoreOf } from '../src/shared/config/rules';
+import { resolveAccount, recordResult } from '../src/features/auth/server/accounts';
 
 /**
  * GET  /api/leaderboard              → top de todos os níveis
@@ -92,9 +93,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // 4) Gravar o resultado calculado aqui, nunca o que veio do cliente.
+      // Com sessão válida, o nome é o da conta (o que o cliente envia é ignorado).
+      const account = await resolveAccount(redis, req.headers.cookie, process.env.AUTH_SECRET);
       const entry = {
         id: crypto.randomUUID(),
-        name: formatPlayerName(sub.name),
+        name: formatPlayerName(account ? account.username : sub.name),
         levelId: sub.levelId,
         commands: replay.commands,
         errors: replay.errors,
@@ -110,13 +113,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const rank = await redis.zrank(key, member);
       const score = scoreOf(entry.commands, entry.errors, entry.time);
 
-      if (rank === null || rank >= LEADERBOARD_SIZE) {
-        await redis.zrem(key, member);
-        return res.status(200).json({ ok: true, qualified: false, score });
+      const qualified = rank !== null && rank < LEADERBOARD_SIZE;
+      if (!qualified) await redis.zrem(key, member);
+      else await redis.zremrangebyrank(key, LEADERBOARD_SIZE, -1);
+
+      // "Os meus resultados": guarda também os que não entraram, se houver conta.
+      if (account) {
+        await recordResult(redis, account.userId, {
+          levelId: entry.levelId,
+          score,
+          commands: entry.commands,
+          errors: entry.errors,
+          time: entry.time,
+          date: entry.date,
+          qualified,
+          ...(qualified ? { rank: (rank as number) + 1 } : {}),
+          createdAt: new Date().toISOString(),
+        });
       }
 
-      await redis.zremrangebyrank(key, LEADERBOARD_SIZE, -1);
-      return res.status(201).json({ ok: true, qualified: true, rank: rank + 1, score });
+      if (!qualified) return res.status(200).json({ ok: true, qualified: false, score });
+      return res.status(201).json({ ok: true, qualified: true, rank: (rank as number) + 1, score });
     }
 
     res.setHeader('Allow', 'GET, POST');
