@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAccount } from './AccountContext';
 import { validateUsername, validatePassword } from './domain/authRules';
-import { requestPasswordReset, deleteAccount, resetPassword } from './authApi';
+import { requestPasswordReset, deleteAccount, resetPassword, googleStartUrl } from './authApi';
 
 export interface AccountMessages {
   login: string;
@@ -32,6 +32,8 @@ export interface AccountMessages {
   deleteDone: string;
   wrongPassword: string;
   back: string;
+  googleLogin: string;
+  googleError: string;
 }
 
 interface AccountPanelProps {
@@ -44,7 +46,13 @@ const field = 'w-full px-3 py-2 rounded-xl bg-brand-ink border border-white/15 t
 
 /** Conta opcional: entrar, criar, recuperar palavra-passe, email, resultados e apagar conta. */
 export const AccountPanel: React.FC<AccountPanelProps> = ({ messages: m, onResults }) => {
-  const { configured, account, loading, signIn, signUp, signOut, linkEmail, clearAccount } = useAccount();
+  const { configured, googleEnabled, account, loading, signIn, signUp, signOut, linkEmail, clearAccount } = useAccount();
+  // Voltou do Google com erro (?google=error): avisa e limpa o parâmetro.
+  const [googleFailed] = useState(() => {
+    const failed = new URLSearchParams(window.location.search).get('google') === 'error';
+    if (failed) window.history.replaceState({}, '', window.location.pathname);
+    return failed;
+  });
   const [mode, setMode] = useState<'closed' | 'auth' | 'forgot'>('closed');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -101,10 +109,11 @@ export const AccountPanel: React.FC<AccountPanelProps> = ({ messages: m, onResul
 
   if (mode === 'closed') {
     return (
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-2">
         <button onClick={() => setMode('auth')} className="text-xs text-brand-cyan underline underline-offset-4">
           {m.login} / {m.register}
         </button>
+        {googleFailed && <p className="text-red-400 text-xs">{m.googleError}</p>}
       </div>
     );
   }
@@ -161,6 +170,12 @@ export const AccountPanel: React.FC<AccountPanelProps> = ({ messages: m, onResul
         <button type="submit" disabled={busy} className="flex-1 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold disabled:opacity-40">{m.login}</button>
         <button type="button" disabled={busy} onClick={() => void submit('register')} className="flex-1 py-2 rounded-xl bg-brand-navy text-brand-ice text-sm font-bold border border-white/15 disabled:opacity-40">{m.register}</button>
       </div>
+      {googleEnabled && (
+        <a href={googleStartUrl()} className="block w-full text-center py-2 rounded-xl bg-white text-brand-ink text-sm font-bold">
+          {m.googleLogin}
+        </a>
+      )}
+      {googleFailed && <p className="text-red-400 text-xs text-center">{m.googleError}</p>}
       <div className="flex justify-between text-[11px]">
         <button type="button" onClick={() => { setMode('forgot'); setError(null); setNotice(null); }} className="text-brand-cyan underline">{m.forgot}</button>
         <button type="button" onClick={() => setMode('closed')} className="text-brand-ice/60 underline">{m.back}</button>

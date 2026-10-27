@@ -8,6 +8,8 @@ export interface UserRecord {
   passwordHash: string;
   createdAt: string;
   email?: string;
+  /** Identificador estável do Google, se a conta foi criada/ligada por Google. */
+  googleSub?: string;
 }
 
 /** Entrada de "Os meus resultados" (últimas 100 por conta). */
@@ -37,6 +39,7 @@ export const validateEmail = (raw: string): string | null => {
 
 export const emailKey = (email: string): string => `email:${email}`;
 export const userIdKey = (id: string): string => `userid:${id}`;
+export const googleKey = (sub: string): string => `google:${sub}`;
 export const resultsKey = (id: string): string => `results:${id}`;
 
 /** Token de recuperação: aleatório, e só o hash é guardado. */

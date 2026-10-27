@@ -163,3 +163,23 @@ Jogar não exige conta. Com conta, o ranking usa o nome da conta e o jogador nã
 
 Um nome de conta é único, sem distinguir maiúsculas. Um resultado enviado com sessão ativa fica com o nome da conta,
 mesmo que o cliente envie outro.
+
+## Login com Google (opcional)
+
+Além de email e palavra-passe, a conta pode ser criada e usada com Google (OAuth 2.0 com PKCE).
+O token do Google nunca chega ao browser: o servidor troca o código e cria ou encontra a conta.
+
+**Configuração (Google Cloud Console → APIs e serviços → Credenciais → ID de cliente OAuth, tipo "Aplicação Web"):**
+
+- URI de redirecionamento autorizado: `https://<APP_URL>/api/auth?action=google-callback`
+  (o mesmo valor de `APP_URL`, sem barra final). Para desenvolvimento local, usa `http://localhost:3000/...`.
+- Variáveis no Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_URL`, `AUTH_SECRET`.
+- Sem as três primeiras, o botão não aparece e a rota responde `503`.
+
+**Regras:**
+
+- Conta Google é identificada pelo `sub` do Google, não pelo email. Entrar de novo com a mesma conta Google reabre a mesma conta.
+- Não há ligação automática por email. Contas com palavra-passe não têm o email verificado, e uma ligação automática
+  permitiria tomar conta de um email alheio. Se o email do Google já estiver noutra conta, a conta Google é criada sem email.
+- Contas só Google não têm palavra-passe e não podem entrar por email. Para as recuperar, basta entrar pelo Google.
+- O nome de utilizador é sugerido a partir do nome Google (ou da parte local do email), limpo para 3 a 10 caracteres e com número se já existir.

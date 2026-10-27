@@ -7,6 +7,7 @@ export interface Account {
 
 export interface SessionState {
   configured: boolean;
+  googleEnabled?: boolean;
   account: Account | null;
 }
 
@@ -27,6 +28,9 @@ export interface AccountResult {
   rank?: number;
   createdAt: string;
 }
+
+/** Arranca o login com Google: o servidor redireciona para o Google. */
+export const googleStartUrl = (): string => `${API_URL}?action=google-start`;
 
 /** Resposta genérica das ações de conta: ok ou a razão da recusa. */
 export interface ActionResult {

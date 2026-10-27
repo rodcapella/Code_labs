@@ -4,6 +4,8 @@ import { Account, fetchSession, login, logout, register, AuthResult, setEmail as
 interface AccountValue {
   /** false quando o servidor não tem contas configuradas: o jogo fica só anónimo. */
   configured: boolean;
+  /** true quando o servidor tem o login com Google configurado. */
+  googleEnabled: boolean;
   account: Account | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<AuthResult>;
@@ -20,6 +22,7 @@ const noop = async (): Promise<AuthResult> => ({ ok: false, account: null, error
 /** Valor por defeito (sem provider): anónimo. Assim os componentes funcionam sem contexto. */
 const AccountContext = createContext<AccountValue>({
   configured: false,
+  googleEnabled: false,
   account: null,
   loading: false,
   signIn: noop,
@@ -31,6 +34,7 @@ const AccountContext = createContext<AccountValue>({
 
 export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [configured, setConfigured] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +43,7 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchSession().then(s => {
       if (!active) return;
       setConfigured(s.configured);
+      setGoogleEnabled(Boolean(s.googleEnabled));
       setAccount(s.account);
       setLoading(false);
     });
@@ -73,8 +78,8 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const clearAccount = useCallback(() => setAccount(null), []);
 
   const value = useMemo(
-    () => ({ configured, account, loading, signIn, signUp, signOut, linkEmail, clearAccount }),
-    [configured, account, loading, signIn, signUp, signOut, linkEmail, clearAccount],
+    () => ({ configured, googleEnabled, account, loading, signIn, signUp, signOut, linkEmail, clearAccount }),
+    [configured, googleEnabled, account, loading, signIn, signUp, signOut, linkEmail, clearAccount],
   );
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

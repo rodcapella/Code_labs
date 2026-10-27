@@ -163,6 +163,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               deleteDone: t.accountDeleted,
               wrongPassword: t.accountWrongPassword,
               back: t.back,
+              googleLogin: t.accountGoogle,
+              googleError: t.accountGoogleError,
             }}
           />
         </div>

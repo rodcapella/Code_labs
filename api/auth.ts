@@ -8,9 +8,14 @@ import {
 } from '../src/features/auth/server/session';
 import {
   UserRecord, validateEmail, emailKey, userIdKey, resultsKey, newResetToken, resetKey,
-  resolveAccount, RESET_TTL_SECONDS,
+  resolveAccount, RESET_TTL_SECONDS, googleKey,
 } from '../src/features/auth/server/accounts';
 import { sendMail, mailConfigured, appUrl } from '../src/features/auth/server/mailer';
+import { signData, verifyData } from '../src/features/auth/server/session';
+import {
+  googleConfigured, googleRedirectUri, pkce, randomState, authorizationUrl,
+  exchangeCode, fetchProfile, suggestUsername,
+} from '../src/features/auth/server/google';
 
 /**
  * GET  /api/auth?action=me                              → conta da sessão (ou null)
@@ -35,6 +40,12 @@ const clientIp = (req: VercelRequest): string => {
 const bodyOf = (req: VercelRequest): Record<string, unknown> =>
   (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>;
 
+/** Valor de um cookie pelo nome, ou null. */
+const cookieValue = (header: string | undefined, name: string): string | null => {
+  const pair = (header ?? '').split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
+  return pair ? pair.slice(name.length + 1) : null;
+};
+
 const parseJson = <T>(raw: unknown): T | null =>
   raw === null || raw === undefined ? null : ((typeof raw === 'string' ? JSON.parse(raw) : raw) as T);
 
@@ -52,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!secret) {
       if (req.method === 'GET' && action === 'me') {
-        return res.status(200).json({ configured: false, account: null });
+        return res.status(200).json({ configured: false, googleEnabled: false, account: null });
       }
       return res.status(503).json({ error: 'contas indisponíveis' });
     }
@@ -78,8 +89,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
         configured: true,
+        googleEnabled: googleConfigured(),
         account: account ? { username: account.username, email } : null,
       });
+    }
+
+    if (req.method === 'GET' && action === 'google-start') {
+      if (!googleConfigured()) return res.status(503).json({ error: 'login com Google indisponível' });
+      const state = randomState();
+      const { verifier, challenge } = pkce();
+      const saved = signData({ state, verifier }, secret, now, 600);
+      res.setHeader('Set-Cookie', `oauth_state=${saved}; Path=/api/auth; HttpOnly; SameSite=Lax; Max-Age=600${secure ? '; Secure' : ''}`);
+      res.setHeader('Location', authorizationUrl(state, challenge));
+      return res.status(302).end();
+    }
+
+    if (req.method === 'GET' && action === 'google-callback') {
+      const back = (outcome: 'ok' | 'error') => {
+        const base = (process.env.APP_URL ?? '').replace(/\/$/, '') || '/';
+        res.setHeader('Set-Cookie', `oauth_state=; Path=/api/auth; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`);
+        res.setHeader('Location', `${base}/?google=${outcome}`);
+        return res.status(302).end();
+      };
+      const code = typeof req.query.code === 'string' ? req.query.code : '';
+      const state = typeof req.query.state === 'string' ? req.query.state : '';
+      const cookie = cookieValue(req.headers.cookie, 'oauth_state');
+      const saved = cookie ? verifyData<{ state: string; verifier: string }>(cookie, secret, now) : null;
+      if (!code || !saved || saved.state !== state) return back('error');
+
+      const accessToken = await exchangeCode(code, saved.verifier);
+      const profile = accessToken ? await fetchProfile(accessToken) : null;
+      if (!profile) return back('error');
+
+      // Conta já ligada a este Google: reutiliza. Senão, cria uma conta nova.
+      // Nunca se liga automaticamente pelo email: os emails das contas não estão verificados.
+      let userId = await redis.get<string>(googleKey(profile.sub));
+      let username: string | null = userId ? await redis.get<string>(userIdKey(String(userId))) : null;
+      if (!userId || !username) {
+        const base = suggestUsername(profile.name, profile.email);
+        if (!base) return back('error');
+        let chosen: string | null = null;
+        for (let n = 0; n < 100 && !chosen; n++) {
+          const candidate = n === 0 ? base : `${base.slice(0, 10 - String(n + 1).length)}${n + 1}`;
+          const id = crypto.randomUUID();
+          const record: UserRecord = {
+            id, username: candidate, passwordHash: '', createdAt: new Date().toISOString(), googleSub: profile.sub,
+          };
+          if (await redis.set(userKey(candidate), JSON.stringify(record), { nx: true })) {
+            chosen = candidate;
+            userId = id;
+            // Email do Google (verificado) só fica ligado se ainda não estiver noutra conta.
+            const email = profile.email_verified ? validateEmail(profile.email ?? '') : null;
+            if (email && (await redis.set(emailKey(email), id, { nx: true }))) {
+              await redis.set(userKey(candidate), JSON.stringify({ ...record, email }));
+            }
+            await redis.set(userIdKey(id), candidate);
+            await redis.set(googleKey(profile.sub), id);
+          }
+        }
+        if (!chosen) return back('error');
+        username = chosen;
+      }
+
+      const token = signSession({ userId: String(userId), username }, secret, now);
+      res.setHeader('Set-Cookie', sessionCookie(token, secure));
+      return back('ok');
     }
 
     if (req.method === 'GET' && action === 'results') {
@@ -205,13 +279,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'delete') {
       const password = typeof body.password === 'string' ? body.password : '';
       const rec = parseJson<UserRecord>(await redis.get<unknown>(userKey(account!.username)));
-      if (!rec || !(await verifyPassword(password, rec.passwordHash))) {
+      // Contas só Google não têm palavra-passe: a sessão ativa (cookie SameSite=Lax) basta.
+      const passwordOk = rec !== null && (rec.passwordHash === '' || (await verifyPassword(password, rec.passwordHash)));
+      if (!rec || !passwordOk) {
         return res.status(403).json({ error: 'palavra-passe incorreta' });
       }
       // Ordem: primeiro invalida a sessão (userid), depois apaga o resto.
       await redis.del(userIdKey(rec.id));
       await redis.del(userKey(rec.username));
       if (rec.email) await redis.del(emailKey(rec.email));
+      if (rec.googleSub) await redis.del(googleKey(rec.googleSub));
       await redis.del(resultsKey(rec.id));
       res.setHeader('Set-Cookie', clearSessionCookie(secure));
       return res.status(200).json({ ok: true });

@@ -82,3 +82,34 @@ describe('sessões assinadas', () => {
     expect(sessionCookie('t', true)).toContain('Secure');
   });
 });
+
+import { suggestUsername } from '../server/google';
+import { signData, verifyData } from '../server/session';
+
+describe('nome sugerido para contas Google', () => {
+  it('usa o nome Google, sem caracteres inválidos e com 3 a 10 caracteres', () => {
+    expect(suggestUsername('Rui Silva', undefined)).toBe('RuiSilva');
+    expect(suggestUsername('Maria José Gonçalves', undefined)).toMatch(/^[\p{L}\p{N}._-]{3,10}$/u);
+  });
+
+  it('sem nome, usa a parte local do email', () => {
+    expect(suggestUsername(undefined, 'ana.costa@gmail.com')).toBe('ana.costa');
+  });
+
+  it('nomes curtos são preenchidos até 3 caracteres', () => {
+    expect(suggestUsername('a', undefined)).toBe('a__');
+  });
+});
+
+describe('dados assinados (estado OAuth)', () => {
+  const secret = 'c'.repeat(40);
+  it('um estado válido é lido de volta', () => {
+    const t = signData({ state: 'abc', verifier: 'v' }, secret, 1000, 600);
+    expect(verifyData<{ state: string }>(t, secret, 1100)?.state).toBe('abc');
+  });
+  it('um estado adulterado ou expirado é rejeitado', () => {
+    const t = signData({ state: 'abc' }, secret, 1000, 600);
+    expect(verifyData(t.replace(/^./, 'x'), secret, 1100)).toBeNull();
+    expect(verifyData(t, secret, 2000)).toBeNull();
+  });
+});

@@ -68,3 +68,26 @@ export const sessionCookie = (token: string, secure: boolean): string =>
 
 export const clearSessionCookie = (secure: boolean): string =>
   `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`;
+
+/** Assina um objeto arbitrário com expiração (usado para o estado do OAuth). */
+export const signData = (data: Record<string, unknown>, secret: string, nowSeconds: number, ttlSeconds: number): string => {
+  const payload = b64url(JSON.stringify({ ...data, exp: nowSeconds + ttlSeconds }));
+  const sig = createHmac('sha256', secret).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+};
+
+export const verifyData = <T extends object>(token: string, secret: string, nowSeconds: number): T | null => {
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return null;
+  const expected = createHmac('sha256', secret).update(payload).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as T & { exp?: number };
+    if (typeof data.exp !== 'number' || data.exp < nowSeconds) return null;
+    return data;
+  } catch {
+    return null;
+  }
+};
