@@ -16,8 +16,10 @@ import { level3 } from './levels/level3';
 import { level4 } from './levels/level4';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
-import { formatPlayerName } from '../leaderboard/domain/leaderboard';
-import { submitEntry, fetchAttempt, AttemptTicket } from '../leaderboard/leaderboardApi';
+import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
+import { qualifiesForTop, formatPlayerName } from '../leaderboard/domain/leaderboard';
+import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
+import { RankingNameEntry, RankingStatus } from '../leaderboard/RankingNameEntry';
 import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
@@ -196,6 +198,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     }
   };
 
+  // Ranking na vitória: verificar o top, pedir o nome e só então submeter.
+  const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
+  const [rankName, setRankName] = useState('');
+  const pendingRef = useRef<{
+    base: { levelId: number; commands: number; errors: number; time: number; date: string; robotColor: string };
+    attempt: AttemptContext;
+  } | null>(null);
+
+  const confirmRanking = async () => {
+    const pending = pendingRef.current;
+    const name = validatePlayerName(rankName);
+    if (!pending || name === null) return;
+    setRankStatus('sending');
+    const ok = await submitEntry({ ...pending.base, name: formatPlayerName(name) }, pending.attempt);
+    // Sem servidor não há submissão: o resultado fica na cópia local.
+    setRankStatus(ok || pending.attempt.attemptId === null ? 'sent' : 'error');
+  };
+
   // Vitória: grava progresso e ranking uma única vez por vitória.
   const savedRef = useRef(false);
   useEffect(() => {
@@ -210,8 +230,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       onUpdateConfig({ completedLevels: [...userConfig.completedLevels, level.id] });
     }
 
-    const entry = {
-      name: formatPlayerName(userConfig.name),
+    // O resultado só é enviado depois de o jogador confirmar o nome (e só se entrar no top).
+    const base = {
       levelId: level.id,
       commands: gameState.commandCount,
       errors,
@@ -219,11 +239,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       date: new Date().toISOString().split('T')[0],
       robotColor: userConfig.robotColor,
     };
-    void submitEntry(entry, {
-      knowledgeLevel: userConfig.level,
-      language: userConfig.language,
-      runs,
-      attemptId: ready && ticket ? ticket.attemptId : null,
+    pendingRef.current = {
+      base,
+      attempt: {
+        knowledgeLevel: userConfig.level,
+        language: userConfig.language,
+        runs,
+        attemptId: ready && ticket ? ticket.attemptId : null,
+      },
+    };
+    setRankStatus('checking');
+    setRankName(userConfig.name);
+    fetchLeaderboard().then(list => {
+      setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
     });
   }, [gameState.victory]);
 
@@ -516,6 +544,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 description={t.victoryDesc(gameState.commandCount, timer)}
                 playAgainLabel={t.playAgain}
                 nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
+                rankingSlot={
+                  <RankingNameEntry
+                    status={rankStatus}
+                    name={rankName}
+                    onNameChange={setRankName}
+                    onConfirm={confirmRanking}
+                    messages={{
+                      checking: t.rankChecking,
+                      qualify: t.rankQualify,
+                      out: t.rankOut,
+                      save: t.rankSave,
+                      sending: t.rankSending,
+                      sent: t.rankSent,
+                      error: t.rankError,
+                      invalid: t.rankInvalid,
+                    }}
+                  />
+                }
                 onPlayAgain={() => {
                   playClickSound();
                   newAttempt();

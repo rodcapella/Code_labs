@@ -45,6 +45,16 @@ export type ValidationResult =
   | { ok: true; submission: Submission }
   | { ok: false; error: string };
 
+/** Nome do jogador: 1 a 10 caracteres (letras, números, espaço, ponto, traço e underscore). */
+export const PLAYER_NAME_MAX = 10;
+const PLAYER_NAME_RE = /^[\p{L}\p{N} ._-]{1,10}$/u;
+
+/** Devolve o nome limpo (sem espaços nas pontas) ou null se for inválido. */
+export const validatePlayerName = (raw: string): string | null => {
+  const name = raw.trim();
+  return PLAYER_NAME_RE.test(name) ? name : null;
+};
+
 const isInt = (v: unknown, min: number, max: number): v is number =>
   typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
 
@@ -55,7 +65,7 @@ export const validateSubmission = (body: unknown): ValidationResult => {
 
   if (typeof b.name !== 'string') return { ok: false, error: 'nome inválido' };
   const name = b.name.trim();
-  if (!/^[\p{L}\p{N} ._-]{1,10}$/u.test(name)) return { ok: false, error: 'nome inválido' };
+  if (validatePlayerName(name) === null) return { ok: false, error: 'nome inválido' };
 
   const levelId = typeof b.levelId === 'number' && (LEVELS as readonly number[]).includes(b.levelId) ? b.levelId : null;
   if (levelId === null) return { ok: false, error: 'nível inválido' };

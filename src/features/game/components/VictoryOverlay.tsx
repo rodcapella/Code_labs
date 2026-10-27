@@ -10,11 +10,13 @@ interface VictoryOverlayProps {
   nextLabel: string;
   onPlayAgain: () => void;
   onNext: () => void;
+  /** Bloco opcional entre a descrição e os botões (ex.: nome para o ranking). */
+  rankingSlot?: React.ReactNode;
 }
 
 /** Ecrã de nível concluído, com a animação de celebração. */
 export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
-  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext,
+  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext, rankingSlot,
 }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -37,8 +39,9 @@ export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
         <Trophy className="w-10 h-10" />
       </motion.div>
       <h3 className="text-2xl font-bold text-brand-ice mb-2">{title}</h3>
-      <p className="text-brand-ice/80 mb-8">{description}</p>
-      <div className="flex flex-col gap-3">
+      <p className="text-brand-ice/80 mb-6">{description}</p>
+      {rankingSlot}
+      <div className="flex flex-col gap-3 mt-6">
         <button
           onClick={onPlayAgain}
           className="w-full py-4 bg-brand-navy text-brand-ice/85 font-bold rounded-2xl hover:bg-white/10 transition-all"

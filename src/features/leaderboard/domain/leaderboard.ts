@@ -48,3 +48,17 @@ export const loadLeaderboard = (): LeaderboardEntry[] =>
 
 export const saveLeaderboard = (entries: LeaderboardEntry[]): void =>
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+
+/**
+ * Um resultado entra no top do nível se houver vaga ou se for estritamente
+ * melhor que o último lugar. Empates com o último lugar não entram.
+ */
+export const qualifiesForTop = (
+  entries: LeaderboardEntry[],
+  candidate: Omit<LeaderboardEntry, 'id' | 'name'>,
+): boolean => {
+  const level = entries.filter(e => e.levelId === candidate.levelId).sort(compareEntries);
+  if (level.length < LEADERBOARD_SIZE) return true;
+  const probe: LeaderboardEntry = { ...candidate, id: 'probe', name: '' };
+  return compareEntries(probe, level[LEADERBOARD_SIZE - 1]) < 0;
+};

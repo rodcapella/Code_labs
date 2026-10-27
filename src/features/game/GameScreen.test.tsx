@@ -170,12 +170,20 @@ describe('GameScreen (Strict Mode)', () => {
     for (const cmd of solve(LAYOUT)) click(cmd);
     click(t.execute);
     runFor(600 * 60);
+    // Com o ranking vazio, o resultado entra no top: pede o nome antes de enviar.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(submitEntry).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: t.rankSave }));
 
     expect(screen.getByText(t.victoryDesc(0, 0).split(' usando')[0], { exact: false })).toBeTruthy();
     // A submissão ao servidor acontece uma única vez, com o nível certo.
     const submit = vi.mocked(submitEntry);
     expect(submit).toHaveBeenCalledTimes(1);
     expect(submit.mock.calls[0][0].levelId).toBe(1);
+    expect(submit.mock.calls[0][0].name).toBe('RUI');
     expect(submit.mock.calls[0][1].runs.length).toBeGreaterThan(0);
     expect(onUpdate).toHaveBeenCalledTimes(1);
     expect(onUpdate).toHaveBeenCalledWith({ completedLevels: [1] });
