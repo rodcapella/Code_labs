@@ -103,10 +103,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         robotColor: sub.robotColor,
       };
       const key = keyFor(sub.levelId);
-      await redis.zadd(key, { score: encodeScore(entry), member: JSON.stringify(entry) });
-      await redis.zremrangebyrank(key, LEADERBOARD_SIZE, -1);
+      // 5) Decidir se entra no top: grava, vê a posição e retira se ficar fora.
+      //    Empates exatos (mesma pontuação e tempo) são desempatados pela ordem do Redis.
+      const member = JSON.stringify(entry);
+      await redis.zadd(key, { score: encodeScore(entry), member });
+      const rank = await redis.zrank(key, member);
+      const score = scoreOf(entry.commands, entry.errors, entry.time);
 
-      return res.status(201).json({ ok: true, score: scoreOf(entry.commands, entry.errors, entry.time) });
+      if (rank === null || rank >= LEADERBOARD_SIZE) {
+        await redis.zrem(key, member);
+        return res.status(200).json({ ok: true, qualified: false, score });
+      }
+
+      await redis.zremrangebyrank(key, LEADERBOARD_SIZE, -1);
+      return res.status(201).json({ ok: true, qualified: true, rank: rank + 1, score });
     }
 
     res.setHeader('Allow', 'GET, POST');

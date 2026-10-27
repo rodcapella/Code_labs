@@ -83,7 +83,9 @@ Sem API disponível, o jogo continua a funcionar e usa o ranking guardado no bro
 
 - `GET /api/leaderboard` → `{ entries: [...] }` (top 10 de cada nível), limite de 60 pedidos/min por IP
 - `GET /api/leaderboard?level=2` → só o nível 2
-- `POST /api/leaderboard` → `201 { ok, score }` ou `400` / `422` / `429` com a razão
+- `POST /api/leaderboard` → `201 { ok, qualified: true, rank, score }` se entrou no top 10,
+  `200 { ok, qualified: false, score }` se ficou fora (o resultado não é gravado), ou `400` / `422` / `429` com a razão.
+  Empates exatos (mesma pontuação e tempo) são desempatados pela ordem do Redis.
 
 O `POST` envia as **execuções** do jogador, não a pontuação:
 

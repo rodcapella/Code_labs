@@ -52,14 +52,20 @@ export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   }
 };
 
+/** Resposta da submissão: se foi guardada e se entrou no top 10 do nível (null = não sabemos). */
+export interface SubmitResult {
+  saved: boolean;
+  qualified: boolean | null;
+}
+
 /**
  * Submete uma vitória para validação no servidor. Guarda sempre uma cópia local
  * (com a pontuação calculada no cliente) para não perder o resultado se a
  * rede falhar. Devolve true só se o servidor aceitou.
  */
-export const submitEntry = async (entry: EntryInput, attempt: AttemptContext): Promise<boolean> => {
+export const submitEntry = async (entry: EntryInput, attempt: AttemptContext): Promise<SubmitResult> => {
   saveLeaderboard(addEntry(loadLeaderboard(), { ...entry, id: `local-${Date.now()}` }));
-  if (attempt.attemptId === null) return false; // sem servidor: não há tentativa para validar
+  if (attempt.attemptId === null) return { saved: false, qualified: null }; // sem servidor: não há tentativa para validar
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
@@ -76,8 +82,10 @@ export const submitEntry = async (entry: EntryInput, attempt: AttemptContext): P
         runs: attempt.runs,
       }),
     });
-    return res.ok;
+    if (!res.ok) return { saved: false, qualified: null };
+    const data = (await res.json()) as { qualified?: boolean };
+    return { saved: true, qualified: data.qualified === true };
   } catch {
-    return false;
+    return { saved: false, qualified: null };
   }
 };

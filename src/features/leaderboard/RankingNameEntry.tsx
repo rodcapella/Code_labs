@@ -1,7 +1,7 @@
 import React from 'react';
 import { PLAYER_NAME_MAX, validatePlayerName } from './domain/leaderboardRules';
 
-export type RankingStatus = 'checking' | 'enter' | 'out' | 'sending' | 'sent' | 'error';
+export type RankingStatus = 'checking' | 'enter' | 'out' | 'sending' | 'sent' | 'rejected' | 'error';
 
 interface RankingNameEntryProps {
   status: RankingStatus;
@@ -12,6 +12,7 @@ interface RankingNameEntryProps {
     checking: string;
     qualify: string;
     out: string;
+    rejected: string;
     save: string;
     sending: string;
     sent: string;
@@ -24,6 +25,7 @@ interface RankingNameEntryProps {
 export const RankingNameEntry: React.FC<RankingNameEntryProps> = ({ status, name, onNameChange, onConfirm, messages }) => {
   if (status === 'checking') return <p className="text-brand-ice/70 text-sm">{messages.checking}</p>;
   if (status === 'out') return <p className="text-brand-ice/70 text-sm">{messages.out}</p>;
+  if (status === 'rejected') return <p className="text-brand-ice/70 text-sm">{messages.rejected}</p>;
   if (status === 'sent') return <p className="text-brand-cyan font-bold text-sm">{messages.sent}</p>;
 
   const valid = validatePlayerName(name) !== null;

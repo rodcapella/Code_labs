@@ -11,7 +11,7 @@ import { fetchAttempt, submitEntry } from '../leaderboard/leaderboardApi';
 // Sem servidor nos testes: tentativa com semente conhecida e sem id (não submete ao ranking).
 vi.mock('../leaderboard/leaderboardApi', () => ({
   fetchAttempt: vi.fn(async () => ({ attemptId: null, seed: 0 })),
-  submitEntry: vi.fn(async () => false),
+  submitEntry: vi.fn(async () => ({ saved: true, qualified: true })),
   fetchLeaderboard: vi.fn(async () => []),
 }));
 

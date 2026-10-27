@@ -211,9 +211,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     const name = validatePlayerName(rankName);
     if (!pending || name === null) return;
     setRankStatus('sending');
-    const ok = await submitEntry({ ...pending.base, name: formatPlayerName(name) }, pending.attempt);
+    const result = await submitEntry({ ...pending.base, name: formatPlayerName(name) }, pending.attempt);
     // Sem servidor não há submissão: o resultado fica na cópia local.
-    setRankStatus(ok || pending.attempt.attemptId === null ? 'sent' : 'error');
+    if (pending.attempt.attemptId === null) setRankStatus('sent');
+    else if (result.qualified === true) setRankStatus('sent');
+    else if (result.qualified === false) setRankStatus('rejected');
+    else setRankStatus('error');
   };
 
   // Vitória: grava progresso e ranking uma única vez por vitória.
@@ -554,6 +557,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                       checking: t.rankChecking,
                       qualify: t.rankQualify,
                       out: t.rankOut,
+                      rejected: t.rankRejected,
                       save: t.rankSave,
                       sending: t.rankSending,
                       sent: t.rankSent,
