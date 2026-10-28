@@ -102,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         commands: replay.commands,
         errors: replay.errors,
         time: sub.time,
+        structureBonus: replay.structureBonus,
         date: sub.date,
         robotColor: sub.robotColor,
       };
@@ -111,7 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const member = JSON.stringify(entry);
       await redis.zadd(key, { score: encodeScore(entry), member });
       const rank = await redis.zrank(key, member);
-      const score = scoreOf(entry.commands, entry.errors, entry.time);
+      const score = scoreOf(entry.commands, entry.errors, entry.time, entry.structureBonus);
 
       const qualified = rank !== null && rank < LEADERBOARD_SIZE;
       if (!qualified) await redis.zrem(key, member);
@@ -126,6 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           errors: entry.errors,
           time: entry.time,
           date: entry.date,
+          structureBonus: entry.structureBonus,
           qualified,
           ...(qualified ? { rank: (rank as number) + 1 } : {}),
           createdAt: new Date().toISOString(),

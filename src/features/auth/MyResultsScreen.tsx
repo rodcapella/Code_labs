@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { fetchResults, AccountResult } from './authApi';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
-import { scoreOf } from '../leaderboard/domain/leaderboard';
+import { scoreOf } from '../../shared/config/rules';
 
 interface MyResultsScreenProps {
   onBack: () => void;
@@ -47,7 +47,7 @@ export const MyResultsScreen: React.FC<MyResultsScreenProps> = ({ onBack, messag
               <div key={`${r.createdAt}-${i}`} className="grid grid-cols-7 gap-3 py-2 border-b border-white/10 text-[8px] md:text-xs min-w-[560px]">
                 <div>{r.date}</div>
                 <div>{r.levelId}</div>
-                <div>{scoreOf({ commands: r.commands, errors: r.errors, time: r.time } as never)}</div>
+                <div>{scoreOf(r.commands, r.errors, r.time, r.structureBonus ?? 0)}</div>
                 <div>{r.commands}</div>
                 <div>{r.errors}</div>
                 <div>{r.time}s</div>

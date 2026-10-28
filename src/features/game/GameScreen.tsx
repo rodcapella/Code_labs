@@ -23,6 +23,7 @@ import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptCont
 import { qualifiesForTop, formatPlayerName } from '../leaderboard/domain/leaderboard';
 import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
 import { RankingNameEntry, RankingStatus } from '../leaderboard/RankingNameEntry';
+import { structureBonusFor } from './engine/structures';
 import { useAccount } from '../auth/AccountContext';
 import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
@@ -215,7 +216,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const [rankName, setRankName] = useState('');
   const { account } = useAccount();
   const pendingRef = useRef<{
-    base: { levelId: number; commands: number; errors: number; time: number; date: string; robotColor: string };
+    base: { levelId: number; commands: number; errors: number; time: number; structureBonus: number; date: string; robotColor: string };
     attempt: AttemptContext;
   } | null>(null);
 
@@ -252,6 +253,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       commands: gameState.commandCount,
       errors,
       time: timer,
+      structureBonus: structureBonusFor(runs[runs.length - 1] ?? [], userConfig.language),
       date: new Date().toISOString().split('T')[0],
       robotColor: userConfig.robotColor,
     };

@@ -10,7 +10,7 @@ export const formatPlayerName = (name: string): string =>
 
 /** Pontuação: comandos, erros e tempo. Menor é melhor. */
 export const scoreOf = (entry: LeaderboardEntry): number =>
-  rulesScoreOf(entry.commands, entry.errors, entry.time);
+  rulesScoreOf(entry.commands, entry.errors, entry.time, entry.structureBonus ?? 0);
 
 /** Ordena por pontuação e, em empate, por tempo. */
 export const compareEntries = (a: LeaderboardEntry, b: LeaderboardEntry): number => {

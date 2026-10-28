@@ -23,8 +23,8 @@ export const scoreOf = rulesScoreOf;
  * Score numérico para o sorted set do Redis: pontuação primeiro, e o tempo
  * exato como desempate (limitado a 99999 s para não invadir a pontuação).
  */
-export const encodeScore = (e: Pick<LeaderboardEntry, 'commands' | 'errors' | 'time'>): number =>
-  scoreOf(e.commands, e.errors, e.time) * 100000 + Math.min(Math.max(e.time, 0), 99999);
+export const encodeScore = (e: Pick<LeaderboardEntry, 'commands' | 'errors' | 'time' | 'structureBonus'>): number =>
+  scoreOf(e.commands, e.errors, e.time, e.structureBonus ?? 0) * 100000 + Math.min(Math.max(e.time, 0), 99999);
 
 export type EntryInput = Omit<LeaderboardEntry, 'id'>;
 

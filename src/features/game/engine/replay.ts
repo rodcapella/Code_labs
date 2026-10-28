@@ -2,10 +2,11 @@ import { LayoutConfig, Language } from '../../../shared/types/game';
 import { executeCommand } from './interpreter';
 import { createInitialState, compileProgram, hasBoxHere, hasRoomAhead } from './program';
 import { MAX_ERRORS_BY_LEVEL, MIN_STEP_MS, MAX_RUN_STEPS } from '../../../shared/config/rules';
+import { structureBonusFor } from './structures';
 import { KnowledgeLevel } from '../../../shared/i18n/translations';
 
 export type ReplayResult =
-  | { ok: true; commands: number; errors: number; steps: number }
+  | { ok: true; commands: number; errors: number; steps: number; structureBonus: number }
   | { ok: false; reason: string };
 
 /** Funcionalidades disponíveis por nível de conhecimento (espelha o cliente). */
@@ -88,7 +89,13 @@ export const replayAttempt = (
     if (won && !isLast) return { ok: false, reason: 'vitória numa execução anterior' };
     if (isLast) {
       if (!won) return { ok: false, reason: 'a última execução não completa o nível' };
-      return { ok: true, commands: state.commandCount, errors, steps };
+      return {
+        ok: true,
+        commands: state.commandCount,
+        errors,
+        steps,
+        structureBonus: structureBonusFor(runs[r], language),
+      };
     }
   }
 

@@ -62,6 +62,8 @@ export interface LeaderboardEntry {
   commands: number;
   /** Erros cometidos na tentativa vencedora. */
   errors: number;
+  /** Desconto por estruturas de controlo usadas na vitória (repetir, se, enquanto). */
+  structureBonus?: number;
   time: number;
   date: string;
   robotColor: string;

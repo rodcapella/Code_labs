@@ -20,6 +20,7 @@ export interface AccountResult {
   errors: number;
   time: number;
   date: string;
+  structureBonus?: number;
   qualified: boolean;
   rank?: number;
   createdAt: string;

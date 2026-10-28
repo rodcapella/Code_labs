@@ -20,8 +20,11 @@ export const SECONDS_PER_POINT = 10;
  * Pontuação do ranking (menor é melhor):
  * comandos + penalização por erro + penalização por tempo.
  */
-export const scoreOf = (commands: number, errors: number, timeSeconds: number): number =>
-  commands + errors * ERROR_PENALTY + Math.floor(Math.max(timeSeconds, 0) / SECONDS_PER_POINT);
+export const scoreOf = (commands: number, errors: number, timeSeconds: number, structureBonus = 0): number =>
+  Math.max(
+    0,
+    commands + errors * ERROR_PENALTY + Math.floor(Math.max(timeSeconds, 0) / SECONDS_PER_POINT) - structureBonus,
+  );
 
 /** Duração mínima de um passo: a velocidade mais rápida do jogo. */
 export const MIN_STEP_MS = 300;
@@ -42,3 +45,6 @@ export const DEMO_RETURN_MS = 5000;
 
 /** Passos máximos de uma execução (proteção contra ciclos enquanto sem fim). */
 export const MAX_RUN_STEPS = 1000;
+
+/** Desconto na pontuação por cada tipo de estrutura (repetir, se, enquanto) usado na vitória. */
+export const STRUCTURE_BONUS = 3;
