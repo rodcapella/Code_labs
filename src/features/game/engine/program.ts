@@ -1,6 +1,7 @@
 import { GameState, LayoutConfig, Language } from '../../../shared/types/game';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { MAX_INSTRUCTIONS, MAX_REPEAT } from '../../../shared/config/rules';
+import { getNextPosition } from './interpreter';
 
 /** Linhas do programa, sem espaços e sem linhas vazias. */
 export const parseProgram = (code: string): string[] =>
@@ -25,7 +26,10 @@ export const createInitialState = (layout: LayoutConfig): GameState => ({
  */
 export type Instruction =
   | { kind: 'cmd'; text: string; sourceLine: number }
-  | { kind: 'check'; sourceLine: number; skipTo: number };
+  /** Teste: se a condição falhar, salta para `skipTo`. `box` = há caixa; `room` = casa à frente livre. */
+  | { kind: 'check'; cond: 'box' | 'room'; sourceLine: number; skipTo: number }
+  /** Salto incondicional (volta ao teste do `enquanto`). */
+  | { kind: 'jump'; target: number; sourceLine: number };
 
 export type CompileError =
   | { reason: 'unclosed'; line: number }
@@ -47,7 +51,8 @@ export interface CompileOptions {
 /** Nós da árvore do programa antes de linearizar. */
 type Node =
   | { kind: 'cmd'; text: string; sourceLine: number }
-  | { kind: 'if'; sourceLine: number; body: Node[] };
+  | { kind: 'if'; sourceLine: number; body: Node[] }
+  | { kind: 'while'; sourceLine: number; body: Node[] };
 
 type Block =
   | { ok: true; nodes: Node[]; next: number; size: number }
@@ -96,12 +101,13 @@ export const compileProgram = (rawLines: string[], lang: Language, opts: Compile
         continue;
       }
 
-      if (line === t.cmdIfBox) {
+      if (line === t.cmdIfBox || line === t.cmdWhileFree) {
         if (!opts.allowConditionals) return fail('conditionalNotAllowed', i);
         const sub = block(i + 1, i);
         if (sub.ok === false) return sub;
-        nodes.push({ kind: 'if', sourceLine: i, body: sub.nodes });
-        size += 1 + sub.size;
+        const kind = line === t.cmdIfBox ? 'if' : 'while';
+        nodes.push({ kind, sourceLine: i, body: sub.nodes });
+        size += 2 + sub.size; // teste + salto (ou só teste no se)
         if (size > MAX_INSTRUCTIONS) return fail('tooLong', i);
         i = sub.next;
         continue;
@@ -126,10 +132,18 @@ export const compileProgram = (rawLines: string[], lang: Language, opts: Compile
     for (const n of nodes) {
       if (n.kind === 'cmd') {
         out.push({ kind: 'cmd', text: n.text, sourceLine: n.sourceLine });
-      } else {
-        const check: Instruction = { kind: 'check', sourceLine: n.sourceLine, skipTo: 0 };
+      } else if (n.kind === 'if') {
+        const check: Instruction = { kind: 'check', cond: 'box', sourceLine: n.sourceLine, skipTo: 0 };
         out.push(check);
         emit(n.body);
+        check.skipTo = out.length;
+      } else {
+        // enquanto: teste -> corpo -> salto de volta ao teste
+        const start = out.length;
+        const check: Instruction = { kind: 'check', cond: 'room', sourceLine: n.sourceLine, skipTo: 0 };
+        out.push(check);
+        emit(n.body);
+        out.push({ kind: 'jump', target: start, sourceLine: n.sourceLine });
         check.skipTo = out.length;
       }
     }
@@ -150,6 +164,10 @@ export const compileErrorMessage = (error: CompileError, lang: Language): string
     case 'tooLong': return t.errorProgramTooLong;
   }
 };
+
+/** Verdadeiro se a casa à frente do robô existe (dentro da grelha). */
+export const hasRoomAhead = (state: GameState): boolean =>
+  getNextPosition(state.robotPosition, state.robotDirection, state.gridSize) !== null;
 
 /** Verdadeiro se há uma caixa por recolher na posição do robô. */
 export const hasBoxHere = (state: GameState): boolean =>

@@ -238,6 +238,32 @@ describe('useProgramRunner', () => {
     expect(result.current.state.error).toBeTruthy();
   });
 
+  it('enquanto_livre repete até à borda (número de passos decidido na execução)', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true, true),
+      { wrapper: strict },
+    );
+    // Robô em (0,0) virado a Este, grelha 6x6: 5 casas até à borda.
+    act(() => result.current.run('enquanto_livre() {\nmover()\n}'));
+    runFor(600 * 20);
+    expect(result.current.state.robotPosition).toEqual({ x: 5, y: 0 });
+    expect(result.current.state.commandCount).toBe(5);
+    expect(result.current.errors).toBe(0);
+  });
+
+  it('ciclo sem fim é travado e conta como erro', () => {
+    const { result } = renderHook(
+      () => useProgramRunner(level1, 'pt', 10, vi.fn(), true, true),
+      { wrapper: strict },
+    );
+    // Vira para Sul e para Este sem parar, com a casa à frente sempre livre.
+    act(() => result.current.run('enquanto_livre() {\nvirar_direita()\nvirar_esquerda()\n}'));
+    runFor(600 * (1000 + 50));
+    expect(result.current.isExecuting).toBe(false);
+    expect(result.current.errors).toBe(1);
+    expect(result.current.state.error).toMatch(/demasiados passos|too many steps/);
+  });
+
   it('reset repõe o estado inicial do nível', () => {
     const { result } = setup();
     act(() => result.current.run('mover()'));

@@ -6,6 +6,7 @@ export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number }>
   2: { gridSize: 8, boxCount: 8 },
   3: { gridSize: 10, boxCount: 12 },
   4: { gridSize: 12, boxCount: 16 },
+  5: { gridSize: 10, boxCount: 8 },
 };
 
 const DIRECTIONS: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];

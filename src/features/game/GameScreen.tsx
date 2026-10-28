@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Pause, AlertCircle, Lightbulb } from 'lucide-react';
 import { Grid } from './components/Grid';
 import { GameHeader } from './components/GameHeader';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 import { LevelTimer } from './components/LevelTimer';
+import { LevelIntroModal } from './components/LevelIntroModal';
 import { ControlPanel } from './components/ControlPanel';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { VictoryOverlay } from './components/VictoryOverlay';
@@ -15,6 +16,7 @@ import { level1 } from './levels/level1';
 import { level2 } from './levels/level2';
 import { level3 } from './levels/level3';
 import { level4 } from './levels/level4';
+import { level5 } from './levels/level5';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
@@ -26,7 +28,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4];
+const LEVELS = [level1, level2, level3, level4, level5];
 
 interface GameScreenProps {
   onBack: () => void;
@@ -40,6 +42,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   // Cada partida tem uma tentativa: o servidor escolhe a semente, e a semente define o layout.
   // `round` sobe ao tentar outra vez ou jogar de novo, para o layout mudar.
   const [round, setRound] = useState(0);
+  // Janela com o conceito do nível: abre sempre que se entra num nível novo.
+  const [introOpen, setIntroOpen] = useState(true);
+  useEffect(() => {
+    setIntroOpen(true);
+  }, [currentLevelIdx]);
+  const closeIntro = useCallback(() => setIntroOpen(false), []);
   const [ticket, setTicket] = useState<(AttemptTicket & { levelIdx: number; round: number }) | null>(null);
   const ready = ticket !== null && ticket.levelIdx === currentLevelIdx && ticket.round === round;
   const seed = ready && ticket ? ticket.seed : 0;
@@ -151,8 +159,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     setActiveHint(null);
   }, [currentLevelIdx, round]);
 
+  // Reiniciar: zera o robô, os erros, o tempo e a consola (mantém o layout da tentativa).
   const resetGame = () => {
     runner.reset();
+    setCode('');
     setTimer(0);
     setHintsRemaining(getInitialHints());
     setActiveHint(null);
@@ -531,6 +541,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 seconds={timer}
                 running={!isPaused && !gameState.victory}
                 label={t.timeLabel}
+              />
+            )}
+            {introOpen && (
+              <LevelIntroModal
+                kicker={`${t.level} ${level.id}`}
+                title={level.intro[userConfig.language].title}
+                body={level.intro[userConfig.language].body}
+                closeLabel={t.introStart}
+                onClose={closeIntro}
               />
             )}
             {!ready && <ArcadeLoader label={t.preparingLevel} />}

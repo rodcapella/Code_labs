@@ -45,6 +45,8 @@ export interface LevelMeta {
   };
   /** Dicas por idioma; a lista usada depende da língua do utilizador. */
   hints: Record<Language, string[]>;
+  /** Conceito testado neste nível (mostrado numa janela antes de começar). */
+  intro: Record<Language, { title: string; body: string[] }>;
   /** Imagem de fundo do nível (URL importada). Opcional. */
   backgroundImage?: string;
 }

@@ -6,6 +6,24 @@ const ON = { allowLoops: true, allowConditionals: false };
 const OFF = { allowLoops: false, allowConditionals: false };
 const ALL = { allowLoops: true, allowConditionals: true };
 
+describe('compileProgram: enquanto', () => {
+  it('gera teste de sala à frente, corpo e salto de volta ao teste', () => {
+    const r = compileProgram(['enquanto_livre() {', 'mover()', '}', 'pegar()'], 'pt', ALL);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.instructions).toEqual([
+      { kind: 'check', cond: 'room', sourceLine: 0, skipTo: 3 },
+      { kind: 'cmd', text: 'mover()', sourceLine: 1 },
+      { kind: 'jump', target: 0, sourceLine: 0 },
+      { kind: 'cmd', text: 'pegar()', sourceLine: 3 },
+    ]);
+  });
+
+  it('não é permitido fora do nível avançado', () => {
+    const r = compileProgram(['enquanto_livre() {', 'mover()', '}'], 'pt', { allowLoops: true, allowConditionals: false });
+    expect(r).toMatchObject({ ok: false, error: { reason: 'conditionalNotAllowed' } });
+  });
+});
+
 const txt = (i: { kind: string; text?: string }) => (i.kind === 'cmd' ? i.text : `<${i.kind}>`);
 
 describe('compileProgram: linhas simples', () => {
@@ -95,7 +113,7 @@ describe('compileProgram: se_caixa', () => {
     const r = compileProgram(['se_caixa() {', 'pegar()', '}', 'mover()'], 'pt', ALL);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.instructions).toEqual([
-      { kind: 'check', sourceLine: 0, skipTo: 2 },
+      { kind: 'check', cond: 'box', sourceLine: 0, skipTo: 2 },
       { kind: 'cmd', text: 'pegar()', sourceLine: 1 },
       { kind: 'cmd', text: 'mover()', sourceLine: 3 },
     ]);
@@ -105,9 +123,9 @@ describe('compileProgram: se_caixa', () => {
     const r = compileProgram(['se_caixa() {', 'mover()', 'se_caixa() {', 'pegar()', '}', '}', 'mover()'], 'pt', ALL);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.instructions).toEqual([
-      { kind: 'check', sourceLine: 0, skipTo: 4 },
+      { kind: 'check', cond: 'box', sourceLine: 0, skipTo: 4 },
       { kind: 'cmd', text: 'mover()', sourceLine: 1 },
-      { kind: 'check', sourceLine: 2, skipTo: 4 },
+      { kind: 'check', cond: 'box', sourceLine: 2, skipTo: 4 },
       { kind: 'cmd', text: 'pegar()', sourceLine: 3 },
       { kind: 'cmd', text: 'mover()', sourceLine: 6 },
     ]);
@@ -116,7 +134,7 @@ describe('compileProgram: se_caixa', () => {
   it('se_caixa dentro de repetir é copiado com saltos corretos em cada cópia', () => {
     const r = compileProgram(['repetir(2) {', 'se_caixa() {', 'pegar()', '}', '}'], 'pt', ALL);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.instructions.map(i => (i.kind === 'check' ? `check->${i.skipTo}` : i.text))).toEqual([
+    if (r.ok) expect(r.instructions.map(i => (i.kind === 'check' ? `check->${i.skipTo}` : i.kind === 'cmd' ? i.text : `jump->${i.target}`))).toEqual([
       'check->2', 'pegar()', 'check->4', 'pegar()',
     ]);
   });

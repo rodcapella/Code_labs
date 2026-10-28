@@ -4,6 +4,22 @@ import { LevelMeta } from '../../../shared/types/game';
 export const level1: LevelMeta = {
   backgroundImage: levelBackground,
   id: 1,
+  intro: {
+    pt: {
+      title: 'Sequências',
+      body: [
+        'Um programa é uma lista de comandos executada de cima para baixo, um de cada vez.',
+        'Usa mover(), virar e pegar() para recolher todas as caixas.',
+      ],
+    },
+    en: {
+      title: 'Sequences',
+      body: [
+        'A program is a list of commands run from top to bottom, one at a time.',
+        'Use move(), turn and pick() to collect every box.',
+      ],
+    },
+  },
   colors: {
     robot: '#2563EB',
     box: '#60A5FA',

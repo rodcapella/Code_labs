@@ -4,9 +4,25 @@ import { LevelMeta } from '../../../shared/types/game';
 export const level3: LevelMeta = {
   backgroundImage: levelBackground,
   id: 3,
+  intro: {
+    pt: {
+      title: 'Repetir (for)',
+      body: [
+        'repetir(n) { ... } executa o bloco um número fixo de vezes.',
+        'Usa-o quando um padrão de comandos se repete.',
+      ],
+    },
+    en: {
+      title: 'Repeat (for)',
+      body: [
+        'repeat(n) { ... } runs the block a fixed number of times.',
+        'Use it when the same pattern of commands repeats.',
+      ],
+    },
+  },
   colors: {
     robot: '#059669',
-    box: '#34D399',
+    box: '#6EE7B7',
     grid: '#34D399',
   },
   hints: {

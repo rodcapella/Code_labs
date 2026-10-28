@@ -4,9 +4,25 @@ import { LevelMeta } from '../../../shared/types/game';
 export const level4: LevelMeta = {
   backgroundImage: levelBackground,
   id: 4,
+  intro: {
+    pt: {
+      title: 'Decisões (se)',
+      body: [
+        'se_caixa() { ... } executa o bloco só se houver uma caixa por recolher na casa atual.',
+        'Se não houver caixa, o bloco é saltado.',
+      ],
+    },
+    en: {
+      title: 'Decisions (if)',
+      body: [
+        'if_box() { ... } runs the block only if there is a box still to collect on the current square.',
+        'If there is no box, the block is skipped.',
+      ],
+    },
+  },
   colors: {
     robot: '#DB2777',
-    box: '#F472B6',
+    box: '#FCD34D',
     grid: '#F59E0B',
   },
   hints: {

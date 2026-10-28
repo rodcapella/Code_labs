@@ -87,10 +87,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <h4 className="text-xs font-bold text-brand-ice/75 uppercase tracking-widest mb-3">{t.availableCommands}</h4>
         <div className="grid grid-cols-2 gap-2">
           {showConditionals && (
-            <button onClick={() => onAddCommand(t.cmdIfBox)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
-              <GitBranch className="w-4 h-4" />
-              {t.cmdIfBox}
-            </button>
+            <>
+              <button onClick={() => onAddCommand(t.cmdIfBox)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
+                <GitBranch className="w-4 h-4" />
+                {t.cmdIfBox}
+              </button>
+              <button onClick={() => onAddCommand(t.cmdWhileFree)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
+                <Repeat className="w-4 h-4" />
+                {t.cmdWhileFree}
+              </button>
+            </>
           )}
           {showLoops && (
             <>

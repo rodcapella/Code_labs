@@ -1,7 +1,7 @@
 import { LayoutConfig, Language } from '../../../shared/types/game';
 import { executeCommand } from './interpreter';
-import { createInitialState, compileProgram, hasBoxHere } from './program';
-import { MAX_ERRORS_BY_LEVEL, MIN_STEP_MS } from '../../../shared/config/rules';
+import { createInitialState, compileProgram, hasBoxHere, hasRoomAhead } from './program';
+import { MAX_ERRORS_BY_LEVEL, MIN_STEP_MS, MAX_RUN_STEPS } from '../../../shared/config/rules';
 import { KnowledgeLevel } from '../../../shared/i18n/translations';
 
 export type ReplayResult =
@@ -49,12 +49,23 @@ export const replayAttempt = (
     let won = false;
     let pc = 0;
 
+    let runSteps = 0;
     while (pc < program.length) {
       const instr = program[pc];
       steps++;
+      // Ciclo sem fim: a execução termina e conta como erro (igual ao cliente).
+      if (++runSteps > MAX_RUN_STEPS) {
+        failed = true;
+        break;
+      }
 
       if (instr.kind === 'check') {
-        pc = hasBoxHere(state) ? pc + 1 : instr.skipTo;
+        const ok = instr.cond === 'box' ? hasBoxHere(state) : hasRoomAhead(state);
+        pc = ok ? pc + 1 : instr.skipTo;
+        continue;
+      }
+      if (instr.kind === 'jump') {
+        pc = instr.target;
         continue;
       }
 

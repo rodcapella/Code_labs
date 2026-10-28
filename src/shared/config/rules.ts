@@ -31,7 +31,7 @@ export const MAX_LINES_PER_RUN = 200;
 export const MAX_LINE_LENGTH = 40;
 
 /** Níveis existentes. Acrescentar um nível: adicionar aqui, no layout e no ficheiro do nível. */
-export const LEVEL_IDS = [1, 2, 3, 4] as const;
+export const LEVEL_IDS = [1, 2, 3, 4, 5] as const;
 
 /** Limites do compilador de programas (repetir). */
 export const MAX_REPEAT = 9;
@@ -39,3 +39,6 @@ export const MAX_INSTRUCTIONS = 500;
 
 /** Modo demonstração: sem resultados no nível, o ranking volta ao início após este tempo. */
 export const DEMO_RETURN_MS = 5000;
+
+/** Passos máximos de uma execução (proteção contra ciclos enquanto sem fim). */
+export const MAX_RUN_STEPS = 1000;

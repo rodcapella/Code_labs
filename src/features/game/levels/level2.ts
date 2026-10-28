@@ -4,6 +4,22 @@ import { LevelMeta } from '../../../shared/types/game';
 export const level2: LevelMeta = {
   backgroundImage: levelBackground,
   id: 2,
+  intro: {
+    pt: {
+      title: 'Direção',
+      body: [
+        'Antes de andar, o robô precisa de estar virado para o lado certo.',
+        'Combina virar_esquerda() e virar_direita() com mover() para planear a rota.',
+      ],
+    },
+    en: {
+      title: 'Direction',
+      body: [
+        'Before moving, the robot must face the right way.',
+        'Combine turn_left() and turn_right() with move() to plan the route.',
+      ],
+    },
+  },
   colors: {
     robot: '#7C3AED',
     box: '#A78BFA',

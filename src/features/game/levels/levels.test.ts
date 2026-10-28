@@ -4,9 +4,10 @@ import { level1 } from './level1';
 import { level2 } from './level2';
 import { level3 } from './level3';
 import { level4 } from './level4';
+import { level5 } from './level5';
 
-const ids = [1, 2, 3, 4] as const;
-const metas = [level1, level2, level3, level4];
+const ids = [1, 2, 3, 4, 5] as const;
+const metas = [level1, level2, level3, level4, level5];
 
 describe('especificação dos níveis', () => {
   it.each(ids)('nível %i tem grelha e nº de caixas definidos', id => {
@@ -17,8 +18,8 @@ describe('especificação dos níveis', () => {
   it('a grelha cresce e o nº de caixas também', () => {
     const sizes = ids.map(id => LEVEL_SPECS[id].gridSize);
     const boxes = ids.map(id => LEVEL_SPECS[id].boxCount);
-    expect(sizes).toEqual([6, 8, 10, 12]);
-    expect(boxes).toEqual([6, 8, 12, 16]);
+    expect(sizes).toEqual([6, 8, 10, 12, 10]);
+    expect(boxes).toEqual([6, 8, 12, 16, 8]);
   });
 });
 

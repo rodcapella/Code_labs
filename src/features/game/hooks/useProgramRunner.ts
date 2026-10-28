@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, Language, LevelConfig } from '../../../shared/types/game';
 import { executeCommand } from '../engine/interpreter';
 import {
-  createInitialState, parseProgram, compileProgram, compileErrorMessage, hasBoxHere, Instruction,
+  createInitialState, parseProgram, compileProgram, compileErrorMessage, hasBoxHere, hasRoomAhead, Instruction,
 } from '../engine/program';
+import { TRANSLATIONS } from '../../../shared/i18n/translations';
+import { MAX_RUN_STEPS } from '../../../shared/config/rules';
 
 export { createInitialState, parseProgram };
 
@@ -13,6 +15,7 @@ type Status = 'idle' | 'running' | 'paused';
 interface Snapshot {
   state: GameState;
   pc: number;
+  steps: number;
 }
 
 const classify = (prev: GameState, next: GameState): StepEvent => {
@@ -54,6 +57,8 @@ export function useProgramRunner(
   const [speed, setSpeed] = useState(600);
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [errors, setErrors] = useState(0);
+  // Passos executados na tentativa em curso (para o limite de ciclos sem fim).
+  const stepsRef = useRef(0);
 
   const onEventRef = useRef(onEvent);
   useEffect(() => {
@@ -71,6 +76,7 @@ export function useProgramRunner(
     setStarted(false);
     setHistory([]);
     setErrors(0);
+    stepsRef.current = 0;
   }, [level]);
 
   useEffect(() => {
@@ -87,18 +93,34 @@ export function useProgramRunner(
 
     const instr = program[pc];
     const id = setTimeout(() => {
+      stepsRef.current += 1;
+      // Ciclo sem fim: a execução termina e conta como erro (o servidor faz o mesmo).
+      if (stepsRef.current > MAX_RUN_STEPS) {
+        setErrors(e => e + 1);
+        setState({ ...state, error: TRANSLATIONS[language].errorLoopLimit, currentLine: instr.sourceLine });
+        return;
+      }
+
       if (instr.kind === 'check') {
-        // Teste de se_caixa: não é um comando, não conta e não gasta erros.
-        setHistory(h => [...h, { state, pc }]);
-        setPc(hasBoxHere(state) ? pc + 1 : instr.skipTo);
+        // Teste de se_caixa / enquanto_livre: não é um comando, não conta e não gasta erros.
+        const ok = instr.cond === 'box' ? hasBoxHere(state) : hasRoomAhead(state);
+        setHistory(h => [...h, { state, pc, steps: stepsRef.current - 1 }]);
+        setPc(ok ? pc + 1 : instr.skipTo);
         setState({ ...state, currentLine: instr.sourceLine });
         return;
       }
+      if (instr.kind === 'jump') {
+        setHistory(h => [...h, { state, pc, steps: stepsRef.current - 1 }]);
+        setPc(instr.target);
+        setState({ ...state, currentLine: instr.sourceLine });
+        return;
+      }
+
       const next = executeCommand(state, instr.text, language);
       const event = classify(state, next);
 
       if (!next.error) {
-        setHistory(h => [...h, { state, pc }]);
+        setHistory(h => [...h, { state, pc, steps: stepsRef.current - 1 }]);
         setPc(pc + 1);
       } else {
         setErrors(e => e + 1);
@@ -148,6 +170,7 @@ export function useProgramRunner(
       setRuns(r => [...r, lines]);
       setPc(0);
       setHistory([]);
+      stepsRef.current = 0;
       setStarted(true);
       setStatus('running');
     },
@@ -164,6 +187,7 @@ export function useProgramRunner(
     setHistory(h => h.slice(0, -1));
     setState(last.state);
     setPc(last.pc);
+    stepsRef.current = last.steps;
   }, [status, history]);
 
   return {
