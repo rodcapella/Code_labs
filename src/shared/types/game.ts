@@ -40,6 +40,8 @@ export interface LevelMeta {
   colors: {
     robot: string;
     box: string;
+    /** Cor da grelha deste nível (bordas e tom das células). */
+    grid: string;
   };
   /** Dicas por idioma; a lista usada depende da língua do utilizador. */
   hints: Record<Language, string[]>;

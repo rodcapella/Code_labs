@@ -7,6 +7,7 @@ export const level4: LevelMeta = {
   colors: {
     robot: '#DB2777',
     box: '#F472B6',
+    grid: '#F59E0B',
   },
   hints: {
     pt: [

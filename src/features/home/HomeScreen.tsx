@@ -169,10 +169,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
           />
         </div>
 
-        <div className="mt-16 flex items-center justify-center gap-2 text-brand-ice/50 text-sm font-medium uppercase tracking-widest">
-          <span>{t.poweredBy}</span>
-          <Logo />
-        </div>
       </motion.div>
     </div>
   );

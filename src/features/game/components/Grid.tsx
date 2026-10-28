@@ -10,6 +10,8 @@ const PAD = 16;
 import { Sparkles } from 'lucide-react';
 
 interface GridProps {
+  /** Cor da grelha do nível (hex). */
+  gridColor: string;
   size: number;
   robotPosition: Position;
   robotDirection: Direction;
@@ -20,6 +22,7 @@ interface GridProps {
 }
 
 export const Grid: React.FC<GridProps> = ({
+  gridColor,
   size,
   robotPosition,
   robotDirection,
@@ -46,12 +49,14 @@ export const Grid: React.FC<GridProps> = ({
   return (
     <div className="relative perspective-1000 flex items-center justify-center p-12">
       <div 
-        className="relative grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8 border-white/20"
-        style={{ 
+        className="relative grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8"
+        style={{
+          ["--grid-accent" as string]: gridColor,
+          borderBottomColor: gridColor,
           gridTemplateColumns: `repeat(${size}, 1fr)`,
           transform: 'rotateX(45deg) rotateZ(-45deg)',
-          transformStyle: 'preserve-3d'
-        }}
+          transformStyle: 'preserve-3d',
+        } as React.CSSProperties}
       >
         {cells.map((cell) => {
           const boxHere = boxes.find(b => b.position.x === cell.x && b.position.y === cell.y && !b.collected);
@@ -59,7 +64,7 @@ export const Grid: React.FC<GridProps> = ({
           return (
             <div
               key={`${cell.x}-${cell.y}`}
-              className="rounded-lg grid-cell flex items-center justify-center relative border-b-4 border-white/10"
+              className="rounded-lg grid-cell flex items-center justify-center relative border-b-4"
               style={{ width: CELL, height: CELL, transformStyle: 'preserve-3d' }}
             >
               {/* Floor Pattern */}

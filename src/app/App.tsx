@@ -8,6 +8,7 @@ import { MyResultsScreen } from '../features/auth/MyResultsScreen';
 import { TRANSLATIONS } from '../shared/i18n/translations';
 import { UserConfig } from '../shared/i18n/translations';
 import { AccountProvider } from '../features/auth/AccountContext';
+import { Footer } from '../shared/components/Footer';
 
 type Screen = 'ONBOARDING' | 'HOME' | 'GAME' | 'LEADERBOARD' | 'RESULTS';
 
@@ -129,6 +130,10 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer
+        rights={TRANSLATIONS[userConfig?.language ?? 'pt'].footerRights}
+        developedBy={TRANSLATIONS[userConfig?.language ?? 'pt'].footerDeveloped}
+      />
     </div>
     </AccountProvider>
     </MotionConfig>

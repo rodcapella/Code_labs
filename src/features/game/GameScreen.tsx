@@ -469,6 +469,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             boxes={gameState.boxes}
             robotColor={userConfig.robotColor}
             boxColor={level.colors.box}
+            gridColor={level.colors.grid}
             commandCount={gameState.commandCount}
           />
 

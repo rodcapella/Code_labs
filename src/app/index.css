@@ -39,12 +39,14 @@ h1, h2 {
 
 /* Tabuleiro */
 .grid-cell {
-  background: linear-gradient(135deg, #012050 0%, #001547 100%);
-  box-shadow: inset 0 0 18px rgba(10, 132, 255, 0.06);
+  /* --grid-accent é definido por nível (ver LevelMeta.colors.grid). */
+  background: linear-gradient(135deg, color-mix(in srgb, var(--grid-accent, #0A84FF) 16%, #012050) 0%, #001547 100%);
+  border-bottom-color: color-mix(in srgb, var(--grid-accent, #0A84FF) 45%, transparent);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--grid-accent, #0A84FF) 14%, transparent);
 }
 
 .grid-cell:hover {
-  background: linear-gradient(135deg, #0a2a66 0%, #012050 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--grid-accent, #0A84FF) 30%, #012050) 0%, #012050 100%);
 }
 
 .robot-shadow {
