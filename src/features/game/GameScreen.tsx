@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import { Pause, AlertCircle, Lightbulb } from 'lucide-react';
 import { Grid } from './components/Grid';
+import { parseProgram } from './engine/program';
 import { GameHeader } from './components/GameHeader';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 import { LevelTimer } from './components/LevelTimer';
 import { LevelIntroModal } from './components/LevelIntroModal';
 import { Modal } from '../../shared/components/Modal';
 import { contextualHint, blockedCellAhead } from './engine/hints';
+import { previewPath, PreviewStep } from './engine/preview';
 import { ControlPanel } from './components/ControlPanel';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { VictoryOverlay } from './components/VictoryOverlay';
@@ -112,6 +114,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   };
 
   const [bumpKey, setBumpKey] = useState(0);
+  const [previewSteps, setPreviewSteps] = useState<PreviewStep[] | null>(null);
   const [errorOpen, setErrorOpen] = useState(false);
 
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
@@ -191,8 +194,27 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const undo = () => runner.undo();
 
+  // Editar o código invalida a pré-visualização.
+  useEffect(() => {
+    setPreviewSteps(null);
+  }, [code]);
+
+  const togglePreview = () => {
+    if (previewSteps) return setPreviewSteps(null);
+    const layout = {
+      gridSize: level.gridSize,
+      initialRobotPosition: level.initialRobotPosition,
+      initialRobotDirection: level.initialRobotDirection,
+      boxes: level.boxes,
+      walls: level.walls,
+    };
+    const result = previewPath(layout, parseProgram(code), userConfig.language, { allowLoops, allowConditionals });
+    setPreviewSteps(result.steps);
+  };
+
   const runCode = () => {
     setErrorOpen(false);
+    setPreviewSteps(null);
     if (ready) runner.run(code);
   };
 
@@ -497,6 +519,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             gridColor={level.colors.grid}
             walls={gameState.walls}
             commandCount={gameState.commandCount}
+            previewSteps={previewSteps}
             bumpKey={bumpKey}
             blockedCell={gameState.error === t.errorWall ? blockedCellAhead(gameState) : null}
             summary={t.boardSummary(
@@ -568,6 +591,33 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 label={t.timeLabel}
               />
             )}
+            {started && !gameState.victory && (
+              <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+                <button
+                  type="button"
+                  onClick={togglePreview}
+                  disabled={isExecuting}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-navy border border-brand-cyan/50 text-brand-cyan hover:bg-brand-blue/15 disabled:opacity-40"
+                >
+                  {previewSteps ? t.previewHide : t.previewShow}
+                </button>
+                {previewSteps && (
+                  <p className="text-[11px] text-brand-cyan/90 bg-brand-ink/85 rounded px-2 py-1">
+                    {t.previewSteps(previewSteps.length)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {runner.lastCheck && started && (
+              <p
+                role="status"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 max-w-[90%] text-center text-xs font-mono px-3 py-1.5 rounded-lg bg-brand-ink/90 border border-brand-violet/60 text-brand-violet"
+              >
+                {t.condResult(parseProgram(code)[runner.lastCheck.line] ?? '', runner.lastCheck.result)}
+              </p>
+            )}
+
             {introOpen && (
               <LevelIntroModal
                 kicker={`${t.level} ${level.id}`}

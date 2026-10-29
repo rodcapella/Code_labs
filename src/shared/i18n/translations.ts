@@ -114,6 +114,11 @@ export const TRANSLATIONS = {
     boardSummary: (x: number, y: number, dir: string, left: number, walls: number) =>
       `Robô na coluna ${x + 1}, linha ${y + 1}, virado para ${dir}. Caixas por recolher: ${left}. Paredes: ${walls}.`,
     dirNames: { NORTH: 'Norte', EAST: 'Este', SOUTH: 'Sul', WEST: 'Oeste' },
+    previewShow: 'Pré-visualizar caminho',
+    previewHide: 'Ocultar caminho',
+    previewSteps: (n: number) => `Caminho: ${n} ${n === 1 ? 'casa' : 'casas'}`,
+    condResult: (line: string, result: boolean) =>
+      result ? `${line} → verdadeira: executa o bloco` : `${line} → falsa: salta o bloco`,
     groupMove: 'Movimento',
     groupRepeat: 'Repetição',
     groupDecisions: 'Decisões',
@@ -296,6 +301,11 @@ export const TRANSLATIONS = {
     boardSummary: (x: number, y: number, dir: string, left: number, walls: number) =>
       `Robot at column ${x + 1}, row ${y + 1}, facing ${dir}. Boxes left: ${left}. Walls: ${walls}.`,
     dirNames: { NORTH: 'north', EAST: 'east', SOUTH: 'south', WEST: 'west' },
+    previewShow: 'Preview path',
+    previewHide: 'Hide path',
+    previewSteps: (n: number) => `Path: ${n} ${n === 1 ? 'square' : 'squares'}`,
+    condResult: (line: string, result: boolean) =>
+      result ? `${line} → true: runs the block` : `${line} → false: skips the block`,
     groupMove: 'Movement',
     groupRepeat: 'Repetition',
     groupDecisions: 'Decisions',

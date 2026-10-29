@@ -26,10 +26,12 @@ interface GridProps {
   blockedCell: { x: number; y: number } | null;
   /** Descrição textual do tabuleiro para leitores de ecrã. */
   summary: string;
+  /** Caminho pré-visualizado (números por ordem de visita). null = oculto. */
+  previewSteps: { x: number; y: number; step: number }[] | null;
 }
 
 export const Grid: React.FC<GridProps> = ({
-  bumpKey, blockedCell, summary,
+  bumpKey, blockedCell, summary, previewSteps,
   gridColor,
   walls,
   size,
@@ -138,6 +140,20 @@ export const Grid: React.FC<GridProps> = ({
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Pré-visualização: número da primeira visita a cada casa do caminho */}
+        {previewSteps && previewSteps
+          .filter((p, i, all) => all.findIndex(q => q.x === p.x && q.y === p.y) === i)
+          .map(p => (
+            <div
+              key={`preview-${p.x}-${p.y}`}
+              aria-hidden="true"
+              className="absolute z-10 pointer-events-none flex items-center justify-center rounded-md bg-brand-cyan/25 border border-brand-cyan text-brand-cyan text-xs font-bold font-mono"
+              style={{ width: CELL, height: CELL, left: PAD + p.x * PITCH, top: PAD + p.y * PITCH }}
+            >
+              {p.step}
+            </div>
+          ))}
 
         {/* Parede contra a qual a jogada falhou: pisca em vermelho */}
         {blockedCell && (

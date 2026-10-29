@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, Language, LevelConfig } from '../../../shared/types/game';
 import { executeCommand } from '../engine/interpreter';
 import {
-  createInitialState, parseProgram, compileProgram, compileErrorMessage, checkCondition, Instruction,
+  createInitialState, parseProgram, compileProgram, compileErrorMessage, checkCondition, Instruction, Condition,
 } from '../engine/program';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { MAX_RUN_STEPS } from '../../../shared/config/rules';
@@ -57,6 +57,8 @@ export function useProgramRunner(
   const [speed, setSpeed] = useState(600);
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [errors, setErrors] = useState(0);
+  // Última condição avaliada (se / enquanto), para mostrar ao jogador o que foi decidido.
+  const [lastCheck, setLastCheck] = useState<{ line: number; cond: Condition; result: boolean } | null>(null);
   // Passos executados na tentativa em curso (para o limite de ciclos sem fim).
   const stepsRef = useRef(0);
 
@@ -76,6 +78,7 @@ export function useProgramRunner(
     setStarted(false);
     setHistory([]);
     setErrors(0);
+    setLastCheck(null);
     stepsRef.current = 0;
   }, [level]);
 
@@ -104,6 +107,7 @@ export function useProgramRunner(
       if (instr.kind === 'check') {
         // Teste de se_caixa / enquanto_livre: não é um comando, não conta e não gasta erros.
         const ok = checkCondition(state, instr.cond);
+        setLastCheck({ line: instr.sourceLine, cond: instr.cond, result: ok });
         setHistory(h => [...h, { state, pc, steps: stepsRef.current - 1 }]);
         setPc(ok ? pc + 1 : instr.skipTo);
         setState({ ...state, currentLine: instr.sourceLine });
@@ -202,6 +206,7 @@ export function useProgramRunner(
     setSpeed,
     historyLength: history.length,
     runs,
+    lastCheck,
     run,
     pause,
     undo,
