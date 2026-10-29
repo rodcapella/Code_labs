@@ -20,9 +20,16 @@ interface GridProps {
   robotColor: string;
   boxColor: string;
   commandCount: number;
+  /** Sobe a cada jogada bloqueada: dispara o embate do robô. */
+  bumpKey: number;
+  /** Parede contra a qual o robô bateu (destacada no tabuleiro). */
+  blockedCell: { x: number; y: number } | null;
+  /** Descrição textual do tabuleiro para leitores de ecrã. */
+  summary: string;
 }
 
 export const Grid: React.FC<GridProps> = ({
+  bumpKey, blockedCell, summary,
   gridColor,
   walls,
   size,
@@ -50,6 +57,7 @@ export const Grid: React.FC<GridProps> = ({
 
   return (
     <div className="relative perspective-1000 flex items-center justify-center p-12">
+      <p className="sr-only" aria-live="polite">{summary}</p>
       <div 
         className="relative grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8"
         style={{
@@ -104,7 +112,16 @@ export const Grid: React.FC<GridProps> = ({
           transition={{ type: 'tween', duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
         >
           <div className="absolute inset-0" style={{ transform: 'rotateZ(45deg) rotateX(-45deg) translateZ(25px)' }}>
-            <Robot color={robotColor} direction={robotDirection} commandCount={commandCount} />
+            {/* Embate: o robô treme quando a jogada é bloqueada. A chave muda a cada embate. */}
+            <motion.div
+              key={bumpKey}
+              className="w-full h-full"
+              initial={{ x: 0 }}
+              animate={{ x: bumpKey > 0 ? [0, -6, 6, -4, 4, 0] : 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Robot color={robotColor} direction={robotDirection} commandCount={commandCount} />
+            </motion.div>
           </div>
           <AnimatePresence>
             {onCollectedBox && (
@@ -121,6 +138,19 @@ export const Grid: React.FC<GridProps> = ({
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Parede contra a qual a jogada falhou: pisca em vermelho */}
+        {blockedCell && (
+          <motion.div
+            key={`blocked-${bumpKey}`}
+            aria-hidden="true"
+            className="absolute z-10 pointer-events-none rounded-lg border-2 border-red-500 bg-red-500/20"
+            style={{ width: CELL, height: CELL, left: PAD + blockedCell.x * PITCH, top: PAD + blockedCell.y * PITCH }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0.3, 1, 0] }}
+            transition={{ duration: 0.9 }}
+          />
+        )}
       </div>
     </div>
   );

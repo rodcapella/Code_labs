@@ -6,6 +6,8 @@ import { GameHeader } from './components/GameHeader';
 import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 import { LevelTimer } from './components/LevelTimer';
 import { LevelIntroModal } from './components/LevelIntroModal';
+import { Modal } from '../../shared/components/Modal';
+import { contextualHint, blockedCellAhead } from './engine/hints';
 import { ControlPanel } from './components/ControlPanel';
 import { GameOverOverlay } from './components/GameOverOverlay';
 import { VictoryOverlay } from './components/VictoryOverlay';
@@ -109,12 +111,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     }
   };
 
+  const [bumpKey, setBumpKey] = useState(0);
+  const [errorOpen, setErrorOpen] = useState(false);
+
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
   const handleStepEvent = (event: StepEvent) => {
     switch (event) {
       case 'error':
         playErrorSound();
         speak('error');
+        // Embate do robô e janela com a dica para o erro.
+        setBumpKey(k => k + 1);
+        setErrorOpen(true);
         break;
       case 'victory':
         playVictorySound();
@@ -165,6 +173,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   // Reiniciar: zera o robô, os erros, o tempo e a consola (mantém o layout da tentativa).
   const resetGame = () => {
     runner.reset();
+    setErrorOpen(false);
     setCode('');
     setTimer(0);
     setHintsRemaining(getInitialHints());
@@ -183,12 +192,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const undo = () => runner.undo();
 
   const runCode = () => {
+    setErrorOpen(false);
     if (ready) runner.run(code);
   };
 
   // Nova partida: layout novo (nova tentativa no servidor).
   const newAttempt = () => {
     setRound(r => r + 1);
+    setErrorOpen(false);
   };
 
   const pauseGame = () => {
@@ -486,6 +497,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             gridColor={level.colors.grid}
             walls={gameState.walls}
             commandCount={gameState.commandCount}
+            bumpKey={bumpKey}
+            blockedCell={gameState.error === t.errorWall ? blockedCellAhead(gameState) : null}
+            summary={t.boardSummary(
+              gameState.robotPosition.x,
+              gameState.robotPosition.y,
+              t.dirNames[gameState.robotDirection],
+              gameState.boxes.filter(b => !b.collected).length,
+              gameState.walls.length,
+            )}
           />
 
           {/* Overlays */}
@@ -558,6 +578,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
               />
             )}
             {!ready && <ArcadeLoader label={t.preparingLevel} />}
+            {errorOpen && !isGameOver && !gameState.victory && gameState.error && (
+              <Modal
+                kicker={t.errorModalTitle}
+                title={gameState.error}
+                closeLabel={t.errorModalClose}
+                tone="alert"
+                onClose={() => setErrorOpen(false)}
+              >
+                <p>{contextualHint(gameState.error, gameState, userConfig.language)}</p>
+              </Modal>
+            )}
+
             {isGameOver && !gameState.victory && (
               <GameOverOverlay
                 title={t.gameOverTitle}
