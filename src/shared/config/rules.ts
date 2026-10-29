@@ -34,7 +34,7 @@ export const MAX_LINES_PER_RUN = 200;
 export const MAX_LINE_LENGTH = 40;
 
 /** Níveis existentes. Acrescentar um nível: adicionar aqui, no layout e no ficheiro do nível. */
-export const LEVEL_IDS = [1, 2, 3, 4, 5] as const;
+export const LEVEL_IDS = [1, 2, 3, 4, 5, 6, 7] as const;
 
 /** Limites do compilador de programas (repetir). */
 export const MAX_REPEAT = 9;
@@ -48,3 +48,9 @@ export const MAX_RUN_STEPS = 1000;
 
 /** Desconto na pontuação por cada tipo de estrutura (repetir, se, enquanto) usado na vitória. */
 export const STRUCTURE_BONUS = 3;
+
+/** Versão das regras de ranking. Mudar isto reinicia os rankings (níveis renumerados). */
+export const RANKING_VERSION = 2;
+
+/** Máximo de casas numa jogada mover(n). */
+export const MAX_MOVE_COUNT = 9;

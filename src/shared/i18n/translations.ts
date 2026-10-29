@@ -9,6 +9,8 @@ export interface UserConfig {
   language: Language;
   robotColor: string;
   completedLevels: number[];
+  /** Versão da numeração dos níveis (2 = renumeração com Argumentos, Decisões e Enquanto). */
+  levelsVersion?: number;
 }
 
 export const TRANSLATIONS = {
@@ -94,6 +96,13 @@ export const TRANSLATIONS = {
     leaderboard: 'RANKING',
     errorsLabel: 'Erros',
     cmdIfBox: 'se_caixa() {',
+    cmdIfWall: 'se_parede() {',
+    cmdElse: 'senao() {',
+    cmdMoveWord: 'mover',
+    cmdMoveN: (n: number) => `mover(${n})`,
+    errorWall: 'Há uma parede à frente. O movimento não foi feito.',
+    errorMoveN: 'mover(n) aceita um número de casas de 1 a 9.',
+    errorElseWithoutIf: '"senao" só pode vir logo depois de um "se_caixa".',
     cmdWhileFree: 'enquanto_livre() {',
     introStart: 'Começar o nível',
     errorLoopLimit: 'O programa executou demasiados passos (possível ciclo sem fim).',
@@ -255,6 +264,13 @@ export const TRANSLATIONS = {
     leaderboard: 'RANKING',
     errorsLabel: 'Errors',
     cmdIfBox: 'if_box() {',
+    cmdIfWall: 'if_wall() {',
+    cmdElse: 'else() {',
+    cmdMoveWord: 'move',
+    cmdMoveN: (n: number) => `move(${n})`,
+    errorWall: 'There is a wall ahead. The move was not made.',
+    errorMoveN: 'move(n) takes a number of squares from 1 to 9.',
+    errorElseWithoutIf: '"else" can only come right after an "if_box" block.',
     cmdWhileFree: 'while_free() {',
     introStart: 'Start level',
     errorLoopLimit: 'The program ran too many steps (possible endless loop).',

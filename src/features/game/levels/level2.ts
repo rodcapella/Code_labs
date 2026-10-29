@@ -1,4 +1,4 @@
-import levelBackground from '../../../shared/assets/backgrounds/level2.jpg';
+import levelBackground from '../../../shared/assets/backgrounds/level1.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level2: LevelMeta = {
@@ -6,35 +6,33 @@ export const level2: LevelMeta = {
   id: 2,
   intro: {
     pt: {
-      title: 'Direção',
+      title: 'Argumentos',
       body: [
-        'Antes de andar, o robô precisa de estar virado para o lado certo.',
-        'Combina virar_esquerda() e virar_direita() com mover() para planear a rota.',
+        'mover(n) anda n casas de uma só vez (de 1 a 9). Conta como um único comando.',
+        'Um programa com mover(4) é mais curto do que quatro mover().',
       ],
     },
     en: {
-      title: 'Direction',
+      title: 'Arguments',
       body: [
-        'Before moving, the robot must face the right way.',
-        'Combine turn_left() and turn_right() with move() to plan the route.',
+        'move(n) moves n squares at once (from 1 to 9). It counts as a single command.',
+        'A program with move(4) is shorter than four move() calls.',
       ],
     },
   },
   colors: {
-    robot: '#7C3AED',
-    box: '#A78BFA',
-    grid: '#7A5CFC',
+    robot: '#2563EB',
+    box: '#7DD3FC',
+    grid: '#38BDF8',
   },
   hints: {
     pt: [
-    'Este nível é um pouco maior! Planeje seus movimentos.',
-    'Você começa no canto inferior esquerdo virado para o Norte.',
-    'Tente coletar as caixas na ordem mais próxima para economizar comandos.',
+      'Tenta mover(3) em vez de três mover() seguidos.',
+      'Se uma parede estiver no caminho, o movimento inteiro falha e não se mexe.',
     ],
     en: [
-    'This level is a bit bigger! Plan your moves.',
-    'Check which way the robot is facing before you plan the route.',
-    'Try collecting the boxes in the closest order to save commands.',
+      'Try move(3) instead of three move() calls in a row.',
+      'If a wall is in the way, the whole move fails and the robot does not move.',
     ],
   },
 };

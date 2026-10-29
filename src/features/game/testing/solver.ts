@@ -7,6 +7,7 @@ const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, O
 export const solve = (layout: LayoutConfig, lang: Language): string[] => {
   const t = TRANSLATIONS[lang];
   const boxIndex = new Map(layout.boxes.map((b, i) => [`${b.x},${b.y}`, i]));
+  const wallSet = new Set((layout.walls ?? []).map(w => `${w.x},${w.y}`));
   const goal = (1 << layout.boxes.length) - 1;
   const startD = ['NORTH', 'EAST', 'SOUTH', 'WEST'].indexOf(layout.initialRobotDirection);
   type N = { x: number; y: number; d: number; mask: number; path: string[] };
@@ -18,7 +19,7 @@ export const solve = (layout: LayoutConfig, lang: Language): string[] => {
     const next: N[] = [];
     const [dx, dy] = DIRS[cur.d];
     const nx = cur.x + dx, ny = cur.y + dy;
-    if (nx >= 0 && ny >= 0 && nx < layout.gridSize && ny < layout.gridSize) {
+    if (nx >= 0 && ny >= 0 && nx < layout.gridSize && ny < layout.gridSize && !wallSet.has(`${nx},${ny}`)) {
       next.push({ ...cur, x: nx, y: ny, path: [...cur.path, t.cmdMove] });
     }
     next.push({ ...cur, d: (cur.d + 1) % 4, path: [...cur.path, t.cmdRight] });

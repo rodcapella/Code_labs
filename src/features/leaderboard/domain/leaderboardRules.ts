@@ -10,7 +10,10 @@ export const MAX_COMMANDS = 10000;
 export const MAX_ERRORS = 10000;
 export const MAX_TIME_SECONDS = 86400;
 
-export const keyFor = (levelId: number): string => `leaderboard:level:${levelId}`;
+import { RANKING_VERSION } from '../../../shared/config/rules';
+
+/** Chave do ranking de um nível. A versão muda quando os níveis são renumerados (ranking reiniciado). */
+export const keyFor = (levelId: number): string => `leaderboard:v${RANKING_VERSION}:level:${levelId}`;
 
 /** Tentativa emitida pelo servidor (semente do layout). Consumida ao submeter. */
 export const attemptKey = (attemptId: string): string => `attempt:${attemptId}`;

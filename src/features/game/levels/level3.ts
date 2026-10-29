@@ -1,4 +1,4 @@
-import levelBackground from '../../../shared/assets/backgrounds/level3.jpg';
+import levelBackground from '../../../shared/assets/backgrounds/level2.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level3: LevelMeta = {
@@ -6,35 +6,35 @@ export const level3: LevelMeta = {
   id: 3,
   intro: {
     pt: {
-      title: 'Repetir (for)',
+      title: 'Direção',
       body: [
-        'repetir(n) { ... } executa o bloco um número fixo de vezes.',
-        'Usa-o quando um padrão de comandos se repete.',
+        'Antes de andar, o robô precisa de estar virado para o lado certo.',
+        'Combina virar_esquerda() e virar_direita() com mover() para planear a rota.',
       ],
     },
     en: {
-      title: 'Repeat (for)',
+      title: 'Direction',
       body: [
-        'repeat(n) { ... } runs the block a fixed number of times.',
-        'Use it when the same pattern of commands repeats.',
+        'Before moving, the robot must face the right way.',
+        'Combine turn_left() and turn_right() with move() to plan the route.',
       ],
     },
   },
   colors: {
-    robot: '#059669',
-    box: '#6EE7B7',
-    grid: '#34D399',
+    robot: '#7C3AED',
+    box: '#A78BFA',
+    grid: '#7A5CFC',
   },
   hints: {
     pt: [
-    'O desafio final do MVP! A posição inicial do robô muda a cada partida.',
-    'As caixas aparecem em posições diferentes a cada partida.',
-    'Use o máximo de eficiência para bater o recorde no Ranking!',
+    'Este nível é um pouco maior! Planeje seus movimentos.',
+    'Você começa no canto inferior esquerdo virado para o Norte.',
+    'Tente coletar as caixas na ordem mais próxima para economizar comandos.',
     ],
     en: [
-    'The final challenge! The robot’s start position changes every game.',
-    'The boxes appear in different places every game.',
-    'Be efficient to beat the record on the Ranking!',
+    'This level is a bit bigger! Plan your moves.',
+    'Check which way the robot is facing before you plan the route.',
+    'Try collecting the boxes in the closest order to save commands.',
     ],
   },
 };

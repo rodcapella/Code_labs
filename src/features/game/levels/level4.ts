@@ -1,4 +1,4 @@
-import levelBackground from '../../../shared/assets/backgrounds/level4.jpg';
+import levelBackground from '../../../shared/assets/backgrounds/level3.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level4: LevelMeta = {
@@ -6,35 +6,35 @@ export const level4: LevelMeta = {
   id: 4,
   intro: {
     pt: {
-      title: 'Decisões (se)',
+      title: 'Repetir (for)',
       body: [
-        'se_caixa() { ... } executa o bloco só se houver uma caixa por recolher na casa atual.',
-        'Se não houver caixa, o bloco é saltado.',
+        'repetir(n) { ... } executa o bloco um número fixo de vezes.',
+        'Usa-o quando um padrão de comandos se repete.',
       ],
     },
     en: {
-      title: 'Decisions (if)',
+      title: 'Repeat (for)',
       body: [
-        'if_box() { ... } runs the block only if there is a box still to collect on the current square.',
-        'If there is no box, the block is skipped.',
+        'repeat(n) { ... } runs the block a fixed number of times.',
+        'Use it when the same pattern of commands repeats.',
       ],
     },
   },
   colors: {
-    robot: '#DB2777',
-    box: '#FCD34D',
-    grid: '#F59E0B',
+    robot: '#059669',
+    box: '#6EE7B7',
+    grid: '#34D399',
   },
   hints: {
     pt: [
-      'Último nível! O tabuleiro é o maior de todos: planeje a rota antes de executar.',
-      'Observe onde o robô começa e para onde está virado antes de planejar a rota.',
-      'Muitos erros acabam o nível: confirme cada grupo de comandos antes de seguir em frente.',
+    'O desafio final do MVP! A posição inicial do robô muda a cada partida.',
+    'As caixas aparecem em posições diferentes a cada partida.',
+    'Use o máximo de eficiência para bater o recorde no Ranking!',
     ],
     en: [
-      'Last level! This is the biggest board: plan your route before running.',
-      'Look at where the robot starts and which way it faces before planning your route.',
-      'Many errors end the level: check each group of commands before moving on.',
+    'The final challenge! The robot’s start position changes every game.',
+    'The boxes appear in different places every game.',
+    'Be efficient to beat the record on the Ranking!',
     ],
   },
 };

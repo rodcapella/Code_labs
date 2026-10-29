@@ -50,7 +50,8 @@ describe('validateSubmission', () => {
   it('rejeita nível, tempo, data e cor inválidos', () => {
     expect(validateSubmission({ ...valid, levelId: 4 }).ok).toBe(true);
     expect(validateSubmission({ ...valid, levelId: 5 }).ok).toBe(true);
-    expect(validateSubmission({ ...valid, levelId: 6 }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, levelId: 6 }).ok).toBe(true);
+    expect(validateSubmission({ ...valid, levelId: 8 }).ok).toBe(false);
     expect(validateSubmission({ ...valid, time: -1 }).ok).toBe(false);
     expect(validateSubmission({ ...valid, date: '26/10/2026' }).ok).toBe(false);
     expect(validateSubmission({ ...valid, robotColor: 'red' }).ok).toBe(false);
@@ -105,7 +106,7 @@ describe('encodeScore', () => {
 
 describe('keyFor', () => {
   it('uma chave Redis por nível', () => {
-    expect(keyFor(1)).toBe('leaderboard:level:1');
+    expect(keyFor(1)).toBe('leaderboard:v2:level:1');
     expect(keyFor(3)).not.toBe(keyFor(2));
   });
 });

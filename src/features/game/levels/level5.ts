@@ -1,38 +1,42 @@
+import levelBackground from '../../../shared/assets/backgrounds/level4.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level5: LevelMeta = {
+  backgroundImage: levelBackground,
   id: 5,
   intro: {
     pt: {
-      title: 'Enquanto (while)',
+      title: 'Decisões (se e senão)',
       body: [
-        'enquanto_livre() { ... } repete o bloco enquanto a casa à frente estiver livre (dentro da grelha).',
-        'Não sabes à partida quantas vezes vai repetir: o programa decide durante a execução.',
+        'se_caixa() { ... } executa o bloco só se houver uma caixa por recolher na casa atual.',
+        'senao() { ... } logo a seguir executa o outro caminho quando não há caixa.',
+        'Há também duas paredes na grelha: não as podes atravessar.',
       ],
     },
     en: {
-      title: 'While loops',
+      title: 'Decisions (if and else)',
       body: [
-        'while_free() { ... } repeats the block while the square ahead is free (inside the grid).',
-        'You do not know in advance how many times it runs: the program decides while it runs.',
+        'if_box() { ... } runs the block only if there is a box still to collect on the current square.',
+        'else() { ... } right after it runs the other path when there is no box.',
+        'There are also two walls on the grid: you cannot cross them.',
       ],
     },
   },
   colors: {
-    robot: '#0D9488',
-    box: '#5EEAD4',
-    grid: '#14B8A6',
+    robot: '#DB2777',
+    box: '#FCD34D',
+    grid: '#F59E0B',
   },
   hints: {
     pt: [
-      'Experimenta enquanto_livre() { mover() } para andar até à borda.',
-      'Um ciclo sem fim é travado depois de muitos passos e conta como erro.',
-      'Combina enquanto_livre() com virar_direita() para varrer a grelha.',
+      'Último nível! O tabuleiro é o maior de todos: planeje a rota antes de executar.',
+      'Observe onde o robô começa e para onde está virado antes de planejar a rota.',
+      'Muitos erros acabam o nível: confirme cada grupo de comandos antes de seguir em frente.',
     ],
     en: [
-      'Try while_free() { move() } to walk to the edge.',
-      'An endless loop is stopped after many steps and counts as an error.',
-      'Combine while_free() with turn_right() to sweep the grid.',
+      'Last level! This is the biggest board: plan your route before running.',
+      'Look at where the robot starts and which way it faces before planning your route.',
+      'Many errors end the level: check each group of commands before moving on.',
     ],
   },
 };

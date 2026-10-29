@@ -12,6 +12,7 @@ import { Sparkles } from 'lucide-react';
 interface GridProps {
   /** Cor da grelha do nível (hex). */
   gridColor: string;
+  walls: Position[];
   size: number;
   robotPosition: Position;
   robotDirection: Direction;
@@ -23,6 +24,7 @@ interface GridProps {
 
 export const Grid: React.FC<GridProps> = ({
   gridColor,
+  walls,
   size,
   robotPosition,
   robotDirection,
@@ -60,6 +62,7 @@ export const Grid: React.FC<GridProps> = ({
       >
         {cells.map((cell) => {
           const boxHere = boxes.find(b => b.position.x === cell.x && b.position.y === cell.y && !b.collected);
+          const isWall = walls.some(w => w.x === cell.x && w.y === cell.y);
 
           return (
             <div
@@ -67,6 +70,14 @@ export const Grid: React.FC<GridProps> = ({
               className="rounded-lg grid-cell flex items-center justify-center relative border-b-4"
               style={{ width: CELL, height: CELL, transformStyle: 'preserve-3d' }}
             >
+              {isWall && (
+                // Parede: bloco elevado e escuro. Não pode ser atravessada.
+                <div
+                  aria-label="parede"
+                  className="absolute inset-0.5 rounded-md bg-brand-ink border-2 border-white/30 shadow-[inset_0_-6px_0_rgba(0,0,0,0.5)] pointer-events-none"
+                  style={{ transform: 'translateZ(10px)' }}
+                />
+              )}
               {/* Floor Pattern */}
               <div className="absolute inset-0 opacity-5 pointer-events-none">
                 <div className="absolute top-1/2 left-0 w-full h-[1px] bg-brand-ink" />

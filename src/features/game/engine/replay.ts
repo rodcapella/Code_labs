@@ -1,6 +1,6 @@
 import { LayoutConfig, Language } from '../../../shared/types/game';
 import { executeCommand } from './interpreter';
-import { createInitialState, compileProgram, hasBoxHere, hasRoomAhead } from './program';
+import { createInitialState, compileProgram, checkCondition } from './program';
 import { MAX_ERRORS_BY_LEVEL, MIN_STEP_MS, MAX_RUN_STEPS } from '../../../shared/config/rules';
 import { structureBonusFor } from './structures';
 import { KnowledgeLevel } from '../../../shared/i18n/translations';
@@ -61,7 +61,7 @@ export const replayAttempt = (
       }
 
       if (instr.kind === 'check') {
-        const ok = instr.cond === 'box' ? hasBoxHere(state) : hasRoomAhead(state);
+        const ok = checkCondition(state, instr.cond);
         pc = ok ? pc + 1 : instr.skipTo;
         continue;
       }

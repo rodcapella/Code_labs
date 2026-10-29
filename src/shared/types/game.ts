@@ -18,6 +18,7 @@ export interface GameState {
   robotPosition: Position;
   robotDirection: Direction;
   boxes: Box[];
+  walls: Position[];
   /** Índice (0-based) da linha que acabou de ser executada, para destaque no editor. */
   currentLine: number;
   error: string | null;
@@ -32,6 +33,8 @@ export interface LayoutConfig {
   initialRobotPosition: Position;
   initialRobotDirection: Direction;
   boxes: Position[];
+  /** Paredes (obstáculos) da grelha. Opcional: sem paredes por defeito. */
+  walls?: Position[];
 }
 
 /** Metadados do nível (estáticos). O layout (posições) é gerado por partida. */

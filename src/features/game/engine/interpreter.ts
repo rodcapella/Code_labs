@@ -1,5 +1,6 @@
 import { GameState, Direction, Position, Language } from '../../../shared/types/game';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
+import { MAX_MOVE_COUNT } from '../../../shared/config/rules';
 
 const DIRECTIONS_LEFT: Direction[] = ['NORTH', 'WEST', 'SOUTH', 'EAST'];
 const DIRECTIONS_RIGHT: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
@@ -7,6 +8,10 @@ const DIRECTIONS_RIGHT: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
 export const samePosition = (a: Position, b: Position): boolean =>
   a.x === b.x && a.y === b.y;
 
+export const isWall = (walls: Position[], p: Position): boolean =>
+  walls.some(w => samePosition(w, p));
+
+/** Casa à frente dentro da grelha, ou null se for a borda. */
 export const getNextPosition = (pos: Position, dir: Direction, gridSize: number): Position | null => {
   let nextX = pos.x;
   let nextY = pos.y;
@@ -32,11 +37,11 @@ export const rotateRight = (dir: Direction): Direction =>
   DIRECTIONS_RIGHT[(DIRECTIONS_RIGHT.indexOf(dir) + 1) % 4];
 
 /**
- * Executa um único comando e devolve o novo estado. Função pura: não mantém
- * nada fora do estado devolvido, por isso pode ser testada e chamada sem React.
+ * Executa um comando sobre um estado e devolve o novo estado. Função pura.
  *
- * Um comando que falha devolve o estado com `error` preenchido e não conta
- * em `commandCount`.
+ * Um comando que falha devolve o estado com `error` e não conta em `commandCount`.
+ * Um `mover(n)` é tudo-ou-nada: se uma das casas for borda ou parede, o robô
+ * fica onde estava e a jogada conta como um erro.
  */
 export const executeCommand = (state: GameState, command: string, lang: Language): GameState => {
   const cmd = command.trim();
@@ -51,9 +56,25 @@ export const executeCommand = (state: GameState, command: string, lang: Language
     commandCount: state.commandCount + 1,
   });
 
+  const moveN = cmd.match(new RegExp(`^${t.cmdMoveWord}\\((\\d+)\\)$`));
+  if (moveN) {
+    const n = Number(moveN[1]);
+    if (n < 1 || n > MAX_MOVE_COUNT) return fail(t.errorMoveN);
+    let pos = state.robotPosition;
+    for (let i = 0; i < n; i++) {
+      const next = getNextPosition(pos, state.robotDirection, state.gridSize);
+      if (next === null) return fail(t.errorOutOfBounds);
+      if (isWall(state.walls, next)) return fail(t.errorWall);
+      pos = next;
+    }
+    return ok({ robotPosition: pos });
+  }
+
   if (cmd === t.cmdMove) {
     const next = getNextPosition(state.robotPosition, state.robotDirection, state.gridSize);
-    return next ? ok({ robotPosition: next }) : fail(t.errorOutOfBounds);
+    if (next === null) return fail(t.errorOutOfBounds);
+    if (isWall(state.walls, next)) return fail(t.errorWall);
+    return ok({ robotPosition: next });
   }
 
   if (cmd === t.cmdLeft) {

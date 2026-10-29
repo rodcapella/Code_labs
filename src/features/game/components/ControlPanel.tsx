@@ -18,12 +18,14 @@ export interface ControlPanelProps {
   onAddCommand: (command: string) => void;
   showLoops: boolean;
   showConditionals: boolean;
+  /** mover(n) disponível a partir do nível 2. */
+  showMoveN: boolean;
 }
 
 /** Painel direito: console (somente leitura), velocidade e paleta de comandos. */
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   t, code, isExecuting, currentLine, error, executionSpeed,
-  onSpeedChange, onClear, onAddCommand, showLoops, showConditionals,
+  onSpeedChange, onClear, onAddCommand, showLoops, showConditionals, showMoveN,
 }) => {
   const commands = [
     { label: t.cmdMove, icon: <ChevronUp className="w-4 h-4" /> },
@@ -92,12 +94,26 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 <GitBranch className="w-4 h-4" />
                 {t.cmdIfBox}
               </button>
+              <button onClick={() => onAddCommand(t.cmdIfWall)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
+                <GitBranch className="w-4 h-4" />
+                {t.cmdIfWall}
+              </button>
+              <button onClick={() => onAddCommand(t.cmdElse)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
+                <GitBranch className="w-4 h-4" />
+                {t.cmdElse}
+              </button>
               <button onClick={() => onAddCommand(t.cmdWhileFree)} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-violet/60 font-mono text-xs text-brand-violet hover:bg-brand-violet/15 transition-all shadow-sm">
                 <Repeat className="w-4 h-4" />
                 {t.cmdWhileFree}
               </button>
             </>
           )}
+          {showMoveN && [2, 3, 4].map(n => (
+            <button key={n} onClick={() => onAddCommand(t.cmdMoveN(n))} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-blue/50 font-mono text-xs text-brand-cyan hover:bg-brand-blue/15 transition-all shadow-sm">
+              <ChevronUp className="w-4 h-4" />
+              {t.cmdMoveN(n)}
+            </button>
+          ))}
           {showLoops && (
             <>
               <button onClick={() => onAddCommand(t.cmdRepeat(2))} className="command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl border border-brand-cyan/40 font-mono text-xs text-brand-cyan hover:bg-brand-blue/15 transition-all shadow-sm">

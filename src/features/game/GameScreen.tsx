@@ -17,6 +17,8 @@ import { level2 } from './levels/level2';
 import { level3 } from './levels/level3';
 import { level4 } from './levels/level4';
 import { level5 } from './levels/level5';
+import { level6 } from './levels/level6';
+import { level7 } from './levels/level7';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
@@ -29,7 +31,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4, level5];
+const LEVELS = [level1, level2, level3, level4, level5, level6, level7];
 
 interface GameScreenProps {
   onBack: () => void;
@@ -482,6 +484,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             robotColor={userConfig.robotColor}
             boxColor={level.colors.box}
             gridColor={level.colors.grid}
+            walls={gameState.walls}
             commandCount={gameState.commandCount}
           />
 
@@ -629,6 +632,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
           onAddCommand={addCommand}
           showLoops={allowLoops}
           showConditionals={allowConditionals}
+          showMoveN={level.id >= 2}
         />
       </main>
     </div>

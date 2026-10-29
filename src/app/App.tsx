@@ -25,7 +25,9 @@ export default function App() {
     if (savedConfig) {
       try {
         const parsed = JSON.parse(savedConfig);
-        setUserConfig(parsed);
+        // Versão 2 dos níveis: os números mudaram de tema, por isso o progresso antigo não se aplica.
+        const migrated = parsed.levelsVersion === 2 ? parsed : { ...parsed, completedLevels: [], levelsVersion: 2 };
+        setUserConfig(migrated);
         setCurrentScreen('HOME');
       } catch (e) {
         console.error('Failed to parse saved config', e);

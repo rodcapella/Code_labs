@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, Language, LevelConfig } from '../../../shared/types/game';
 import { executeCommand } from '../engine/interpreter';
 import {
-  createInitialState, parseProgram, compileProgram, compileErrorMessage, hasBoxHere, hasRoomAhead, Instruction,
+  createInitialState, parseProgram, compileProgram, compileErrorMessage, checkCondition, Instruction,
 } from '../engine/program';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { MAX_RUN_STEPS } from '../../../shared/config/rules';
@@ -103,7 +103,7 @@ export function useProgramRunner(
 
       if (instr.kind === 'check') {
         // Teste de se_caixa / enquanto_livre: não é um comando, não conta e não gasta erros.
-        const ok = instr.cond === 'box' ? hasBoxHere(state) : hasRoomAhead(state);
+        const ok = checkCondition(state, instr.cond);
         setHistory(h => [...h, { state, pc, steps: stepsRef.current - 1 }]);
         setPc(ok ? pc + 1 : instr.skipTo);
         setState({ ...state, currentLine: instr.sourceLine });
