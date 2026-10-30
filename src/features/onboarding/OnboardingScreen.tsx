@@ -22,7 +22,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onComplete({ name, age, level, language, robotColor, completedLevels: [], levelsVersion: 2 });
+      onComplete({ name, age, level, language, robotColor, completedLevels: [], levelsVersion: 3 });
     }
   };
 

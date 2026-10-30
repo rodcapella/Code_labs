@@ -2,7 +2,7 @@ import { LayoutConfig, Language, Position, GameState } from '../../../shared/typ
 import { MAX_RUN_STEPS } from '../../../shared/config/rules';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { compileProgram, createInitialState, checkCondition, CompileOptions } from './program';
-import { executeCommand, getNextPosition, isWall } from './interpreter';
+import { executeCommand, getNextPosition, isWall, isSolidAt } from './interpreter';
 
 export interface PreviewStep {
   x: number;
@@ -58,9 +58,14 @@ export const previewPath = (
       let pos = state.robotPosition;
       for (let i = 0; i < n; i++) {
         const nxt = getNextPosition(pos, state.robotDirection, state.gridSize);
-        if (nxt === null || isWall(state.walls, nxt)) return { steps, stoppedBy: 'error' };
+        if (nxt === null || isSolidAt(state, nxt)) return { steps, stoppedBy: 'error' };
         cells.push(nxt);
         pos = nxt;
+        // Buraco: o caminho mostra a casa onde se cai e para aí.
+        if (isWall(state.holes, nxt)) {
+          for (const c of cells) steps.push({ x: c.x, y: c.y, step: steps.length + 1 });
+          return { steps, stoppedBy: 'error' };
+        }
       }
       for (const c of cells) steps.push({ x: c.x, y: c.y, step: steps.length + 1 });
       state = { ...state, robotPosition: pos, commandCount: state.commandCount + 1 } as GameState;

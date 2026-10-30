@@ -13,6 +13,9 @@ export const contextualHint = (error: string, state: GameState, lang: Language):
   if (error === t.errorNoBox) return t.hintNoBox;
   if (error === t.errorLoopLimit) return t.hintLoop;
   if (error === t.errorMoveN) return t.hintMoveN;
+  if (error === t.errorHole) return t.hintHole;
+  if (error === t.errorWood) return t.hintWood;
+  if (error === t.errorNoWood) return t.hintNoWood;
   // Qualquer outro erro de comando: o comando não existe nesta versão do jogo.
   void state;
   return t.hintCommand;

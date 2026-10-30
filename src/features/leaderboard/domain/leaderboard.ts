@@ -2,7 +2,7 @@ import { LeaderboardEntry } from '../../../shared/types/game';
 import { scoreOf as rulesScoreOf } from '../../../shared/config/rules';
 import { LEADERBOARD_SIZE } from './leaderboardRules';
 
-export const LEADERBOARD_KEY = 'codebot_leaderboard_v2';
+export const LEADERBOARD_KEY = 'codebot_leaderboard_v3';
 export { LEADERBOARD_SIZE };
 
 export const formatPlayerName = (name: string): string =>

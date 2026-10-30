@@ -1,15 +1,16 @@
 import { Direction, LayoutConfig, Position } from '../../../shared/types/game';
 
 /** Grelha, caixas e paredes de cada nível. Posições são geradas por partida. */
-export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number }> = {
-  1: { gridSize: 6, boxCount: 6, wallCount: 0 },
-  2: { gridSize: 8, boxCount: 6, wallCount: 0 },
-  3: { gridSize: 8, boxCount: 8, wallCount: 0 },
-  4: { gridSize: 10, boxCount: 12, wallCount: 0 },
-  5: { gridSize: 12, boxCount: 16, wallCount: 2 },
-  6: { gridSize: 10, boxCount: 8, wallCount: 4 },
-  7: { gridSize: 10, boxCount: 8, wallCount: 6 },
-  8: { gridSize: 10, boxCount: 10, wallCount: 3 },
+export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number; holeCount: number; woodCount: number }> = {
+  1: { gridSize: 6, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
+  2: { gridSize: 8, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
+  3: { gridSize: 8, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 0 },
+  4: { gridSize: 10, boxCount: 12, wallCount: 0, holeCount: 0, woodCount: 0 },
+  5: { gridSize: 12, boxCount: 16, wallCount: 2, holeCount: 0, woodCount: 0 },
+  6: { gridSize: 10, boxCount: 8, wallCount: 4, holeCount: 2, woodCount: 0 },
+  7: { gridSize: 10, boxCount: 8, wallCount: 6, holeCount: 0, woodCount: 0 },
+  8: { gridSize: 10, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 4 },
+  9: { gridSize: 10, boxCount: 10, wallCount: 3, holeCount: 1, woodCount: 1 },
 };
 
 const DIRECTIONS: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
@@ -31,9 +32,12 @@ export const mulberry32 = (seed: number): (() => number) => {
  * As caixas nunca ficam no ponto de partida, e a grelha é aberta, por isso
  * qualquer layout gerado tem solução. Usado pelo jogo e pelo servidor.
  */
-/** Todas as casas alcançáveis a partir do robô, sem atravessar paredes (caixas não bloqueiam). */
-const reachable = (start: Position, walls: Position[], gridSize: number): Set<string> => {
-  const blocked = new Set(walls.map(w => `${w.x},${w.y}`));
+/**
+ * Casas alcançáveis a partir do robô sem atravessar paredes nem buracos.
+ * A madeira é atravessável: pode ser partida com partir(), por isso não bloqueia o alcance.
+ */
+const reachable = (start: Position, impassable: Position[], gridSize: number): Set<string> => {
+  const blocked = new Set(impassable.map(w => `${w.x},${w.y}`));
   const seen = new Set([`${start.x},${start.y}`]);
   const queue = [start];
   while (queue.length) {
@@ -74,7 +78,11 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
     const start = cells[0];
     const boxes = cells.slice(1, 1 + spec.boxCount);
     const walls = cells.slice(1 + spec.boxCount, 1 + spec.boxCount + spec.wallCount);
-    const reach = reachable(start, walls, spec.gridSize);
+    const holeStart = 1 + spec.boxCount + spec.wallCount;
+    const holes = cells.slice(holeStart, holeStart + spec.holeCount);
+    const woodStart = holeStart + spec.holeCount;
+    const wood = cells.slice(woodStart, woodStart + spec.woodCount);
+    const reach = reachable(start, [...walls, ...holes], spec.gridSize);
     const allReachable = boxes.every(b => reach.has(`${b.x},${b.y}`));
     if (!allReachable) continue;
 
@@ -84,6 +92,8 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
       initialRobotDirection: DIRECTIONS[Math.floor(rnd() * DIRECTIONS.length)],
       boxes,
       walls,
+      holes,
+      wood,
     };
   }
   throw new Error(`não foi possível gerar um layout jogável para o nível ${levelId}`);

@@ -19,6 +19,10 @@ export interface GameState {
   robotDirection: Direction;
   boxes: Box[];
   walls: Position[];
+  holes: Position[];
+  wood: Position[];
+  /** true quando o último comando fez o robô cair num buraco. */
+  fell?: boolean;
   /** Índice (0-based) da linha que acabou de ser executada, para destaque no editor. */
   currentLine: number;
   error: string | null;
@@ -35,6 +39,10 @@ export interface LayoutConfig {
   boxes: Position[];
   /** Paredes (obstáculos) da grelha. Opcional: sem paredes por defeito. */
   walls?: Position[];
+  /** Buracos: pisar um faz o robô cair e a execução reinicia. */
+  holes: Position[];
+  /** Madeira: bloqueia até ser partida com partir(). */
+  wood: Position[];
 }
 
 /** Metadados do nível (estáticos). O layout (posições) é gerado por partida. */

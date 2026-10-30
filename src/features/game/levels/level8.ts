@@ -4,35 +4,35 @@ export const level8: LevelMeta = {
   id: 8,
   intro: {
     pt: {
-      title: 'Revisão final',
+      title: 'Madeira',
       body: [
-        'Último nível: junta tudo o que aprendeste.',
-        'Combina repetir, se_caixa com senao, se_parede e enquanto_livre. Planeia antes de executar: a pré-visualização ajuda.',
+        'A madeira bloqueia o caminho, como uma parede, mas pode ser aberta.',
+        'partir() remove a madeira que está à frente. Conta como um comando.',
       ],
     },
     en: {
-      title: 'Final review',
+      title: 'Wood',
       body: [
-        'The last level: it brings everything together.',
-        'Combine repeat, if_box with else, if_wall and while_free. Plan before you run: the path preview helps.',
+        'Wood blocks the way, like a wall, but it can be opened.',
+        'break() removes the wood on the square ahead. It counts as one command.',
       ],
     },
   },
   colors: {
-    robot: '#BE185D',
-    box: '#F9A8D4',
-    grid: '#EC4899',
+    robot: '#92400E',
+    box: '#FDE68A',
+    grid: '#B45309',
   },
   hints: {
     pt: [
-      'Começa por desenhar a rota no papel, casa a casa.',
-      'Um enquanto_livre() dentro de repetir(2) { } faz o mesmo percurso duas vezes.',
-      'Usa se_caixa() { pegar() } senao { mover() } para não perder passos.',
+      'Procura a madeira na tua frente antes de contar passos.',
+      'partir() só funciona com madeira na casa da frente.',
+      'Depois de partir, a casa fica livre e o caminho continua normal.',
     ],
     en: [
-      'Start by sketching the route on paper, square by square.',
-      'A while_free() inside repeat(2) { } walks the same route twice.',
-      'Use if_box() { pick() } else { move() } to avoid wasted steps.',
+      'Look for wood in front of you before counting steps.',
+      'break() only works when there is wood on the square ahead.',
+      'Once broken, the square is free and the path continues as normal.',
     ],
   },
 };

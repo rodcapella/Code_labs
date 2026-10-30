@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Eraser, Gauge, ChevronUp, RotateCcw, RotateCw, Hand, Repeat, CornerDownLeft, GitBranch, Shield, Route } from 'lucide-react';
+import { Terminal, Eraser, Gauge, ChevronUp, RotateCcw, RotateCw, Hand, Repeat, CornerDownLeft, GitBranch, Shield, Route, Hammer } from 'lucide-react';
 import { CodeEditor } from './CodeEditor';
 import { Tooltip } from '../../../shared/components/Tooltip';
 import { Translations } from './GameHeader';
@@ -20,6 +20,8 @@ export interface ControlPanelProps {
   showConditionals: boolean;
   /** mover(n) disponível a partir do nível 2. */
   showMoveN: boolean;
+  /** partir() disponível a partir do nível da madeira. */
+  showBreak: boolean;
 }
 
 const btnBase = 'command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 min-h-10 rounded-xl font-mono text-xs transition-all shadow-sm';
@@ -33,7 +35,7 @@ const decisionBtn = `${btnBase} border border-brand-violet/60 text-brand-violet 
  */
 export const ControlPanel: React.FC<ControlPanelProps> = ({
   t, code, isExecuting, currentLine, error, executionSpeed,
-  onSpeedChange, onClear, onAddCommand, showLoops, showConditionals, showMoveN,
+  onSpeedChange, onClear, onAddCommand, showLoops, showConditionals, showMoveN, showBreak,
 }) => (
   <div className="w-full lg:w-[450px] bg-brand-navy border-l border-white/10 p-6 flex flex-col gap-6">
     <div className="flex-1">
@@ -105,6 +107,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           <button onClick={() => onAddCommand(t.cmdPick)} className={moveBtn}>
             <Hand className="w-4 h-4" />{t.cmdPick}
           </button>
+          {showBreak && (
+            <button onClick={() => onAddCommand(t.cmdBreak)} className={`${moveBtn} text-amber-300 border-amber-400/50`}>
+              <Hammer className="w-4 h-4" />{t.cmdBreak}
+            </button>
+          )}
           {showMoveN && [2, 3, 4].map(n => (
             <button key={n} onClick={() => onAddCommand(t.cmdMoveN(n))} className={`${moveBtn} text-brand-cyan border-brand-blue/50`}>
               <Route className="w-4 h-4" />{t.cmdMoveN(n)}

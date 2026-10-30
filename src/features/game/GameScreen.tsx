@@ -25,6 +25,7 @@ import { level5 } from './levels/level5';
 import { level6 } from './levels/level6';
 import { level7 } from './levels/level7';
 import { level8 } from './levels/level8';
+import { level9 } from './levels/level9';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
@@ -38,7 +39,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8];
+const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9];
 
 interface GameScreenProps {
   onBack: () => void;
@@ -211,6 +212,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       initialRobotDirection: level.initialRobotDirection,
       boxes: level.boxes,
       walls: level.walls,
+      holes: level.holes,
+      wood: level.wood,
     };
     const result = previewPath(layout, parseProgram(code), userConfig.language, { allowLoops, allowConditionals });
     setPreviewSteps(result.steps);
@@ -530,6 +533,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             boxColor={level.colors.box}
             gridColor={level.colors.grid}
             walls={gameState.walls}
+            holes={gameState.holes}
+            wood={gameState.wood}
             commandCount={gameState.commandCount}
             previewSteps={previewSteps}
             bumpKey={bumpKey}
@@ -727,6 +732,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
           showLoops={allowLoops}
           showConditionals={allowConditionals}
           showMoveN={level.id >= 2}
+          showBreak={level.id >= 8}
         />
       </main>
     </div>

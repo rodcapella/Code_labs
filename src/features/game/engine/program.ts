@@ -1,7 +1,7 @@
 import { GameState, LayoutConfig, Language } from '../../../shared/types/game';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { MAX_INSTRUCTIONS, MAX_REPEAT } from '../../../shared/config/rules';
-import { getNextPosition, isWall } from './interpreter';
+import { getNextPosition, isSolidAt } from './interpreter';
 
 /** Linhas do programa, sem espaços e sem linhas vazias. */
 export const parseProgram = (code: string): string[] =>
@@ -13,6 +13,8 @@ export const createInitialState = (layout: LayoutConfig): GameState => ({
   robotDirection: layout.initialRobotDirection,
   boxes: layout.boxes.map((p, i) => ({ id: `box-${i}`, position: p, collected: false })),
   walls: layout.walls,
+  holes: layout.holes,
+  wood: layout.wood,
   currentLine: 0,
   error: null,
   victory: false,
@@ -217,7 +219,7 @@ export const hasBoxHere = (state: GameState): boolean =>
 /** Verdadeiro se a casa à frente existe e não é parede. */
 export const hasRoomAhead = (state: GameState): boolean => {
   const next = getNextPosition(state.robotPosition, state.robotDirection, state.gridSize);
-  return next !== null && !isWall(state.walls, next);
+  return next !== null && !isSolidAt(state, next);
 };
 
 /** Avalia uma condição de teste sobre o estado. Usada pelo hook e pelo servidor. */

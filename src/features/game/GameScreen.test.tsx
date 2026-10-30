@@ -103,6 +103,9 @@ const solve = (lvl: LayoutConfig): string[] => {
   throw new Error('sem solução');
 };
 
+// Simular um nível inteiro com relógio falso é lento; 5 s era apertado para a carga da máquina.
+vi.setConfig({ testTimeout: 20_000 });
+
 describe('GameScreen (Strict Mode)', () => {
   beforeEach(() => {
     vi.mocked(fetchAttempt).mockResolvedValue({ attemptId: null, seed: SEED });

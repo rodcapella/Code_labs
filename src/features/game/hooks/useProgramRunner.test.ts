@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { StrictMode, createElement, ReactNode } from 'react';
 import { useProgramRunner, StepEvent, parseProgram } from './useProgramRunner';
 import { fixedLevel as level1 } from '../testing/fixtures';
+import { TRANSLATIONS } from '../../../shared/i18n/translations';
 
 const strict = ({ children }: { children: ReactNode }) => createElement(StrictMode, null, children);
 
@@ -262,6 +263,20 @@ describe('useProgramRunner', () => {
     expect(result.current.isExecuting).toBe(false);
     expect(result.current.errors).toBe(1);
     expect(result.current.state.error).toMatch(/demasiados passos|too many steps/);
+  });
+
+  it('cair num buraco reinicia a execução: o robô volta ao início e conta um erro', () => {
+    const holeLevel = { ...level1, holes: [{ x: 1, y: 0 }] };
+    const { result } = renderHook(
+      () => useProgramRunner(holeLevel, 'pt', 10, vi.fn(), true, true),
+      { wrapper: strict },
+    );
+    act(() => result.current.run('mover()\nmover()'));
+    runFor(600 * 2);
+    expect(result.current.isExecuting).toBe(false);
+    expect(result.current.errors).toBe(1);
+    expect(result.current.state.robotPosition).toEqual(holeLevel.initialRobotPosition);
+    expect(result.current.state.error).toBe(TRANSLATIONS.pt.errorHole);
   });
 
   it('reset repõe o estado inicial do nível', () => {

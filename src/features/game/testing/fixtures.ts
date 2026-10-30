@@ -11,6 +11,8 @@ export const FIXED_LAYOUT: LayoutConfig = {
     { x: 5, y: 2 }, { x: 3, y: 4 }, { x: 5, y: 5 },
   ],
   walls: [],
+  holes: [],
+  wood: [],
 };
 
 export const fixedLevel: LevelConfig = { ...level1, ...FIXED_LAYOUT };

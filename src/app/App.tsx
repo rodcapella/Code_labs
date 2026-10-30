@@ -27,7 +27,7 @@ export default function App() {
       try {
         const parsed = JSON.parse(savedConfig);
         // Versão 2 dos níveis: os números mudaram de tema, por isso o progresso antigo não se aplica.
-        const migrated = parsed.levelsVersion === 2 ? parsed : { ...parsed, completedLevels: [], levelsVersion: 2 };
+        const migrated = parsed.levelsVersion === 3 ? parsed : { ...parsed, completedLevels: [], levelsVersion: 3 };
         setUserConfig(migrated);
         setCurrentScreen('HOME');
       } catch (e) {

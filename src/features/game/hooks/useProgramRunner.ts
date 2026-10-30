@@ -121,6 +121,16 @@ export function useProgramRunner(
       }
 
       const next = executeCommand(state, instr.text, language);
+      // Buraco: o robô cai e a execução reinicia do início (o erro conta, as caixas voltam ao sítio).
+      if (next.fell) {
+        setErrors(e => e + 1);
+        setState({ ...createInitialState(level), error: next.error, currentLine: instr.sourceLine });
+        setHistory([]);
+        setPc(0);
+        setStatus('idle');
+        onEventRef.current('error');
+        return;
+      }
       const event = classify(state, next);
 
       if (!next.error) {

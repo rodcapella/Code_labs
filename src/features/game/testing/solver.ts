@@ -7,7 +7,7 @@ const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, O
 export const solve = (layout: LayoutConfig, lang: Language): string[] => {
   const t = TRANSLATIONS[lang];
   const boxIndex = new Map(layout.boxes.map((b, i) => [`${b.x},${b.y}`, i]));
-  const wallSet = new Set((layout.walls ?? []).map(w => `${w.x},${w.y}`));
+  const wallSet = new Set([...(layout.walls ?? []), ...(layout.holes ?? [])].map(w => `${w.x},${w.y}`));
   const goal = (1 << layout.boxes.length) - 1;
   const startD = ['NORTH', 'EAST', 'SOUTH', 'WEST'].indexOf(layout.initialRobotDirection);
   type N = { x: number; y: number; d: number; mask: number; path: string[] };

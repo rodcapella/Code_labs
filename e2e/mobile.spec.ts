@@ -5,7 +5,7 @@ const seedProfile = async (page: Page, level: 'beginner' | 'advanced' = 'beginne
   await page.addInitScript(lvl => {
     localStorage.setItem('codebot_lab_user_config', JSON.stringify({
       name: 'rui', age: 20, level: lvl, language: 'pt', robotColor: '#2563EB',
-      completedLevels: [], levelsVersion: 2, stars: {},
+      completedLevels: [], levelsVersion: 3, stars: {},
     }));
     localStorage.setItem('tutorial_completed', 'true');
   }, level);

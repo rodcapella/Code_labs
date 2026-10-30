@@ -202,3 +202,15 @@ O token do Google nunca chega ao browser: o servidor troca o código e cria ou e
 - O tempo só tem limite superior (não pode ser maior do que o real), não inferior. Um jogador pode declarar um tempo menor
   do que demorou, desde que não seja menor do que o mínimo dos passos executados.
 - Um nome de utilizador é visível publicamente no ranking e nos resultados de quem o usa.
+
+## Obstáculos e currículo (versão 3)
+
+| Obstáculo | Regra | Nível |
+|---|---|---|
+| Parede | Bloqueia o movimento | 5, 6, 7, 9 |
+| Buraco | Pisar faz o robô cair: conta um erro e a execução reinicia do início (caixas voltam ao sítio) | 6, 9 |
+| Madeira | Bloqueia até `partir()` (conta como comando) | 8, 9 |
+
+- `se_parede()` é verdadeiro perante parede, madeira ou borda. Um buraco não bloqueia, por isso não é "parede".
+- A verificação de alcance do gerador trata buracos e paredes como bloqueados, por isso todo o layout tem solução sem cair.
+- A versão 3 dos níveis reinicia o progresso e o ranking (os números dos níveis mudaram de tema).

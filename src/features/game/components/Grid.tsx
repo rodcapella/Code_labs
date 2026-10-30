@@ -13,6 +13,10 @@ interface GridProps {
   /** Cor da grelha do nível (hex). */
   gridColor: string;
   walls: Position[];
+  /** Buracos: casas que fazem cair o robô. */
+  holes: Position[];
+  /** Madeira: bloqueia até ser partida. */
+  wood: Position[];
   size: number;
   robotPosition: Position;
   robotDirection: Direction;
@@ -34,6 +38,8 @@ export const Grid: React.FC<GridProps> = ({
   bumpKey, blockedCell, summary, previewSteps,
   gridColor,
   walls,
+  holes,
+  wood,
   size,
   robotPosition,
   robotDirection,
@@ -80,6 +86,25 @@ export const Grid: React.FC<GridProps> = ({
               className="rounded-lg grid-cell flex items-center justify-center relative border-b-4"
               style={{ width: CELL, height: CELL, transformStyle: 'preserve-3d' }}
             >
+              {holes.some(h => h.x === cell.x && h.y === cell.y) && (
+                // Buraco: poço escuro com contorno tracejado (não depende da cor).
+                <div
+                  aria-label="buraco"
+                  className="absolute inset-1 rounded-full bg-black/80 border-2 border-dashed border-white/40 shadow-[inset_0_6px_12px_rgba(0,0,0,0.9)] pointer-events-none"
+                  style={{ transform: 'translateZ(-6px)' }}
+                />
+              )}
+              {wood.some(w => w.x === cell.x && w.y === cell.y) && (
+                // Madeira: bloco com veios diagonais (padrão, não só cor).
+                <div
+                  aria-label="madeira"
+                  className="absolute inset-0.5 rounded-md border-2 border-amber-900 shadow-[inset_0_-6px_0_rgba(0,0,0,0.35)] pointer-events-none"
+                  style={{
+                    transform: 'translateZ(10px)',
+                    background: 'repeating-linear-gradient(45deg, #92400E 0 6px, #B45309 6px 9px)',
+                  }}
+                />
+              )}
               {isWall && (
                 // Parede: bloco elevado e escuro. Não pode ser atravessada.
                 <div
