@@ -1,3 +1,4 @@
+import { ROBOT_PALETTE } from '../../shared/config/robotPalette';
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { UserConfig, KnowledgeLevel, Language, TRANSLATIONS } from '../../shared/i18n/translations';
@@ -16,12 +17,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
   const t = TRANSLATIONS[language];
 
-  const robotColors = [
-    { name: t.colorBlue, value: '#3B82F6' },
-    { name: t.colorYellow, value: '#EAB308' },
-    { name: t.colorGreen, value: '#22C55E' },
-    { name: t.colorPink, value: '#EC4899' },
-  ];
+  const robotColors = ROBOT_PALETTE.map(c => ({ name: t[c.key], value: c.value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,11 +127,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               <Bot className="w-4 h-4" />
               {t.robotColorLabel}
             </label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-3" role="radiogroup" aria-label={t.robotColorLabel}>
               {robotColors.map((color) => (
                 <button
                   key={color.value}
                   type="button"
+                  role="radio"
+                  aria-checked={robotColor === color.value}
+                  aria-label={color.name}
                   onClick={() => setRobotColor(color.value)}
                   className={`aspect-square rounded-xl border-4 transition-all flex items-center justify-center ${
                     robotColor === color.value
