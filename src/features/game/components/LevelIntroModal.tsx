@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { Portal } from '../../../shared/components/Portal';
+
 
 interface LevelIntroModalProps {
   kicker: string;
@@ -25,6 +27,7 @@ export const LevelIntroModal: React.FC<LevelIntroModalProps> = ({ kicker, title,
   }, [onClose]);
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-brand-ink/85 p-4 backdrop-blur-sm">
       <div
         role="dialog"
@@ -48,5 +51,6 @@ export const LevelIntroModal: React.FC<LevelIntroModalProps> = ({ kicker, title,
         </button>
       </div>
     </div>
+    </Portal>
   );
 };

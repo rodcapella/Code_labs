@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { Portal } from './Portal';
+
 
 interface ModalProps {
   /** Texto pequeno acima do título (ex.: "Nível 3" ou "Erro"). */
@@ -30,6 +32,7 @@ export const Modal: React.FC<ModalProps> = ({ kicker, title, children, closeLabe
   const accent = tone === 'alert' ? 'border-red-400/50 text-red-300' : 'border-brand-cyan/40 text-brand-cyan';
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-brand-ink/85 p-4 backdrop-blur-sm">
       <div
         role="dialog"
@@ -49,5 +52,6 @@ export const Modal: React.FC<ModalProps> = ({ kicker, title, children, closeLabe
         </button>
       </div>
     </div>
+    </Portal>
   );
 };

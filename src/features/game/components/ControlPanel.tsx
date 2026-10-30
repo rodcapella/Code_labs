@@ -22,7 +22,7 @@ export interface ControlPanelProps {
   showMoveN: boolean;
 }
 
-const btnBase = 'command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 rounded-xl font-mono text-xs transition-all shadow-sm';
+const btnBase = 'command-btn flex items-center gap-2 bg-brand-navy px-3 py-2 min-h-10 rounded-xl font-mono text-xs transition-all shadow-sm';
 const moveBtn = `${btnBase} border border-white/10 text-brand-ice/85 hover:border-brand-cyan/60 hover:bg-brand-blue/15`;
 const loopBtn = `${btnBase} border border-brand-cyan/40 text-brand-cyan hover:bg-brand-blue/15`;
 const decisionBtn = `${btnBase} border border-brand-violet/60 text-brand-violet hover:bg-brand-violet/15`;
