@@ -7,9 +7,10 @@ import { level4 } from './level4';
 import { level5 } from './level5';
 import { level6 } from './level6';
 import { level7 } from './level7';
+import { level8 } from './level8';
 
-const ids = [1, 2, 3, 4, 5, 6, 7] as const;
-const metas = [level1, level2, level3, level4, level5, level6, level7];
+const ids = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const metas = [level1, level2, level3, level4, level5, level6, level7, level8];
 
 describe('especificação dos níveis', () => {
   it.each(ids)('nível %i tem grelha e nº de caixas definidos', id => {
@@ -20,12 +21,12 @@ describe('especificação dos níveis', () => {
   it('a grelha cresce e o nº de caixas também', () => {
     const sizes = ids.map(id => LEVEL_SPECS[id].gridSize);
     const boxes = ids.map(id => LEVEL_SPECS[id].boxCount);
-    expect(sizes).toEqual([6, 8, 8, 10, 12, 10, 10]);
-    expect(boxes).toEqual([6, 6, 8, 12, 16, 8, 8]);
+    expect(sizes).toEqual([6, 8, 8, 10, 12, 10, 10, 10]);
+    expect(boxes).toEqual([6, 6, 8, 12, 16, 8, 8, 10]);
   });
 
   it('paredes: 0, 0, 0, 0, 2, 4 e 6 (nível 6 e 7 com a mesma grelha)', () => {
-    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6]);
+    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6, 3]);
     expect(LEVEL_SPECS[7].gridSize).toBe(LEVEL_SPECS[6].gridSize);
   });
 });

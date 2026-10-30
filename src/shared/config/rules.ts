@@ -34,7 +34,7 @@ export const MAX_LINES_PER_RUN = 200;
 export const MAX_LINE_LENGTH = 40;
 
 /** Níveis existentes. Acrescentar um nível: adicionar aqui, no layout e no ficheiro do nível. */
-export const LEVEL_IDS = [1, 2, 3, 4, 5, 6, 7] as const;
+export const LEVEL_IDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 /** Limites do compilador de programas (repetir). */
 export const MAX_REPEAT = 9;
@@ -54,3 +54,16 @@ export const RANKING_VERSION = 2;
 
 /** Máximo de casas numa jogada mover(n). */
 export const MAX_MOVE_COUNT = 9;
+
+/**
+ * Estrelas de uma vitória (1 a 3):
+ * 1 = nível concluído; 2 = no máximo 1 erro;
+ * 3 = sem erros e com comandos dentro do orçamento do nível (2 × caixas + tamanho da grelha).
+ */
+export const starBudget = (boxCount: number, gridSize: number): number => 2 * boxCount + gridSize;
+
+export const starsFor = (commands: number, errors: number, boxCount: number, gridSize: number): 1 | 2 | 3 => {
+  if (errors === 0 && commands <= starBudget(boxCount, gridSize)) return 3;
+  if (errors <= 1) return 2;
+  return 1;
+};

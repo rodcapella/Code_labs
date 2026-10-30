@@ -186,6 +186,6 @@ describe('GameScreen (Strict Mode)', () => {
     expect(submit.mock.calls[0][0].name).toBe('RUI');
     expect(submit.mock.calls[0][1].runs.length).toBeGreaterThan(0);
     expect(onUpdate).toHaveBeenCalledTimes(1);
-    expect(onUpdate).toHaveBeenCalledWith({ completedLevels: [1] });
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ completedLevels: [1] }));
   });
 });

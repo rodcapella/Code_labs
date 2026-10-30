@@ -104,6 +104,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
                 }`}
               >
                 {lvlId}
+                {(userConfig.stars?.[lvlId] ?? 0) > 0 && (
+                  <span className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-amber-300" aria-label={`${userConfig.stars?.[lvlId]} estrelas`}>
+                    {'★'.repeat(userConfig.stars?.[lvlId] ?? 0)}
+                  </span>
+                )}
                 {userConfig.completedLevels.includes(lvlId) && (
                   <div className="absolute -top-2 -right-2 bg-brand-navy rounded-full p-0.5 shadow-sm">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-white" />

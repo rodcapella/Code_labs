@@ -23,9 +23,11 @@ import { level4 } from './levels/level4';
 import { level5 } from './levels/level5';
 import { level6 } from './levels/level6';
 import { level7 } from './levels/level7';
+import { level8 } from './levels/level8';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
+import { starsFor } from '../../shared/config/rules';
 import { qualifiesForTop, formatPlayerName } from '../leaderboard/domain/leaderboard';
 import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
 import { RankingNameEntry, RankingStatus } from '../leaderboard/RankingNameEntry';
@@ -35,7 +37,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4, level5, level6, level7];
+const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8];
 
 interface GameScreenProps {
   onBack: () => void;
@@ -115,6 +117,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const [bumpKey, setBumpKey] = useState(0);
   const [previewSteps, setPreviewSteps] = useState<PreviewStep[] | null>(null);
+  const [earnedStars, setEarnedStars] = useState(0);
   const [errorOpen, setErrorOpen] = useState(false);
 
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
@@ -278,9 +281,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     if (savedRef.current) return;
     savedRef.current = true;
 
-    if (!userConfig.completedLevels.includes(level.id)) {
-      onUpdateConfig({ completedLevels: [...userConfig.completedLevels, level.id] });
-    }
+    // Estrelas: guarda só a melhor classificação do nível.
+    const earned = starsFor(gameState.commandCount, errors, level.boxes.length, level.gridSize);
+    const previous = userConfig.stars?.[level.id] ?? 0;
+    onUpdateConfig({
+      completedLevels: userConfig.completedLevels.includes(level.id)
+        ? userConfig.completedLevels
+        : [...userConfig.completedLevels, level.id],
+      stars: { ...(userConfig.stars ?? {}), [level.id]: Math.max(previous, earned) },
+    });
+    setEarnedStars(earned);
 
     // O resultado só é enviado depois de o jogador confirmar o nome (e só se entrar no top).
     const base = {
@@ -660,7 +670,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             {gameState.victory && (
               <VictoryOverlay
                 title={t.victoryTitle}
-                description={t.victoryDesc(gameState.commandCount, timer)}
+                description={`${t.victoryDesc(gameState.commandCount, timer)} ${t.victoryStars}: ${'★'.repeat(earnedStars)}${'☆'.repeat(3 - earnedStars)}`}
                 playAgainLabel={t.playAgain}
                 nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
                 rankingSlot={

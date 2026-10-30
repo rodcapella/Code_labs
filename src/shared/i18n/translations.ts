@@ -11,6 +11,8 @@ export interface UserConfig {
   completedLevels: number[];
   /** Versão da numeração dos níveis (2 = renumeração com Argumentos, Decisões e Enquanto). */
   levelsVersion?: number;
+  /** Melhor classificação (1 a 3 estrelas) de cada nível. */
+  stars?: Record<number, number>;
 }
 
 export const TRANSLATIONS = {
@@ -115,6 +117,8 @@ export const TRANSLATIONS = {
       `Robô na coluna ${x + 1}, linha ${y + 1}, virado para ${dir}. Caixas por recolher: ${left}. Paredes: ${walls}.`,
     dirNames: { NORTH: 'Norte', EAST: 'Este', SOUTH: 'Sul', WEST: 'Oeste' },
     previewShow: 'Pré-visualizar caminho',
+    victoryStars: 'Estrelas',
+    reviewLevelNote: 'Nível final de revisão: junta sequências, repetição, decisões e enquanto.',
     previewHide: 'Ocultar caminho',
     previewSteps: (n: number) => `Caminho: ${n} ${n === 1 ? 'casa' : 'casas'}`,
     condResult: (line: string, result: boolean) =>
@@ -302,6 +306,8 @@ export const TRANSLATIONS = {
       `Robot at column ${x + 1}, row ${y + 1}, facing ${dir}. Boxes left: ${left}. Walls: ${walls}.`,
     dirNames: { NORTH: 'north', EAST: 'east', SOUTH: 'south', WEST: 'west' },
     previewShow: 'Preview path',
+    victoryStars: 'Stars',
+    reviewLevelNote: 'Final review level: sequences, repetition, decisions and while together.',
     previewHide: 'Hide path',
     previewSteps: (n: number) => `Path: ${n} ${n === 1 ? 'square' : 'squares'}`,
     condResult: (line: string, result: boolean) =>
