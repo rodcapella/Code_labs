@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { sessionFromCookieHeader } from './session';
+import { sessionFromCookieHeader, isRevoked } from './session';
 
 /** Dados de utilizador guardados no Redis em `user:{nome em minúsculas}`. */
 export interface UserRecord {
@@ -40,6 +40,7 @@ export const validateEmail = (raw: string): string | null => {
 
 export const emailKey = (email: string): string => `email:${email}`;
 export const userIdKey = (id: string): string => `userid:${id}`;
+export const revokeSessionsKey = (id: string): string => `revoked:${id}`;
 export const googleKey = (sub: string): string => `google:${sub}`;
 export const resultsKey = (id: string): string => `results:${id}`;
 
@@ -74,6 +75,8 @@ export const resolveAccount = async (
   if (!session) return null;
   const username = await redis.get<string>(userIdKey(session.userId));
   if (!username) return null; // conta apagada: a sessão deixa de valer
+  const revokedAt = Number(await redis.get<string>(revokeSessionsKey(session.userId))) || null;
+  if (isRevoked(session.iat, revokedAt)) return null; // emitida antes de uma recuperação de palavra-passe
   return { userId: session.userId, username: typeof username === 'string' ? username : session.username };
 };
 

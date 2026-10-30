@@ -10,6 +10,8 @@ const KEY_LENGTH = 64;
 export interface Session {
   userId: string;
   username: string;
+  /** Momento de emissão (segundos). Sessões emitidas antes de uma revogação deixam de valer. */
+  iat?: number;
 }
 
 /** Palavra-passe guardada como `scrypt$<salt>$<hash>` (base64). Nunca em texto. */
@@ -32,7 +34,7 @@ const b64url = (buf: Buffer | string): string =>
 
 /** Token de sessão assinado: `payload.assinatura`, com expiração. */
 export const signSession = (session: Session, secret: string, nowSeconds: number): string => {
-  const payload = b64url(JSON.stringify({ ...session, exp: nowSeconds + SESSION_TTL_SECONDS }));
+  const payload = b64url(JSON.stringify({ userId: session.userId, username: session.username, iat: nowSeconds, exp: nowSeconds + SESSION_TTL_SECONDS }));
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 };
@@ -49,11 +51,15 @@ export const verifySession = (token: string, secret: string, nowSeconds: number)
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Session & { exp: number };
     if (typeof data.exp !== 'number' || data.exp < nowSeconds) return null;
     if (typeof data.userId !== 'string' || typeof data.username !== 'string') return null;
-    return { userId: data.userId, username: data.username };
+    return { userId: data.userId, username: data.username, iat: typeof data.iat === 'number' ? data.iat : undefined };
   } catch {
     return null;
   }
 };
+
+/** Uma sessão é válida se foi emitida depois da última revogação da conta. */
+export const isRevoked = (iat: number | undefined, revokedAt: number | null): boolean =>
+  revokedAt !== null && (iat === undefined || iat <= revokedAt);
 
 /** Extrai a sessão de um cabeçalho `Cookie`. Sem AUTH_SECRET não há sessões. */
 export const sessionFromCookieHeader = (cookieHeader: string | undefined, secret: string | undefined): Session | null => {

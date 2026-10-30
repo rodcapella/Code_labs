@@ -20,8 +20,13 @@ export const sendMail = async (to: string, subject: string, html: string): Promi
 
 export const mailConfigured = (): boolean => Boolean(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
 
-/** Endereço público da aplicação, para os links dos emails. */
-export const appUrl = (fallbackHost: string | undefined): string => {
-  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
-  return `https://${fallbackHost ?? 'localhost:3000'}`;
+/**
+ * Endereço público da aplicação para os links dos emails. Só vem de APP_URL.
+ * Nunca se usa o cabeçalho Host do pedido: quem pede a recuperação controla esse cabeçalho,
+ * e um link com outro domínio levaria o token da vítima para fora.
+ */
+export const appUrl = (): string | null => {
+  const base = process.env.APP_URL;
+  if (!base) return null;
+  return base.replace(/\/$/, '');
 };

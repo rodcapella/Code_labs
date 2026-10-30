@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { validateUsername, validatePassword, userKey } from './authRules';
-import { hashPassword, verifyPassword, signSession, verifySession, sessionFromCookieHeader, sessionCookie, SESSION_COOKIE } from '../server/session';
+import { hashPassword, verifyPassword, signSession, verifySession, sessionFromCookieHeader, sessionCookie, SESSION_COOKIE, isRevoked } from '../server/session';
+import { appUrl } from '../server/mailer';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('regras de conta', () => {
   it('nome de conta: 3 a 10 caracteres, sem espaços', () => {
@@ -47,7 +50,7 @@ describe('sessões assinadas', () => {
 
   it('um token válido devolve a sessão', () => {
     const token = signSession({ userId: 'u1', username: 'rui' }, secret, now);
-    expect(verifySession(token, secret, now + 10)).toEqual({ userId: 'u1', username: 'rui' });
+    expect(verifySession(token, secret, now + 10)).toEqual({ userId: 'u1', username: 'rui', iat: now });
   });
 
   it('um token adulterado é rejeitado', () => {
@@ -111,5 +114,39 @@ describe('dados assinados (estado OAuth)', () => {
     const t = signData({ state: 'abc' }, secret, 1000, 600);
     expect(verifyData(t.replace(/^./, 'x'), secret, 1100)).toBeNull();
     expect(verifyData(t, secret, 2000)).toBeNull();
+  });
+});
+
+describe('segurança: revogação e links', () => {
+  it('uma sessão emitida antes da revogação deixa de valer; depois, continua válida', () => {
+    expect(isRevoked(1000, 2000)).toBe(true);
+    expect(isRevoked(3000, 2000)).toBe(false);
+    expect(isRevoked(1000, null)).toBe(false);
+  });
+
+  it('sessões sem data de emissão são consideradas revogadas quando há revogação', () => {
+    expect(isRevoked(undefined, 2000)).toBe(true);
+  });
+
+  it('o link de recuperação só usa APP_URL (nunca o cabeçalho Host)', () => {
+    const before = process.env.APP_URL;
+    try {
+      delete process.env.APP_URL;
+      expect(appUrl()).toBeNull();
+      process.env.APP_URL = 'https://exemplo.pt/';
+      expect(appUrl()).toBe('https://exemplo.pt');
+    } finally {
+      if (before === undefined) delete process.env.APP_URL; else process.env.APP_URL = before;
+    }
+  });
+
+  it('vercel.json define CSP com frame-ancestors, HSTS e Referrer-Policy', () => {
+    const cfg = JSON.parse(readFileSync(resolve(__dirname, '../../../../vercel.json'), 'utf8'));
+    const headers = Object.fromEntries(cfg.headers[0].headers.map((h: { key: string; value: string }) => [h.key, h.value]));
+    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'none'");
+    expect(headers['Content-Security-Policy']).toContain("object-src 'none'");
+    expect(headers['Strict-Transport-Security']).toContain('max-age=');
+    expect(headers['Referrer-Policy']).toBe('strict-origin-when-cross-origin');
+    expect(headers['X-Content-Type-Options']).toBe('nosniff');
   });
 });

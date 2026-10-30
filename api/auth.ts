@@ -11,6 +11,7 @@ import {
   resolveAccount, RESET_TTL_SECONDS, googleKey,
 } from '../src/features/auth/server/accounts';
 import { sendMail, mailConfigured, appUrl } from '../src/features/auth/server/mailer';
+import { revokeSessionsKey } from '../src/features/auth/server/accounts';
 import { signData, verifyData } from '../src/features/auth/server/session';
 import {
   googleConfigured, googleRedirectUri, pkce, randomState, authorizationUrl,
@@ -74,9 +75,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const account = await resolveAccount(redis, req.headers.cookie, secret);
     const ip = clientIp(req);
 
-    const limited = async (prefix: string, max: number) => {
+    const limited = async (prefix: string, max: number, identifier: string = ip) => {
       const limit = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(max, '1 m'), prefix });
-      return !(await limit.limit(ip)).success;
+      return !(await limit.limit(identifier)).success;
     };
 
     // Leitura da conta (sessão).
@@ -177,6 +178,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'register' || action === 'login') {
       if (await limited('rl:auth', 10)) return res.status(429).json({ error: 'demasiadas tentativas, tenta mais tarde' });
+      // Limite por conta: impede adivinhar a palavra-passe de um nome a partir de muitos IPs.
+      const attemptedName = typeof body.username === 'string' ? body.username.trim().toLowerCase() : '';
+      if (attemptedName && (await limited('rl:auth-user', 5, `u:${attemptedName}`))) {
+        return res.status(429).json({ error: 'demasiadas tentativas, tenta mais tarde' });
+      }
       const username = typeof body.username === 'string' ? validateUsername(body.username) : null;
       const password = typeof body.password === 'string' ? validatePassword(body.password) : null;
       if (username === null || password === null) {
@@ -230,6 +236,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (email === null) return res.status(400).json({ error: 'email inválido' });
       const rec = parseJson<UserRecord>(await redis.get<unknown>(userKey(account!.username)));
       if (!rec) return res.status(401).json({ error: 'sem sessão' });
+      // Com sessão roubada, sem a palavra-passe não se pode ligar um email próprio e recuperar a conta.
+      if (rec.passwordHash !== '') {
+        const password = typeof body.password === 'string' ? body.password : '';
+        if (!(await verifyPassword(password, rec.passwordHash))) {
+          return res.status(403).json({ error: 'palavra-passe incorreta' });
+        }
+      }
       if (rec.email === email) return res.status(200).json({ ok: true, email });
       if (!(await redis.set(emailKey(email), rec.id, { nx: true }))) {
         return res.status(409).json({ error: 'esse email já está ligado a outra conta' });
@@ -241,7 +254,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'forgot') {
       if (await limited('rl:forgot', 5)) return res.status(429).json({ error: 'demasiados pedidos, tenta mais tarde' });
-      if (!mailConfigured()) return res.status(503).json({ error: 'envio de email indisponível' });
+      const base = appUrl();
+      if (!mailConfigured() || base === null) return res.status(503).json({ error: 'envio de email indisponível' });
       const email = typeof body.email === 'string' ? validateEmail(body.email) : null;
       // Resposta igual exista ou não conta com este email.
       if (email) {
@@ -251,7 +265,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (rec && rec.email === email) {
           const { token, hash: _hash } = newResetToken();
           await redis.set(resetKey(token), JSON.stringify({ userId: rec.id }), { ex: RESET_TTL_SECONDS });
-          const link = `${appUrl(req.headers.host)}/?reset=${token}`;
+          const link = `${base}/?reset=${token}`;
           await sendMail(
             email,
             'Recuperar palavra-passe · SapienteAI CodeBot Lab',
@@ -273,6 +287,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const rec = username ? parseJson<UserRecord>(await redis.get<unknown>(userKey(String(username)))) : null;
       if (!rec) return res.status(400).json({ error: 'link inválido ou expirado' });
       await redis.set(userKey(rec.username), JSON.stringify({ ...rec, passwordHash: await hashPassword(password) }));
+      // Sessões emitidas antes desta troca deixam de valer (um cookie roubado não sobrevive à recuperação).
+      await redis.set(revokeSessionsKey(rec.id), Math.floor(Date.now() / 1000));
       return res.status(200).json({ ok: true });
     }
 
