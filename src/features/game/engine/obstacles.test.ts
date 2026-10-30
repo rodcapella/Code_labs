@@ -24,10 +24,10 @@ describe('buraco', () => {
     expect(executeCommand(s, 'mover()', 'pt').error).not.toBe(t.errorWall);
   });
 
-  it('a pré-visualização mostra a casa do buraco e para aí', () => {
-    const r = previewPath(layout({ holes: [{ x: 2, y: 0 }] }), ['mover(4)'], 'pt', opts);
+  it('a pré-visualização mostra a queda e o reinício, até ao limite de erros', () => {
+    const r = previewPath(layout({ holes: [{ x: 2, y: 0 }] }), ['mover(4)'], 'pt', opts, 3);
     expect(r.stoppedBy).toBe('error');
-    expect(r.steps.at(-1)).toMatchObject({ x: 2, y: 0 });
+    expect(r.steps.filter(p => p.x === 2 && p.y === 0)).toHaveLength(3);
   });
 
   it('uma execução que cai conta como erro na re-execução do servidor', () => {

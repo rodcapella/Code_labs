@@ -9,7 +9,7 @@ import { MAX_RUN_STEPS } from '../../../shared/config/rules';
 
 export { createInitialState, parseProgram };
 
-export type StepEvent = 'move' | 'turn' | 'pick' | 'step' | 'error' | 'victory' | 'gameover';
+export type StepEvent = 'move' | 'turn' | 'pick' | 'step' | 'error' | 'fall' | 'victory' | 'gameover';
 type Status = 'idle' | 'running' | 'paused';
 
 interface Snapshot {
@@ -121,14 +121,20 @@ export function useProgramRunner(
       }
 
       const next = executeCommand(state, instr.text, language);
-      // Buraco: o robô cai e a execução reinicia do início (o erro conta, as caixas voltam ao sítio).
+      // Buraco: o robô cai, conta um erro e a execução recomeça sozinha do início (caixas no sítio).
+      // Só termina se as quedas esgotarem o limite de erros do nível (game over).
       if (next.fell) {
+        const reachedLimit = errors + 1 >= maxErrors;
         setErrors(e => e + 1);
-        setState({ ...createInitialState(level), error: next.error, currentLine: instr.sourceLine });
         setHistory([]);
+        setState({ ...createInitialState(level), error: reachedLimit ? next.error : null, currentLine: instr.sourceLine });
         setPc(0);
-        setStatus('idle');
-        onEventRef.current('error');
+        if (reachedLimit) {
+          setStatus('idle');
+          onEventRef.current('error');
+        } else {
+          onEventRef.current('fall');
+        }
         return;
       }
       const event = classify(state, next);

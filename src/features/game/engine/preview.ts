@@ -20,22 +20,38 @@ export interface PreviewResult {
 
 /**
  * Simula o programa sem o executar no ecrã: mostra a ordem das casas que o robô visitaria.
- * Usa o mesmo compilador, o mesmo motor e o mesmo limite de passos que a execução real.
+ * Usa o mesmo compilador, o mesmo motor e as mesmas regras da execução real: uma queda num buraco
+ * reinicia o programa do início (cada queda conta como erro) até ao limite de erros do nível.
  */
 export const previewPath = (
   layout: LayoutConfig,
   lines: string[],
   lang: Language,
   opts: CompileOptions,
+  maxErrors: number = Number.POSITIVE_INFINITY,
 ): PreviewResult => {
   const compiled = compileProgram(lines, lang, opts);
   if (compiled.ok === false) return { steps: [], stoppedBy: 'compileError' };
 
+  const t = TRANSLATIONS[lang];
   const program = compiled.instructions;
-  let state = createInitialState(layout);
+  let state: GameState = createInitialState(layout);
   const steps: PreviewStep[] = [];
   let pc = 0;
   let runSteps = 0;
+  let falls = 0;
+
+  const push = (x: number, y: number) => steps.push({ x, y, step: steps.length + 1 });
+
+  // Queda: a casa do buraco entra no caminho, conta um erro e o programa recomeça do início.
+  const fall = (hole: Position): PreviewResult | null => {
+    push(hole.x, hole.y);
+    falls++;
+    if (falls >= maxErrors) return { steps, stoppedBy: 'error' };
+    state = createInitialState(layout);
+    pc = 0;
+    return null;
+  };
 
   while (pc < program.length) {
     if (++runSteps > MAX_RUN_STEPS) return { steps, stoppedBy: 'loopLimit' };
@@ -50,37 +66,49 @@ export const previewPath = (
       continue;
     }
 
-    // mover(n): tudo-ou-nada. Mostra cada casa do caminho; se uma for parede/borda, a jogada falha.
-    const moveN = instr.text.match(new RegExp(`^${TRANSLATIONS[lang].cmdMoveWord}\\((\\d+)\\)$`));
+    // mover(n): tudo-ou-nada, exceto a queda num buraco, que reinicia o programa.
+    const moveN = instr.text.match(new RegExp(`^${t.cmdMoveWord}\\((\\d+)\\)$`));
     if (moveN) {
       const n = Number(moveN[1]);
       const cells: Position[] = [];
       let pos = state.robotPosition;
+      let fellAt: Position | null = null;
       for (let i = 0; i < n; i++) {
         const nxt = getNextPosition(pos, state.robotDirection, state.gridSize);
-        if (nxt === null || isSolidAt(state, nxt)) return { steps, stoppedBy: 'error' };
-        cells.push(nxt);
-        pos = nxt;
-        // Buraco: o caminho mostra a casa onde se cai e para aí.
-        if (isWall(state.holes, nxt)) {
-          for (const c of cells) steps.push({ x: c.x, y: c.y, step: steps.length + 1 });
+        if (nxt === null || isSolidAt(state, nxt)) {
+          // Parede ou borda: a jogada inteira é cancelada (não há passos desta jogada).
           return { steps, stoppedBy: 'error' };
         }
+        cells.push(nxt);
+        pos = nxt;
+        if (isWall(state.holes, nxt)) {
+          fellAt = nxt;
+          break;
+        }
       }
-      for (const c of cells) steps.push({ x: c.x, y: c.y, step: steps.length + 1 });
+      if (fellAt) {
+        // Mostra as casas até ao buraco (a do buraco é registada por fall).
+        for (const c of cells.slice(0, -1)) push(c.x, c.y);
+        const end = fall(fellAt);
+        if (end) return end;
+        continue;
+      }
+      for (const c of cells) push(c.x, c.y);
       state = { ...state, robotPosition: pos, commandCount: state.commandCount + 1 } as GameState;
       pc++;
       continue;
     }
 
     const next = executeCommand(state, instr.text, lang);
+    if (next.fell) {
+      const end = fall(next.robotPosition);
+      if (end) return end;
+      continue;
+    }
     if (next.error) return { steps, stoppedBy: 'error' };
     const moved = next.robotPosition.x !== state.robotPosition.x || next.robotPosition.y !== state.robotPosition.y;
     state = next;
-    if (moved) {
-      const p: Position = state.robotPosition;
-      steps.push({ x: p.x, y: p.y, step: steps.length + 1 });
-    }
+    if (moved) push(state.robotPosition.x, state.robotPosition.y);
     pc++;
     if (state.victory) return { steps, stoppedBy: 'victory' };
   }

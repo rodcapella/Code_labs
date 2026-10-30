@@ -120,11 +120,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const [bumpKey, setBumpKey] = useState(0);
   const [previewSteps, setPreviewSteps] = useState<PreviewStep[] | null>(null);
   const [earnedStars, setEarnedStars] = useState(0);
+  const [fallNotice, setFallNotice] = useState(false);
+  // O aviso de queda desaparece sozinho.
+  useEffect(() => {
+    if (!fallNotice) return;
+    const id = setTimeout(() => setFallNotice(false), 2000);
+    return () => clearTimeout(id);
+  }, [fallNotice]);
   const [errorOpen, setErrorOpen] = useState(false);
 
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
   const handleStepEvent = (event: StepEvent) => {
     switch (event) {
+      case 'fall':
+        // Queda com reinício automático: treme o robô e mostra um aviso breve (sem janela).
+        playErrorSound();
+        setBumpKey(k => k + 1);
+        setFallNotice(true);
+        break;
       case 'error':
         playErrorSound();
         speak('error');
@@ -215,7 +228,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       holes: level.holes,
       wood: level.wood,
     };
-    const result = previewPath(layout, parseProgram(code), userConfig.language, { allowLoops, allowConditionals });
+    const result = previewPath(layout, parseProgram(code), userConfig.language, { allowLoops, allowConditionals }, maxErrors);
     setPreviewSteps(result.steps);
   };
 
@@ -624,6 +637,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                   </p>
                 )}
               </div>
+            )}
+
+            {fallNotice && (
+              <p role="status" className="absolute top-14 left-1/2 -translate-x-1/2 z-20 max-w-[90%] text-center text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-900/90 border border-amber-400/60 text-amber-200">
+                {t.errorHole}
+              </p>
             )}
 
             {runner.lastCheck && started && (

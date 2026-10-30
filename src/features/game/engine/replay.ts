@@ -71,6 +71,14 @@ export const replayAttempt = (
       }
 
       const next = executeCommand(state, instr.text, language);
+      // Queda num buraco: conta um erro e a execução reinicia do início (igual ao cliente).
+      if (next.fell) {
+        errors++;
+        if (errors >= maxErrors) return { ok: false, reason: 'limite de erros excedido' };
+        state = createInitialState(layout);
+        pc = 0;
+        continue;
+      }
       if (next.error) {
         failed = true;
         break;

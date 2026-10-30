@@ -265,18 +265,22 @@ describe('useProgramRunner', () => {
     expect(result.current.state.error).toMatch(/demasiados passos|too many steps/);
   });
 
-  it('cair num buraco reinicia a execução: o robô volta ao início e conta um erro', () => {
+  it('cair num buraco reinicia sozinho a execução, e as quedas esgotam o limite (game over)', () => {
     const holeLevel = { ...level1, holes: [{ x: 1, y: 0 }] };
+    const onEvent = vi.fn();
     const { result } = renderHook(
-      () => useProgramRunner(holeLevel, 'pt', 10, vi.fn(), true, true),
+      () => useProgramRunner(holeLevel, 'pt', 3, onEvent, true, true),
       { wrapper: strict },
     );
     act(() => result.current.run('mover()\nmover()'));
-    runFor(600 * 2);
+    // Cada queda reinicia sozinha: a execução só para ao 3.º erro.
+    runFor(600 * 10);
     expect(result.current.isExecuting).toBe(false);
-    expect(result.current.errors).toBe(1);
+    expect(result.current.errors).toBe(3);
+    expect(result.current.isGameOver).toBe(true);
     expect(result.current.state.robotPosition).toEqual(holeLevel.initialRobotPosition);
     expect(result.current.state.error).toBe(TRANSLATIONS.pt.errorHole);
+    expect(onEvent).toHaveBeenCalledWith('fall');
   });
 
   it('reset repõe o estado inicial do nível', () => {

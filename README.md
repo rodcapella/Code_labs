@@ -208,7 +208,7 @@ O token do Google nunca chega ao browser: o servidor troca o código e cria ou e
 | Obstáculo | Regra | Nível |
 |---|---|---|
 | Parede | Bloqueia o movimento | 5, 6, 7, 9 |
-| Buraco | Pisar faz o robô cair: conta um erro e a execução reinicia do início (caixas voltam ao sítio) | 6, 9 |
+| Buraco | Pisar faz o robô cair: conta um erro e a execução **reinicia sozinha** do início (caixas voltam ao sítio). Esgotados os erros do nível, é game over | 6, 9 |
 | Madeira | Bloqueia até `partir()` (conta como comando) | 8, 9 |
 
 - `se_parede()` é verdadeiro perante parede, madeira ou borda. Um buraco não bloqueia, por isso não é "parede".
