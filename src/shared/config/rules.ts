@@ -50,7 +50,8 @@ export const MAX_RUN_STEPS = 1000;
 export const STRUCTURE_BONUS = 3;
 
 /** Versão das regras de ranking. Mudar isto reinicia os rankings (níveis renumerados). */
-export const RANKING_VERSION = 2;
+/** Versão do ranking no Redis. Subir ao renumerar níveis (a versão 3 começou com os obstáculos). */
+export const RANKING_VERSION = 3;
 
 /** Máximo de casas numa jogada mover(n). */
 export const MAX_MOVE_COUNT = 9;

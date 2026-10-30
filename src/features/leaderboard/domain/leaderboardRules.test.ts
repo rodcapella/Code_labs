@@ -107,7 +107,7 @@ describe('encodeScore', () => {
 
 describe('keyFor', () => {
   it('uma chave Redis por nível', () => {
-    expect(keyFor(1)).toBe('leaderboard:v2:level:1');
+    expect(keyFor(1)).toBe('leaderboard:v3:level:1');
     expect(keyFor(3)).not.toBe(keyFor(2));
   });
 });
