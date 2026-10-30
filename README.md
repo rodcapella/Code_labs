@@ -183,3 +183,22 @@ O token do Google nunca chega ao browser: o servidor troca o código e cria ou e
   permitiria tomar conta de um email alheio. Se o email do Google já estiver noutra conta, a conta Google é criada sem email.
 - Contas só Google não têm palavra-passe e não podem entrar por email. Para as recuperar, basta entrar pelo Google.
 - O nome de utilizador é sugerido a partir do nome Google (ou da parte local do email), limpo para 3 a 10 caracteres e com número se já existir.
+
+
+## Segurança das contas (estado atual)
+
+- **Registo confirmado por email.** O registo exige email e responde sempre `202`, exista ou não o nome ou o email.
+  A conta só é criada quando o link de confirmação é aberto (válido 24 h, uso único). Quem já tem conta recebe um aviso.
+- **Sessões revogáveis.** O cookie leva só um identificador opaco (256 bits). A sessão vive no Redis (30 dias).
+  Logout apaga-a no servidor. Recuperar a palavra-passe ou apagar a conta termina todas as sessões da conta.
+- **Links fora do URL de pedidos.** Recuperação e confirmação usam o fragmento (`#reset=`, `#confirm=`), que não é enviado
+  ao servidor nem aparece nos registos de acesso. Os tokens são de uso único e guardados só em hash.
+- **Ranking.** O tempo declarado não pode exceder o tempo real decorrido desde a criação da tentativa.
+- **Limites.** Entrar e registar: 10 pedidos/min por IP e 5/min por nome de conta. Recuperar: 5/min por IP.
+- **Variáveis obrigatórias.** `APP_URL` (links de email), `RESEND_API_KEY` e `MAIL_FROM` (envio), `AUTH_SECRET` (estado OAuth).
+
+**Riscos que continuam abertos (aceites):**
+- Automação: um script que resolva o nível pode entrar no ranking. Para prémios em dinheiro, não seria adequado.
+- O tempo só tem limite superior (não pode ser maior do que o real), não inferior. Um jogador pode declarar um tempo menor
+  do que demorou, desde que não seja menor do que o mínimo dos passos executados.
+- Um nome de utilizador é visível publicamente no ranking e nos resultados de quem o usa.

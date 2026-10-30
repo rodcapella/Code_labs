@@ -122,3 +122,10 @@ export const validateSubmission = (body: unknown): ValidationResult => {
     },
   };
 };
+
+/**
+ * O tempo declarado não pode ser maior do que o tempo real decorrido desde que a tentativa foi criada
+ * (com uma folga de 5 s para atrasos de rede). Trava reutilizar tempos de outras partidas.
+ */
+export const fitsElapsed = (claimedSeconds: number, elapsedSeconds: number): boolean =>
+  claimedSeconds <= elapsedSeconds + 5;

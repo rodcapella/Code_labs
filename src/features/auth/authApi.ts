@@ -15,6 +15,8 @@ export interface AuthResult {
   ok: boolean;
   account: Account | null;
   error?: string;
+  /** Registo aceite: falta confirmar o email (a conta ainda não existe). */
+  pending?: boolean;
 }
 
 export interface AccountResult {
@@ -63,6 +65,8 @@ export const fetchSession = async (): Promise<SessionState> => {
 const authPost = async (action: 'register' | 'login', username: string, password: string, email?: string): Promise<AuthResult> => {
   try {
     const { status, data } = await post(action, { username, password, ...(email ? { email } : {}) });
+    // Registo: 202 sempre (a conta só existe depois de confirmar o email).
+    if (status === 202) return { ok: true, account: null, pending: true };
     const account = data.account as Account | undefined;
     if (status >= 400 || !account) return { ok: false, account: null, error: String(data.error ?? 'erro') };
     return { ok: true, account };
@@ -71,7 +75,19 @@ const authPost = async (action: 'register' | 'login', username: string, password
   }
 };
 
-export const register = (username: string, password: string, email?: string) => authPost('register', username, password, email);
+export const register = (username: string, password: string, email: string) => authPost('register', username, password, email);
+
+/** Confirma o registo pelo link do email. Cria a conta e inicia sessão. */
+export const confirmSignup = async (token: string): Promise<AuthResult> => {
+  try {
+    const { status, data } = await post('confirm', { token });
+    const account = data.account as Account | undefined;
+    if (status >= 400 || !account) return { ok: false, account: null, error: String(data.error ?? 'erro') };
+    return { ok: true, account };
+  } catch {
+    return { ok: false, account: null, error: 'sem ligação' };
+  }
+};
 export const login = (username: string, password: string) => authPost('login', username, password);
 
 export const logout = async (): Promise<void> => {

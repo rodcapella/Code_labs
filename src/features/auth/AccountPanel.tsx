@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAccount } from './AccountContext';
 import { validateUsername, validatePassword } from './domain/authRules';
-import { requestPasswordReset, deleteAccount, resetPassword, googleStartUrl } from './authApi';
+import { requestPasswordReset, deleteAccount, resetPassword, googleStartUrl, confirmSignup } from './authApi';
 
 export interface AccountMessages {
   login: string;
@@ -34,6 +34,8 @@ export interface AccountMessages {
   back: string;
   googleLogin: string;
   googleError: string;
+  emailRequired: string;
+  registerSent: string;
 }
 
 interface AccountPanelProps {
@@ -144,9 +146,11 @@ export const AccountPanel: React.FC<AccountPanelProps> = ({ messages: m, onResul
     const u = validateUsername(username);
     const p = validatePassword(password);
     if (u === null || p === null) { setError(m.invalid); return; }
+    if (kind === 'register' && email.trim() === '') { setError(m.emailRequired); return; }
     setBusy(true); setError(null);
-    const r = kind === 'login' ? await signIn(u, p) : await signUp(u, p, email.trim() || undefined);
+    const r = kind === 'login' ? await signIn(u, p) : await signUp(u, p, email.trim());
     setBusy(false);
+    if (r.ok && r.pending) { setNotice(m.registerSent); return; }
     if (!r.ok) {
       setError(
         r.error === 'esse nome já existe' ? m.taken
@@ -163,9 +167,10 @@ export const AccountPanel: React.FC<AccountPanelProps> = ({ messages: m, onResul
       <p className="text-[11px] text-brand-ice/70 text-center">{m.hint}</p>
       <input value={username} onChange={e => setUsername(e.target.value)} placeholder={m.username} aria-label={m.username} maxLength={10} className={field} />
       <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={m.password} aria-label={m.password} maxLength={128} className={field} />
-      <input type="email" value={email} onChange={e => setEmailInput(e.target.value)} placeholder={m.emailOptional} aria-label={m.emailOptional} className={field} />
+      <input type="email" value={email} onChange={e => setEmailInput(e.target.value)} placeholder={m.email} aria-label={m.email} required className={field} />
       <p className="text-[10px] text-brand-ice/60">{m.rules}</p>
       {error && <p className="text-red-400 text-xs">{error}</p>}
+      {notice && <p className="text-brand-cyan text-xs">{notice}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={busy} className="flex-1 py-2 rounded-xl bg-brand-blue text-white text-sm font-bold disabled:opacity-40">{m.login}</button>
         <button type="button" disabled={busy} onClick={() => void submit('register')} className="flex-1 py-2 rounded-xl bg-brand-navy text-brand-ice text-sm font-bold border border-white/15 disabled:opacity-40">{m.register}</button>
@@ -217,6 +222,49 @@ export const ResetPasswordPanel: React.FC<{
           <p className="text-[10px] text-brand-ice/60">{m.rules}</p>
           {state === 'error' && <p className="text-red-400 text-xs">{error}</p>}
           <button onClick={() => void submit()} disabled={state === 'busy' || password === ''} className="w-full py-2 rounded-xl bg-brand-blue text-white text-sm font-bold disabled:opacity-40">{m.save}</button>
+        </>
+      )}
+    </div>
+  );
+};
+
+/** Confirma o registo pelo link do email (#confirm=token). Ao concluir, inicia a sessão. */
+export const ConfirmSignupPanel: React.FC<{
+  token: string;
+  messages: { title: string; done: string; expired: string; busy: string };
+  onDone: () => void;
+}> = ({ token, messages: m, onDone }) => {
+  const { refresh } = useAccount();
+  const [state, setState] = useState<'busy' | 'done' | 'error'>('busy');
+
+  useEffect(() => {
+    let active = true;
+    void confirmSignup(token).then(async r => {
+      if (!active) return;
+      if (r.ok) {
+        await refresh();
+        setState('done');
+      } else {
+        setState('error');
+      }
+    });
+    return () => { active = false; };
+  }, [token, refresh]);
+
+  return (
+    <div className="mx-auto max-w-sm space-y-3 rounded-2xl border border-brand-cyan/40 p-4 text-center">
+      <p className="text-sm font-bold text-brand-ice">{m.title}</p>
+      {state === 'busy' && <p className="text-xs text-brand-ice/70">{m.busy}</p>}
+      {state === 'done' && (
+        <>
+          <p className="text-brand-cyan text-xs">{m.done}</p>
+          <button onClick={onDone} className="w-full py-2 rounded-xl bg-brand-blue text-white text-sm font-bold">OK</button>
+        </>
+      )}
+      {state === 'error' && (
+        <>
+          <p className="text-red-400 text-xs">{m.expired}</p>
+          <button onClick={onDone} className="w-full py-2 rounded-xl bg-brand-navy text-brand-ice text-sm border border-white/15">OK</button>
         </>
       )}
     </div>

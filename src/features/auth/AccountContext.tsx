@@ -9,7 +9,9 @@ interface AccountValue {
   account: Account | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<AuthResult>;
-  signUp: (username: string, password: string, email?: string) => Promise<AuthResult>;
+  signUp: (username: string, password: string, email: string) => Promise<AuthResult>;
+  /** Recarrega o estado da sessão (ex.: depois de confirmar o registo). */
+  refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   /** Atualiza o email da conta em sessão (sem recarregar a página). */
   linkEmail: (email: string) => Promise<{ ok: boolean; error?: string }>;
@@ -28,6 +30,7 @@ const AccountContext = createContext<AccountValue>({
   signIn: noop,
   signUp: noop,
   signOut: async () => {},
+  refresh: async () => {},
   linkEmail: async () => ({ ok: false, error: 'sem conta' }),
   clearAccount: () => {},
 });
@@ -58,10 +61,16 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return r;
   }, []);
 
-  const signUp = useCallback(async (u: string, p: string, email?: string) => {
+  const signUp = useCallback(async (u: string, p: string, email: string) => {
     const r = await register(u, p, email);
-    if (r.ok) setAccount(r.account);
+    // Com pending, a conta ainda não existe: só se entra depois de confirmar o email.
+    if (r.ok && r.account) setAccount(r.account);
     return r;
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const s = await fetchSession();
+    setAccount(s.account);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -78,8 +87,8 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const clearAccount = useCallback(() => setAccount(null), []);
 
   const value = useMemo(
-    () => ({ configured, googleEnabled, account, loading, signIn, signUp, signOut, linkEmail, clearAccount }),
-    [configured, googleEnabled, account, loading, signIn, signUp, signOut, linkEmail, clearAccount],
+    () => ({ configured, googleEnabled, account, loading, signIn, signUp, signOut, refresh, linkEmail, clearAccount }),
+    [configured, googleEnabled, account, loading, signIn, signUp, signOut, refresh, linkEmail, clearAccount],
   );
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

@@ -4,7 +4,7 @@ import { Play, Code2, LogOut, CheckCircle2, Trophy } from 'lucide-react';
 
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { Logo } from '../../shared/components/Logo';
-import { AccountPanel, ResetPasswordPanel } from '../auth/AccountPanel';
+import { AccountPanel, ResetPasswordPanel, ConfirmSignupPanel } from '../auth/AccountPanel';
 import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
@@ -17,12 +17,17 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, onResults, userConfig, onReset }) => {
   // Link de recuperação do email: ?reset=token abre o ecrã de nova palavra-passe.
-  const [resetToken, setResetToken] = React.useState<string | null>(() =>
-    new URLSearchParams(window.location.search).get('reset'),
-  );
+  // Links do email usam o fragmento (#reset= / #confirm=): não vão ao servidor nem aos registos de acesso.
+  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const [resetToken, setResetToken] = React.useState<string | null>(() => fragment.get('reset'));
+  const [confirmToken, setConfirmToken] = React.useState<string | null>(() => fragment.get('confirm'));
   const finishReset = () => {
     window.history.replaceState({}, '', window.location.pathname);
     setResetToken(null);
+  };
+  const finishConfirm = () => {
+    window.history.replaceState({}, '', window.location.pathname);
+    setConfirmToken(null);
   };
 
   const t = TRANSLATIONS[userConfig.language];
@@ -120,6 +125,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
         </div>
 
         <div className="mt-10">
+          {confirmToken && (
+            <div className="mb-6">
+              <ConfirmSignupPanel
+                token={confirmToken}
+                onDone={finishConfirm}
+                messages={{ title: t.confirmTitle, done: t.confirmDone, expired: t.confirmExpired, busy: t.confirmBusy }}
+              />
+            </div>
+          )}
           {resetToken && (
             <div className="mb-6">
               <ResetPasswordPanel
@@ -170,6 +184,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               back: t.back,
               googleLogin: t.accountGoogle,
               googleError: t.accountGoogleError,
+              emailRequired: t.accountEmailRequired,
+              registerSent: t.accountRegisterSent,
             }}
           />
         </div>

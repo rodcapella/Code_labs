@@ -110,3 +110,15 @@ describe('keyFor', () => {
     expect(keyFor(3)).not.toBe(keyFor(2));
   });
 });
+
+import { fitsElapsed } from './leaderboardRules';
+describe('tempo declarado vs tempo real', () => {
+  it('aceita um tempo igual ou menor do que o decorrido (com folga de 5 s)', () => {
+    expect(fitsElapsed(60, 60)).toBe(true);
+    expect(fitsElapsed(40, 120)).toBe(true);
+    expect(fitsElapsed(64, 60)).toBe(true);
+  });
+  it('rejeita um tempo maior do que o decorrido desde a tentativa', () => {
+    expect(fitsElapsed(120, 30)).toBe(false);
+  });
+});

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { sessionFromCookieHeader, isRevoked } from './session';
+import type { Redis } from '@upstash/redis';
+import { newSessionId, sessionIdFromCookie } from './session';
 
 /** Dados de utilizador guardados no Redis em `user:{nome em minúsculas}`. */
 export interface UserRecord {
@@ -27,8 +28,8 @@ export interface AccountResult {
 }
 
 export const RESET_TTL_SECONDS = 30 * 60;
+export const PENDING_TTL_SECONDS = 24 * 60 * 60;
 export const RESULTS_MAX = 100;
-
 export const EMAIL_MAX = 254;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -40,55 +41,62 @@ export const validateEmail = (raw: string): string | null => {
 
 export const emailKey = (email: string): string => `email:${email}`;
 export const userIdKey = (id: string): string => `userid:${id}`;
-export const revokeSessionsKey = (id: string): string => `revoked:${id}`;
-export const googleKey = (sub: string): string => `google:${sub}`;
 export const resultsKey = (id: string): string => `results:${id}`;
+export const googleKey = (sub: string): string => `google:${sub}`;
+export const sessionKey = (sid: string): string => `session:${sid}`;
+export const sessionsOfKey = (userId: string): string => `sessions-of:${userId}`;
 
-/** Token de recuperação: aleatório, e só o hash é guardado. */
-export const newResetToken = (): { token: string; hash: string } => {
+/** Token de uso único (recuperação ou confirmação): aleatório, e só o hash é guardado. */
+export const newToken = (): { token: string; hash: string } => {
   const token = randomBytes(32).toString('base64url');
   return { token, hash: hashToken(token) };
 };
-export const hashToken = (token: string): string =>
-  createHash('sha256').update(token).digest('hex');
-export const resetKey = (token: string): string => `reset:${hashToken(token)}`;
+export const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
+export const tokenKey = (prefix: string, token: string): string => `${prefix}:${hashToken(token)}`;
 
-type RedisLike = {
-  get<T>(key: string): Promise<T | null>;
-  getdel<T>(key: string): Promise<T | null>;
-  set(key: string, value: unknown, opts?: Record<string, unknown>): Promise<unknown>;
-  del(...keys: string[]): Promise<unknown>;
+/** Cria uma sessão no servidor. O cookie só leva o identificador. */
+export const createSession = async (redis: Redis, userId: string, username: string): Promise<string> => {
+  const sid = newSessionId();
+  await redis.set(sessionKey(sid), JSON.stringify({ userId, username }), { ex: 30 * 24 * 60 * 60 });
+  await redis.sadd(sessionsOfKey(userId), sid);
+  await redis.expire(sessionsOfKey(userId), 30 * 24 * 60 * 60);
+  return sid;
 };
 
-const parse = <T>(raw: unknown): T | null => {
-  if (raw === null || raw === undefined) return null;
-  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as T;
+/** Termina uma sessão (logout). O token copiado deixa de valer de imediato. */
+export const revokeSession = async (redis: Redis, sid: string): Promise<void> => {
+  const raw = await redis.get<unknown>(sessionKey(sid));
+  await redis.del(sessionKey(sid));
+  if (raw) {
+    const rec = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { userId: string };
+    await redis.srem(sessionsOfKey(rec.userId), sid);
+  }
 };
 
-/** Conta da sessão, se a sessão for válida E a conta ainda existir. */
+/** Termina todas as sessões de uma conta (recuperação de palavra-passe, apagar conta). */
+export const revokeAllSessions = async (redis: Redis, userId: string): Promise<void> => {
+  const sids = (await redis.smembers<string[]>(sessionsOfKey(userId))) ?? [];
+  for (const sid of sids) await redis.del(sessionKey(sid));
+  await redis.del(sessionsOfKey(userId));
+};
+
+/** Conta da sessão do cookie, se a sessão existir E a conta ainda existir. */
 export const resolveAccount = async (
-  redis: RedisLike,
+  redis: Redis,
   cookieHeader: string | undefined,
-  secret: string | undefined,
 ): Promise<{ userId: string; username: string } | null> => {
-  const session = sessionFromCookieHeader(cookieHeader, secret);
-  if (!session) return null;
-  const username = await redis.get<string>(userIdKey(session.userId));
-  if (!username) return null; // conta apagada: a sessão deixa de valer
-  const revokedAt = Number(await redis.get<string>(revokeSessionsKey(session.userId))) || null;
-  if (isRevoked(session.iat, revokedAt)) return null; // emitida antes de uma recuperação de palavra-passe
-  return { userId: session.userId, username: typeof username === 'string' ? username : session.username };
+  const sid = sessionIdFromCookie(cookieHeader);
+  if (!sid) return null;
+  const raw = await redis.get<unknown>(sessionKey(sid));
+  if (!raw) return null;
+  const rec = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { userId: string; username: string };
+  const username = await redis.get<string>(userIdKey(rec.userId));
+  if (!username) return null; // conta apagada
+  return { userId: rec.userId, username: typeof username === 'string' ? username : rec.username };
 };
-
-export const readUser = async (redis: RedisLike, username: string, userKeyFn: (u: string) => string): Promise<UserRecord | null> =>
-  parse<UserRecord>(await redis.get<unknown>(userKeyFn(username)));
 
 /** Guarda um resultado na conta e mantém só os últimos RESULTS_MAX. */
-export const recordResult = async (
-  redis: RedisLike & { lpush(key: string, ...v: string[]): Promise<unknown>; ltrim(key: string, s: number, e: number): Promise<unknown> },
-  userId: string,
-  result: AccountResult,
-): Promise<void> => {
+export const recordResult = async (redis: Redis, userId: string, result: AccountResult): Promise<void> => {
   await redis.lpush(resultsKey(userId), JSON.stringify(result));
   await redis.ltrim(resultsKey(userId), 0, RESULTS_MAX - 1);
 };

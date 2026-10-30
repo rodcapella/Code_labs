@@ -23,7 +23,7 @@ const messages = {
   email: 'Email', emailOptional: 'Email opcional', emailTaken: 'taken email', forgot: 'Esqueci', forgotSent: 'ok', forgotHelp: 'ajuda',
   sendLink: 'Enviar', myResults: 'Resultados', addEmail: 'Ligar', emailOnAccount: (e: string) => e, noEmail: 'sem email',
   deleteAccount: 'Apagar conta', deleteConfirm: 'confirma', deleteDone: 'apagada', wrongPassword: 'errada', back: 'Voltar',
-  googleLogin: 'Entrar com Google', googleError: 'erro google',
+  googleLogin: 'Entrar com Google', googleError: 'erro google', emailRequired: 'email obrigatório', registerSent: 'enviado',
 };
 const noop = () => {};
 

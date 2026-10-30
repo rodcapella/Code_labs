@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { validateUsername, validatePassword, userKey } from './authRules';
-import { hashPassword, verifyPassword, signSession, verifySession, sessionFromCookieHeader, sessionCookie, SESSION_COOKIE, isRevoked } from '../server/session';
+import {
+  hashPassword, verifyPassword, sessionCookie, sessionIdFromCookie, newSessionId, signData, verifyData,
+  SESSION_COOKIE,
+} from '../server/session';
+import { suggestUsername } from '../server/google';
 import { appUrl } from '../server/mailer';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -44,40 +48,22 @@ describe('palavras-passe', () => {
   });
 });
 
-describe('sessões assinadas', () => {
-  const secret = 'a'.repeat(40);
-  const now = 1_700_000_000;
-
-  it('um token válido devolve a sessão', () => {
-    const token = signSession({ userId: 'u1', username: 'rui' }, secret, now);
-    expect(verifySession(token, secret, now + 10)).toEqual({ userId: 'u1', username: 'rui', iat: now });
+describe('sessões (identificador opaco no cookie)', () => {
+  it('o identificador tem 256 bits e é diferente em cada sessão', () => {
+    const a = newSessionId();
+    expect(a).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(a).not.toBe(newSessionId());
   });
 
-  it('um token adulterado é rejeitado', () => {
-    const token = signSession({ userId: 'u1', username: 'rui' }, secret, now);
-    const [payload, sig] = token.split('.');
-    const forged = Buffer.from(JSON.stringify({ userId: 'u2', username: 'admin', exp: now + 99999 })).toString('base64url');
-    expect(verifySession(`${forged}.${sig}`, secret, now)).toBeNull();
-    expect(verifySession(`${payload}.x`, secret, now)).toBeNull();
+  it('lê o identificador do cookie e rejeita formatos que não são de sessão', () => {
+    const sid = newSessionId();
+    expect(sessionIdFromCookie(`${SESSION_COOKIE}=${sid}`)).toBe(sid);
+    expect(sessionIdFromCookie(`${SESSION_COOKIE}=abc`)).toBeNull();
+    expect(sessionIdFromCookie('outro=valor')).toBeNull();
+    expect(sessionIdFromCookie(undefined)).toBeNull();
   });
 
-  it('um token com outro segredo é rejeitado', () => {
-    const token = signSession({ userId: 'u1', username: 'rui' }, secret, now);
-    expect(verifySession(token, 'b'.repeat(40), now)).toBeNull();
-  });
-
-  it('um token expirado é rejeitado', () => {
-    const token = signSession({ userId: 'u1', username: 'rui' }, secret, now);
-    expect(verifySession(token, secret, now + 31 * 24 * 60 * 60)).toBeNull();
-  });
-
-  it('sem AUTH_SECRET não há sessão, mesmo com cookie', () => {
-    const token = signSession({ userId: 'u1', username: 'rui' }, secret, Math.floor(Date.now() / 1000));
-    expect(sessionFromCookieHeader(`${SESSION_COOKIE}=${token}`, undefined)).toBeNull();
-    expect(sessionFromCookieHeader(undefined, secret)).toBeNull();
-  });
-
-  it('o cookie é HttpOnly e SameSite', () => {
+  it('o cookie é HttpOnly, SameSite e Secure em produção', () => {
     const c = sessionCookie('t', false);
     expect(c).toContain('HttpOnly');
     expect(c).toContain('SameSite=Lax');
@@ -86,8 +72,18 @@ describe('sessões assinadas', () => {
   });
 });
 
-import { suggestUsername } from '../server/google';
-import { signData, verifyData } from '../server/session';
+describe('dados assinados (estado do login com Google)', () => {
+  const secret = 'c'.repeat(40);
+  it('um estado válido é lido de volta', () => {
+    const t = signData({ state: 'abc', verifier: 'v' }, secret, 1000, 600);
+    expect(verifyData<{ state: string }>(t, secret, 1100)?.state).toBe('abc');
+  });
+  it('um estado adulterado ou expirado é rejeitado', () => {
+    const t = signData({ state: 'abc' }, secret, 1000, 600);
+    expect(verifyData(t.replace(/^./, 'x'), secret, 1100)).toBeNull();
+    expect(verifyData(t, secret, 2000)).toBeNull();
+  });
+});
 
 describe('nome sugerido para contas Google', () => {
   it('usa o nome Google, sem caracteres inválidos e com 3 a 10 caracteres', () => {
@@ -104,30 +100,7 @@ describe('nome sugerido para contas Google', () => {
   });
 });
 
-describe('dados assinados (estado OAuth)', () => {
-  const secret = 'c'.repeat(40);
-  it('um estado válido é lido de volta', () => {
-    const t = signData({ state: 'abc', verifier: 'v' }, secret, 1000, 600);
-    expect(verifyData<{ state: string }>(t, secret, 1100)?.state).toBe('abc');
-  });
-  it('um estado adulterado ou expirado é rejeitado', () => {
-    const t = signData({ state: 'abc' }, secret, 1000, 600);
-    expect(verifyData(t.replace(/^./, 'x'), secret, 1100)).toBeNull();
-    expect(verifyData(t, secret, 2000)).toBeNull();
-  });
-});
-
-describe('segurança: revogação e links', () => {
-  it('uma sessão emitida antes da revogação deixa de valer; depois, continua válida', () => {
-    expect(isRevoked(1000, 2000)).toBe(true);
-    expect(isRevoked(3000, 2000)).toBe(false);
-    expect(isRevoked(1000, null)).toBe(false);
-  });
-
-  it('sessões sem data de emissão são consideradas revogadas quando há revogação', () => {
-    expect(isRevoked(undefined, 2000)).toBe(true);
-  });
-
+describe('segurança: links e cabeçalhos', () => {
   it('o link de recuperação só usa APP_URL (nunca o cabeçalho Host)', () => {
     const before = process.env.APP_URL;
     try {

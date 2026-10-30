@@ -3,7 +3,7 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import {
   LEADERBOARD_SIZE, LEVEL_IDS, encodeScore, keyFor, validateSubmission,
-  attemptKey, ATTEMPT_TTL_SECONDS,
+  attemptKey, ATTEMPT_TTL_SECONDS, fitsElapsed,
 } from '../src/features/leaderboard/domain/leaderboardRules';
 import { replayAttempt, isTimePlausible } from '../src/features/game/engine/replay';
 import { generateLayout } from '../src/features/game/levels/generator';
@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         const attemptId = crypto.randomUUID();
         const seed = crypto.getRandomValues(new Uint32Array(1))[0];
-        await redis.set(attemptKey(attemptId), JSON.stringify({ levelId, seed }), { ex: ATTEMPT_TTL_SECONDS });
+        await redis.set(attemptKey(attemptId), JSON.stringify({ levelId, seed, createdAt: Date.now() }), { ex: ATTEMPT_TTL_SECONDS });
         res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json({ attemptId, levelId, seed });
       }
@@ -79,8 +79,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // 1) Consumir a tentativa (uma só submissão por tentativa) e recuperar a semente.
       const stored = await redis.getdel<unknown>(attemptKey(sub.attemptId));
       if (!stored) return res.status(422).json({ error: 'tentativa inválida ou expirada' });
-      const record = (typeof stored === 'string' ? JSON.parse(stored) : stored) as { levelId: number; seed: number };
+      const record = (typeof stored === 'string' ? JSON.parse(stored) : stored) as { levelId: number; seed: number; createdAt: number };
       if (record.levelId !== sub.levelId) return res.status(422).json({ error: 'nível não corresponde à tentativa' });
+      // O tempo declarado não pode ser maior do que o tempo real desde que a tentativa começou.
+      const elapsed = (Date.now() - Number(record.createdAt)) / 1000;
+      if (!fitsElapsed(sub.time, elapsed)) {
+        return res.status(422).json({ error: 'tempo maior do que o decorrido desde o início da tentativa' });
+      }
 
       // 2) Re-executar as jogadas sobre o layout que o servidor gerou para essa semente.
       const layout = generateLayout(record.levelId, record.seed);
@@ -94,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // 4) Gravar o resultado calculado aqui, nunca o que veio do cliente.
       // Com sessão válida, o nome é o da conta (o que o cliente envia é ignorado).
-      const account = await resolveAccount(redis, req.headers.cookie, process.env.AUTH_SECRET);
+      const account = await resolveAccount(redis, req.headers.cookie);
       const entry = {
         id: crypto.randomUUID(),
         name: formatPlayerName(account ? account.username : sub.name),
