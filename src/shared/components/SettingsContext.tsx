@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { MotionConfig } from 'motion/react';
 import { Settings, loadSettings, saveSettings, applySettings } from '../config/settings';
-import { SettingsModal } from './SettingsModal';
+import { SettingsModal, ProfileSettings } from './SettingsModal';
 
 interface SettingsValue {
   settings: Settings;
@@ -19,7 +19,15 @@ const SettingsContext = createContext<SettingsValue>({
  * Preferências de acessibilidade e som. Aplica-as ao documento e ao MotionConfig,
  * e é dono do menu de definições (aberto de qualquer ecrã).
  */
-export const SettingsProvider: React.FC<{ children: React.ReactNode; lang?: 'pt' | 'en' }> = ({ children, lang = 'pt' }) => {
+interface SettingsProviderProps {
+  children: React.ReactNode;
+  lang?: 'pt' | 'en';
+  /** Perfil do jogador (cor do robô e idioma). Vem do onboarding; o menu pode alterá-lo. */
+  profile?: ProfileSettings;
+  onProfileChange?: (patch: Partial<ProfileSettings>) => void;
+}
+
+export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, lang = 'pt', profile, onProfileChange }) => {
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [open, setOpen] = useState(false);
 
@@ -41,7 +49,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; lang?: 'pt'
     <SettingsContext.Provider value={value}>
       <MotionConfig reducedMotion={settings.reduceMotion ? 'always' : 'user'}>
         {children}
-        {open && <SettingsModal settings={settings} onChange={update} onClose={closeSettings} lang={lang} />}
+        {open && (
+          <SettingsModal
+            settings={settings}
+            onChange={update}
+            onClose={closeSettings}
+            lang={lang}
+            profile={profile}
+            onProfileChange={onProfileChange}
+          />
+        )}
       </MotionConfig>
     </SettingsContext.Provider>
   );

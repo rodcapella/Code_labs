@@ -2,6 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { Portal } from './Portal';
 import { Settings } from '../config/settings';
 import { TRANSLATIONS } from '../i18n/translations';
+import { ROBOT_PALETTE } from '../config/robotPalette';
+
+/** Campos do perfil editáveis no menu (vêm do onboarding). */
+export interface ProfileSettings {
+  robotColor: string;
+  language: 'pt' | 'en';
+}
 
 interface SettingsModalProps {
   settings: Settings;
@@ -9,6 +16,8 @@ interface SettingsModalProps {
   onClose: () => void;
   /** Idioma da interface (o menu segue o idioma do perfil; por defeito português). */
   lang?: 'pt' | 'en';
+  profile?: ProfileSettings;
+  onProfileChange?: (patch: Partial<ProfileSettings>) => void;
 }
 
 const Switch: React.FC<{ id: string; label: string; hint: string; checked: boolean; onToggle: () => void }> = ({
@@ -39,7 +48,7 @@ const Switch: React.FC<{ id: string; label: string; hint: string; checked: boole
 );
 
 /** Menu de definições: acessibilidade (daltónicos, movimento, texto grande) e som. */
-export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onChange, onClose, lang = 'pt' }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onChange, onClose, lang = 'pt', profile, onProfileChange }) => {
   const t = TRANSLATIONS[lang];
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -102,6 +111,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onChange
               onToggle={() => onChange({ sound: !settings.sound })}
             />
           </section>
+
+          {profile && onProfileChange && (
+            <section className="mt-6" aria-labelledby="settings-profile">
+              <h3 id="settings-profile" className="text-[11px] font-bold uppercase tracking-widest text-brand-cyan">
+                {t.settingsProfile}
+              </h3>
+
+              <p id="settings-language-label" className="mt-3 text-sm font-bold text-brand-ice">{t.settingsLanguage}</p>
+              <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-labelledby="settings-language-label">
+                {(['pt', 'en'] as const).map(code => (
+                  <button
+                    key={code}
+                    type="button"
+                    aria-pressed={profile.language === code}
+                    onClick={() => onProfileChange({ language: code })}
+                    className={`rounded-xl py-2 text-sm font-bold border transition-all ${
+                      profile.language === code
+                        ? 'bg-brand-blue border-brand-blue text-white'
+                        : 'bg-brand-ink border-white/15 text-brand-ice/80 hover:border-brand-cyan/50'
+                    }`}
+                  >
+                    {code === 'pt' ? 'Português' : 'English'}
+                  </button>
+                ))}
+              </div>
+
+              <p id="settings-robot-label" className="mt-4 text-sm font-bold text-brand-ice">{t.settingsRobotColor}</p>
+              <div className="mt-2 grid grid-cols-4 gap-3" role="radiogroup" aria-labelledby="settings-robot-label">
+                {ROBOT_PALETTE.map(c => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={profile.robotColor === c.value}
+                    aria-label={t[c.key]}
+                    onClick={() => onProfileChange({ robotColor: c.value })}
+                    className={`aspect-square rounded-xl border-4 transition-all ${
+                      profile.robotColor === c.value ? 'border-white scale-110' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: c.value }}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
           <button
             ref={closeRef}

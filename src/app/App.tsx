@@ -62,7 +62,11 @@ export default function App() {
   if (!isLoaded) return null;
 
   return (
-    <SettingsProvider lang={userConfig?.language ?? 'pt'}>
+    <SettingsProvider
+      lang={userConfig?.language ?? 'pt'}
+      profile={userConfig ? { robotColor: userConfig.robotColor, language: userConfig.language } : undefined}
+      onProfileChange={patch => setUserConfig(prev => (prev ? { ...prev, ...patch } : prev))}
+    >
     <AccountProvider>
     <div className="min-h-screen overflow-hidden">
       <AnimatePresence mode="wait">

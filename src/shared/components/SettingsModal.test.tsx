@@ -28,4 +28,28 @@ describe('menu de definições', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it('com perfil, mostra o idioma e as 12 cores do robô', () => {
+    render(
+      <SettingsModal settings={DEFAULT_SETTINGS} onChange={vi.fn()} onClose={vi.fn()}
+        profile={{ robotColor: '#3B82F6', language: 'pt' }} onProfileChange={vi.fn()} />,
+    );
+    expect(screen.getAllByRole('radio')).toHaveLength(12);
+    expect(screen.getByRole('button', { name: 'Português' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('escolher outra cor do robô atualiza o perfil', () => {
+    const onProfileChange = vi.fn();
+    render(
+      <SettingsModal settings={DEFAULT_SETTINGS} onChange={vi.fn()} onClose={vi.fn()}
+        profile={{ robotColor: '#3B82F6', language: 'pt' }} onProfileChange={onProfileChange} />,
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'Vermelho' }));
+    expect(onProfileChange).toHaveBeenCalledWith({ robotColor: '#EF4444' });
+  });
+
+  it('sem perfil, a secção não aparece (o menu funciona sozinho)', () => {
+    render(<SettingsModal settings={DEFAULT_SETTINGS} onChange={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+  });
 });
