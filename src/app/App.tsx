@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AnimatePresence, MotionConfig, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { SettingsProvider } from '../shared/components/SettingsContext';
 import { HomeScreen } from '../features/home/HomeScreen';
 import { GameScreen } from '../features/game/GameScreen';
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen';
@@ -61,7 +62,7 @@ export default function App() {
   if (!isLoaded) return null;
 
   return (
-    <MotionConfig reducedMotion="user">
+    <SettingsProvider lang={userConfig?.language ?? 'pt'}>
     <AccountProvider>
     <div className="min-h-screen overflow-hidden">
       <AnimatePresence mode="wait">
@@ -138,7 +139,7 @@ export default function App() {
       />
     </div>
     </AccountProvider>
-    </MotionConfig>
+    </SettingsProvider>
   );
 }
 

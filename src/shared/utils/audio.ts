@@ -1,4 +1,18 @@
-const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
+/** Sons ligados ou desligados (definições). */
+let soundsOn = true;
+export const setSoundsOn = (on: boolean): void => {
+  soundsOn = on;
+};
+
+// Criado de forma tolerante: ambientes sem Web Audio (testes) não podem falhar ao importar.
+const audioCtx: AudioContext | null = (() => {
+  try {
+    const Ctor = typeof window !== 'undefined' ? (window.AudioContext || (window as any).webkitAudioContext) : undefined;
+    return Ctor ? new Ctor() : null;
+  } catch {
+    return null;
+  }
+})();
 
 const playTone = (freq: number, type: OscillatorType, duration: number, volume: number = 0.1) => {
   if (!audioCtx) return;
@@ -20,6 +34,7 @@ const playTone = (freq: number, type: OscillatorType, duration: number, volume: 
 };
 
 export const playMoveSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
@@ -40,6 +55,7 @@ export const playMoveSound = () => {
 };
 
 export const playTurnSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
@@ -60,6 +76,7 @@ export const playTurnSound = () => {
 };
 
 export const playPickSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   
@@ -87,6 +104,7 @@ export const playPickSound = () => {
 };
 
 export const playErrorSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
@@ -107,6 +125,7 @@ export const playErrorSound = () => {
 };
 
 export const playVictorySound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
@@ -126,6 +145,7 @@ export const playVictorySound = () => {
 };
 
 export const playClickSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
@@ -146,6 +166,7 @@ export const playClickSound = () => {
 };
 
 export const playBeepBoopSound = () => {
+  if (!soundsOn) return;
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
   

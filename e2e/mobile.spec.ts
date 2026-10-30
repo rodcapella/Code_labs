@@ -88,3 +88,18 @@ test.describe('ranking', () => {
     await noHorizontalOverflow(page);
   });
 });
+
+test.describe('definições', () => {
+  test('o modo para daltónicos abre do ecrã inicial e aplica-se ao documento', async ({ page }) => {
+    await seedProfile(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Definições' }).tap();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await fitsViewport(page, '[role="dialog"]');
+    await page.getByRole('switch', { name: 'Modo para daltónicos' }).tap();
+    await expect(page.locator('html')).toHaveAttribute('data-cvd', 'on');
+    await page.getByRole('button', { name: 'Fechar' }).tap();
+    await expect(dialog).toHaveCount(0);
+  });
+});

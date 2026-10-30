@@ -5,6 +5,7 @@ import { Play, Code2, LogOut, CheckCircle2, Trophy } from 'lucide-react';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { Logo } from '../../shared/components/Logo';
 import { AccountPanel, ResetPasswordPanel, ConfirmSignupPanel } from '../auth/AccountPanel';
+import { useSettings } from '../../shared/components/SettingsContext';
 import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
@@ -16,6 +17,7 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, onResults, userConfig, onReset }) => {
+  const { openSettings } = useSettings();
   // Link de recuperação do email: ?reset=token abre o ecrã de nova palavra-passe.
   // Links do email usam o fragmento (#reset= / #confirm=): não vão ao servidor nem aos registos de acesso.
   const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -151,6 +153,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               />
             </div>
           )}
+          <div className="mb-4 flex justify-center">
+            <button
+              type="button"
+              onClick={openSettings}
+              className="text-xs text-brand-cyan underline underline-offset-4"
+            >
+              {t.settingsTitle}
+            </button>
+          </div>
           <AccountPanel
             onResults={onResults}
             messages={{

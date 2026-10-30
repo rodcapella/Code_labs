@@ -8,6 +8,7 @@ import { ArcadeLoader } from '../../shared/components/ArcadeLoader';
 import { LevelTimer } from './components/LevelTimer';
 import { LevelIntroModal } from './components/LevelIntroModal';
 import { Modal } from '../../shared/components/Modal';
+import { useSettings } from '../../shared/components/SettingsContext';
 import { contextualHint, blockedCellAhead } from './engine/hints';
 import { previewPath, PreviewStep } from './engine/preview';
 import { ControlPanel } from './components/ControlPanel';
@@ -253,6 +254,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
   const [rankName, setRankName] = useState('');
   const { account } = useAccount();
+  const { openSettings } = useSettings();
   const pendingRef = useRef<{
     base: { levelId: number; commands: number; errors: number; time: number; structureBonus: number; date: string; robotColor: string };
     attempt: AttemptContext;
@@ -496,7 +498,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
         onHint={showHint}
         onSettings={() => {
           playClickSound();
-          setTutorialStep(0);
+          openSettings();
         }}
       />
 

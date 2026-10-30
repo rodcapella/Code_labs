@@ -157,3 +157,25 @@ button:disabled {
     opacity: 1;
   }
 }
+
+
+/* Definições: modo para daltónicos (laranja/azul no lugar de vermelho/verde, e padrões) */
+[data-cvd="on"] .text-red-400,
+[data-cvd="on"] .text-red-300,
+[data-cvd="on"] .text-red-600 { color: #FB923C !important; }
+[data-cvd="on"] .text-emerald-400,
+[data-cvd="on"] .text-emerald-600 { color: #38BDF8 !important; }
+[data-cvd="on"] .bg-emerald-100 { background-color: #E0F2FE !important; }
+[data-cvd="on"] .bg-red-100 { background-color: #FFEDD5 !important; }
+[data-cvd="on"] .border-red-500 { border-color: #FB923C !important; }
+[data-cvd="on"] [class*="border-red-500"] {
+  background-image: repeating-linear-gradient(45deg, rgba(251, 146, 60, 0.35) 0 6px, transparent 6px 12px) !important;
+}
+
+/* Definições: reduzir movimento (além da preferência do sistema) */
+[data-reduce-motion="on"] *,
+[data-reduce-motion="on"] *::before,
+[data-reduce-motion="on"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
