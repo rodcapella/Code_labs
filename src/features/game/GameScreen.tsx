@@ -36,6 +36,8 @@ import { RankingNameEntry } from '../leaderboard/RankingNameEntry';
 import { useVictory, rankingMessages } from './hooks/useVictory';
 import { useAttempt } from './hooks/useAttempt';
 import { useAvisos } from './hooks/useAvisos';
+import { ShareSolution } from '../share/ShareSolution';
+import { scoreOf } from '../../shared/config/rules';
 import { useCronometro } from './hooks/useCronometro';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { structureBonusFor } from './engine/structures';
@@ -499,6 +501,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 description={`${t.victoryDesc(gameState.commandCount, timer)} ${t.victoryStars}: ${'★'.repeat(earnedStars)}${'☆'.repeat(3 - earnedStars)}`}
                 playAgainLabel={t.playAgain}
                 nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
+                shareSlot={
+                  runs.length > 0 ? (
+                    <ShareSolution
+                      level={level}
+                      winningLines={runs[runs.length - 1]}
+                      lang={userConfig.language}
+                      opts={{ allowLoops, allowConditionals }}
+                      robotColor={userConfig.robotColor}
+                      levelNumber={level.id}
+                      score={scoreOf(gameState.commandCount, errors, timer, structureBonusFor(runs[runs.length - 1], userConfig.language))}
+                      stars={earnedStars}
+                    />
+                  ) : undefined
+                }
                 rankingSlot={
                   <RankingNameEntry
                     status={rankStatus}

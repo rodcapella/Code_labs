@@ -12,11 +12,13 @@ interface VictoryOverlayProps {
   onNext: () => void;
   /** Bloco opcional entre a descrição e os botões (ex.: nome para o ranking). */
   rankingSlot?: React.ReactNode;
+  /** Bloco opcional de partilha (GIF da solução). */
+  shareSlot?: React.ReactNode;
 }
 
 /** Ecrã de nível concluído, com a animação de celebração. */
 export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
-  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext, rankingSlot,
+  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext, rankingSlot, shareSlot,
 }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -41,6 +43,7 @@ export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
       <h3 className="text-2xl font-bold text-brand-ice mb-2">{title}</h3>
       <p className="text-brand-ice/80 mb-6">{description}</p>
       {rankingSlot}
+      {shareSlot && <div className="mt-6">{shareSlot}</div>}
       <div className="flex flex-col gap-3 mt-6">
         <button
           onClick={onPlayAgain}
