@@ -32,7 +32,9 @@ import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptCont
 import { starsFor } from '../../shared/config/rules';
 import { qualifiesForTop, formatPlayerName } from '../leaderboard/domain/leaderboard';
 import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
-import { RankingNameEntry, RankingStatus } from '../leaderboard/RankingNameEntry';
+import { RankingNameEntry } from '../leaderboard/RankingNameEntry';
+import { useVictory, rankingMessages } from './hooks/useVictory';
+import { useAttempt } from './hooks/useAttempt';
 import { structureBonusFor } from './engine/structures';
 import { useAccount } from '../auth/AccountContext';
 import { generateLayout } from './levels/generator';
@@ -50,32 +52,8 @@ interface GameScreenProps {
 export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUpdateConfig }) => {
   const t = TRANSLATIONS[userConfig.language];
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
-  // Cada partida tem uma tentativa: o servidor escolhe a semente, e a semente define o layout.
-  // `round` sobe ao tentar outra vez ou jogar de novo, para o layout mudar.
-  const [round, setRound] = useState(0);
-  // Janela com o conceito do nível: abre sempre que se entra num nível novo.
-  const [introOpen, setIntroOpen] = useState(true);
-  useEffect(() => {
-    setIntroOpen(true);
-  }, [currentLevelIdx]);
-  const closeIntro = useCallback(() => setIntroOpen(false), []);
-  const [ticket, setTicket] = useState<(AttemptTicket & { levelIdx: number; round: number }) | null>(null);
-  const ready = ticket !== null && ticket.levelIdx === currentLevelIdx && ticket.round === round;
-  const seed = ready && ticket ? ticket.seed : 0;
-  const level = useMemo(
-    () => ({ ...LEVELS[currentLevelIdx], ...generateLayout(LEVELS[currentLevelIdx].id, seed) }),
-    [currentLevelIdx, seed],
-  );
-
-  useEffect(() => {
-    let active = true;
-    fetchAttempt(LEVELS[currentLevelIdx].id).then(tk => {
-      if (active) setTicket({ ...tk, levelIdx: currentLevelIdx, round });
-    });
-    return () => {
-      active = false;
-    };
-  }, [currentLevelIdx, round]);
+  // Tentativa do nível (semente, layout, janela de conceito): ver hooks/useAttempt.ts.
+  const { level, round, ready, attemptId, newAttempt, introOpen, closeIntro } = useAttempt(LEVELS, currentLevelIdx);
   const [code, setCode] = useState('');
   const [tutorialStep, setTutorialStep] = useState<number | null>(() => {
     const completed = localStorage.getItem('tutorial_completed');
@@ -119,7 +97,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const [bumpKey, setBumpKey] = useState(0);
   const [previewSteps, setPreviewSteps] = useState<PreviewStep[] | null>(null);
-  const [earnedStars, setEarnedStars] = useState(0);
   const [fallNotice, setFallNotice] = useState(false);
   // O aviso de queda desaparece sozinho.
   useEffect(() => {
@@ -239,10 +216,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   };
 
   // Nova partida: layout novo (nova tentativa no servidor).
-  const newAttempt = () => {
-    setRound(r => r + 1);
-    setErrorOpen(false);
-  };
 
   const pauseGame = () => {
     runner.pause();
@@ -266,75 +239,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     }
   };
 
-  // Ranking na vitória: verificar o top, pedir o nome e só então submeter.
-  const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
-  const [rankName, setRankName] = useState('');
   const { account } = useAccount();
   const { openSettings } = useSettings();
-  const pendingRef = useRef<{
-    base: { levelId: number; commands: number; errors: number; time: number; structureBonus: number; date: string; robotColor: string };
-    attempt: AttemptContext;
-  } | null>(null);
-
-  const confirmRanking = async () => {
-    const pending = pendingRef.current;
-    const name = validatePlayerName(rankName);
-    if (!pending || name === null) return;
-    setRankStatus('sending');
-    const result = await submitEntry({ ...pending.base, name: formatPlayerName(name) }, pending.attempt);
-    // Sem servidor não há submissão: o resultado fica na cópia local.
-    if (pending.attempt.attemptId === null) setRankStatus('sent');
-    else if (result.qualified === true) setRankStatus('sent');
-    else if (result.qualified === false) setRankStatus('rejected');
-    else setRankStatus('error');
-  };
-
-  // Vitória: grava progresso e ranking uma única vez por vitória.
-  const savedRef = useRef(false);
-  useEffect(() => {
-    if (!gameState.victory) {
-      savedRef.current = false;
-      return;
-    }
-    if (savedRef.current) return;
-    savedRef.current = true;
-
-    // Estrelas: guarda só a melhor classificação do nível.
-    const earned = starsFor(gameState.commandCount, errors, level.boxes.length, level.gridSize);
-    const previous = userConfig.stars?.[level.id] ?? 0;
-    onUpdateConfig({
-      completedLevels: userConfig.completedLevels.includes(level.id)
-        ? userConfig.completedLevels
-        : [...userConfig.completedLevels, level.id],
-      stars: { ...(userConfig.stars ?? {}), [level.id]: Math.max(previous, earned) },
-    });
-    setEarnedStars(earned);
-
-    // O resultado só é enviado depois de o jogador confirmar o nome (e só se entrar no top).
-    const base = {
-      levelId: level.id,
-      commands: gameState.commandCount,
-      errors,
-      time: timer,
-      structureBonus: structureBonusFor(runs[runs.length - 1] ?? [], userConfig.language),
-      date: new Date().toISOString().split('T')[0],
-      robotColor: userConfig.robotColor,
-    };
-    pendingRef.current = {
-      base,
-      attempt: {
-        knowledgeLevel: userConfig.level,
-        language: userConfig.language,
-        runs,
-        attemptId: ready && ticket ? ticket.attemptId : null,
-      },
-    };
-    setRankStatus('checking');
-    setRankName(account ? account.username : userConfig.name);
-    fetchLeaderboard().then(list => {
-      setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
-    });
-  }, [gameState.victory]);
+  // Vitória: estrelas, progresso e ranking (ver hooks/useVictory.ts).
+  const { earnedStars, rankStatus, rankName, setRankName, confirmRanking } = useVictory({
+    victory: gameState.victory,
+    commandCount: gameState.commandCount,
+    errors,
+    timer,
+    level,
+    runs,
+    attemptId,
+    userConfig,
+    onUpdateConfig,
+    accountUsername: account ? account.username : null,
+  });
 
   const finishTutorial = () => {
     localStorage.setItem('tutorial_completed', 'true');
@@ -706,17 +625,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                     locked={account !== null}
                     onNameChange={setRankName}
                     onConfirm={confirmRanking}
-                    messages={{
-                      checking: t.rankChecking,
-                      qualify: t.rankQualify,
-                      out: t.rankOut,
-                      rejected: t.rankRejected,
-                      save: t.rankSave,
-                      sending: t.rankSending,
-                      sent: t.rankSent,
-                      error: t.rankError,
-                      invalid: t.rankInvalid,
-                    }}
+                    messages={rankingMessages(t)}
                   />
                 }
                 onPlayAgain={() => {
