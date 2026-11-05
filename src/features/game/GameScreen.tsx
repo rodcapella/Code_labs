@@ -35,6 +35,9 @@ import { validatePlayerName } from '../leaderboard/domain/leaderboardRules';
 import { RankingNameEntry } from '../leaderboard/RankingNameEntry';
 import { useVictory, rankingMessages } from './hooks/useVictory';
 import { useAttempt } from './hooks/useAttempt';
+import { useAvisos } from './hooks/useAvisos';
+import { useCronometro } from './hooks/useCronometro';
+import { TutorialOverlay } from './components/TutorialOverlay';
 import { structureBonusFor } from './engine/structures';
 import { useAccount } from '../auth/AccountContext';
 import { generateLayout } from './levels/generator';
@@ -55,12 +58,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   // Tentativa do nível (semente, layout, janela de conceito): ver hooks/useAttempt.ts.
   const { level, round, ready, attemptId, newAttempt, introOpen, closeIntro } = useAttempt(LEVELS, currentLevelIdx);
   const [code, setCode] = useState('');
-  const [tutorialStep, setTutorialStep] = useState<number | null>(() => {
-    const completed = localStorage.getItem('tutorial_completed');
-    return completed ? null : 0;
-  });
-  const [timer, setTimer] = useState(0);
-  const [robotMessage, setRobotMessage] = useState('');
+  const [tutorialDone, setTutorialDone] = useState(() => Boolean(localStorage.getItem('tutorial_completed')));
 
   const getInitialHints = () => {
     const baseHints = level.hints[userConfig.language].length;
@@ -83,27 +81,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     };
   }, []);
 
-  // Robot commentary: a fala é escolhida aleatoriamente de uma lista traduzida.
-  const speak = (type: 'idle' | 'success' | 'error' | 'victory') => {
-    const messages = t[`robot${type.charAt(0).toUpperCase() + type.slice(1)}` as keyof typeof t] as string[];
-    if (messages && messages.length > 0) {
-      const msg = messages[Math.floor(Math.random() * messages.length)];
-      setRobotMessage(msg);
-      playBeepBoopSound();
-      if (robotTimer.current) clearTimeout(robotTimer.current);
-      robotTimer.current = setTimeout(() => setRobotMessage(''), 3000);
-    }
-  };
-
+  const { robotMessage, fallNotice, speak, showFall } = useAvisos(userConfig.language);
   const [bumpKey, setBumpKey] = useState(0);
   const [previewSteps, setPreviewSteps] = useState<PreviewStep[] | null>(null);
-  const [fallNotice, setFallNotice] = useState(false);
-  // O aviso de queda desaparece sozinho.
-  useEffect(() => {
-    if (!fallNotice) return;
-    const id = setTimeout(() => setFallNotice(false), 2000);
-    return () => clearTimeout(id);
-  }, [fallNotice]);
   const [errorOpen, setErrorOpen] = useState(false);
 
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
@@ -113,7 +93,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
         // Queda com reinício automático: treme o robô e mostra um aviso breve (sem janela).
         playErrorSound();
         setBumpKey(k => k + 1);
-        setFallNotice(true);
+        showFall();
         break;
       case 'error':
         playErrorSound();
@@ -149,21 +129,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     state: gameState, errors, isGameOver, isExecuting, isPaused, started,
     speed: executionSpeed, historyLength, runs,
   } = runner;
+  const { seconds: timer, reset: resetTimer } = useCronometro(
+    started && !isPaused && !gameState.victory,
+    `${currentLevelIdx}-${round}`,
+  );
 
   useEffect(() => {
     speak('idle');
   }, [currentLevelIdx]);
 
-  // Cronómetro: corre desde a primeira execução até à vitória, pausa com a execução.
+  // Ao mudar de nível ou de tentativa, o hook repõe o robô; aqui repomos o resto da UI.
   useEffect(() => {
-    if (!started || isPaused || gameState.victory) return;
-    const id = setInterval(() => setTimer(s => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [started, isPaused, gameState.victory]);
-
-  // Ao mudar de nível, o hook repõe o robô; aqui repomos o resto do estado da UI.
-  useEffect(() => {
-    setTimer(0);
     setHintsRemaining(getInitialHints());
     setActiveHint(null);
   }, [currentLevelIdx, round]);
@@ -173,7 +149,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
     runner.reset();
     setErrorOpen(false);
     setCode('');
-    setTimer(0);
+    resetTimer();
     setHintsRemaining(getInitialHints());
     setActiveHint(null);
   };
@@ -257,7 +233,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   const finishTutorial = () => {
     localStorage.setItem('tutorial_completed', 'true');
-    setTutorialStep(null);
+    setTutorialDone(true);
     playClickSound();
   };
 
@@ -291,112 +267,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
           : undefined
       }
     >
-      {/* Tutorial Overlay */}
+      {/* Tutorial de primeira utilização (monta-se só enquanto não foi concluído) */}
       <AnimatePresence>
-        {tutorialStep !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-brand-navy/60 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="bg-brand-navy rounded-3xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-2 bg-brand-navy">
-                <motion.div 
-                  className="h-full bg-brand-blue"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${((tutorialStep + 1) / 8) * 100}%` }}
-                />
-              </div>
-
-              <h3 className="text-xl font-bold text-brand-ice mb-4 flex items-center gap-2">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-blue/20 text-brand-cyan text-sm">
-                  {tutorialStep + 1}
-                </span>
-                {t.tutorialTitle}
-              </h3>
-
-              <div className="text-brand-ice/75 mb-8 min-h-[80px]">
-                {tutorialStep === 0 && <p>{t.tutorialWelcome}</p>}
-                {tutorialStep === 1 && (
-                  <div className="space-y-4">
-                    <p>{t.tutorialLang}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['pt', 'en'] as Language[]).map(lang => (
-                        <button
-                          key={lang}
-                          onClick={() => onUpdateConfig({ language: lang })}
-                          className={`py-2 rounded-xl font-bold border-2 transition-all ${
-                            userConfig.language === lang 
-                              ? 'border-brand-blue bg-brand-blue/15 text-brand-cyan' 
-                              : 'border-white/10 text-brand-ice/75'
-                          }`}
-                        >
-                          {lang === 'pt' ? 'Português' : 'English'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {tutorialStep === 2 && (
-                  <div className="space-y-4">
-                    <p>{t.tutorialRobot}</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {robotColors.map(color => (
-                        <button
-                          key={color.value}
-                          onClick={() => onUpdateConfig({ robotColor: color.value })}
-                          className={`w-full aspect-square rounded-xl border-4 transition-all ${
-                            userConfig.robotColor === color.value 
-                              ? 'border-white/15 scale-110' 
-                              : 'border-transparent'
-                          }`}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {tutorialStep === 3 && <p>{t.tutorialMove}</p>}
-                {tutorialStep === 4 && <p>{t.tutorialPick}</p>}
-                {tutorialStep === 5 && <p>{t.tutorialError}</p>}
-                {tutorialStep === 6 && <p>{t.tutorialExecute}</p>}
-                {tutorialStep === 7 && <p>{t.tutorialFinish}</p>}
-              </div>
-
-              <div className="flex gap-3">
-                {tutorialStep > 0 && (
-                  <button
-                    onClick={() => {
-                      playClickSound();
-                      setTutorialStep(s => s !== null ? s - 1 : null);
-                    }}
-                    className="flex-1 py-3 bg-brand-navy text-brand-ice/75 font-bold rounded-2xl hover:bg-white/10 transition-all"
-                  >
-                    {t.back}
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    playClickSound();
-                    if (tutorialStep < 7) setTutorialStep(s => s !== null ? s + 1 : null);
-                    else finishTutorial();
-                  }}
-                  className="flex-[2] py-3 bg-brand-blue text-white font-bold rounded-2xl shadow-lg shadow-brand-blue/20 hover:bg-brand-blue transition-all"
-                >
-                  {tutorialStep < 7 ? t.continue : t.start}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+        {!tutorialDone && <TutorialOverlay
+            t={t}
+            userConfig={userConfig}
+            onUpdateConfig={onUpdateConfig}
+            robotColors={robotColors}
+            onFinish={finishTutorial}
+            playClick={playClickSound}
+          />}
       </AnimatePresence>
-
       {/* Header */}
       <GameHeader
         t={t}
