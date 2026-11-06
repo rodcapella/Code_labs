@@ -11,6 +11,8 @@ export interface Box {
   id: string;
   position: Position;
   collected: boolean;
+  /** Número de ordem de recolha (1..N). Só existe em níveis com ordem obrigatória. */
+  order?: number;
 }
 
 export interface GameState {
@@ -52,6 +54,8 @@ export interface LayoutConfig {
   wood: Position[];
   /** Portais azuis: pares que se ligam entre si. Opcional (sem portais por defeito). */
   portals?: PortalPair[];
+  /** Ordem de recolha de cada caixa (mesmo índice de `boxes`). Opcional: sem ordem por defeito. */
+  boxOrder?: number[];
 }
 
 /** Metadados do nível (estáticos). O layout (posições) é gerado por partida. */

@@ -118,6 +118,14 @@ export const executeCommand = (state: GameState, command: string, lang: Language
     );
     if (idx === -1) return fail(t.errorNoBox);
 
+    // Ordem de recolha: só pode ser apanhada a caixa com o número mais baixo ainda por recolher.
+    const ordered = state.boxes.some(b => b.order !== undefined);
+    if (ordered) {
+      const remaining = state.boxes.filter(b => !b.collected && b.order !== undefined);
+      const nextOrder = Math.min(...remaining.map(b => b.order as number));
+      if (state.boxes[idx].order !== nextOrder) return fail(t.errorBoxOrder);
+    }
+
     const boxes = state.boxes.map((b, i) => (i === idx ? { ...b, collected: true } : b));
     return ok({ boxes, victory: boxes.every(b => b.collected) });
   }

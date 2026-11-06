@@ -11,7 +11,12 @@ export const createInitialState = (layout: LayoutConfig): GameState => ({
   gridSize: layout.gridSize,
   robotPosition: layout.initialRobotPosition,
   robotDirection: layout.initialRobotDirection,
-  boxes: layout.boxes.map((p, i) => ({ id: `box-${i}`, position: p, collected: false })),
+  boxes: layout.boxes.map((p, i) => ({
+    id: `box-${i}`,
+    position: p,
+    collected: false,
+    ...(layout.boxOrder ? { order: layout.boxOrder[i] } : {}),
+  })),
   walls: layout.walls,
   holes: layout.holes,
   wood: layout.wood,

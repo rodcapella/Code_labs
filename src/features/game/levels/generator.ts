@@ -1,7 +1,7 @@
 import { Direction, LayoutConfig, Position, PortalPair } from '../../../shared/types/game';
 
 /** Grelha, caixas e paredes de cada nível. Posições são geradas por partida. */
-export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number; holeCount: number; woodCount: number; portalPairs?: number }> = {
+export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number; holeCount: number; woodCount: number; portalPairs?: number; orderedBoxes?: boolean }> = {
   1: { gridSize: 6, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
   2: { gridSize: 8, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
   3: { gridSize: 8, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 0 },
@@ -12,6 +12,7 @@ export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; w
   8: { gridSize: 10, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 4 },
   9: { gridSize: 10, boxCount: 10, wallCount: 3, holeCount: 1, woodCount: 1 },
   10: { gridSize: 10, boxCount: 8, wallCount: 3, holeCount: 0, woodCount: 0, portalPairs: 2 },
+  11: { gridSize: 10, boxCount: 6, wallCount: 3, holeCount: 0, woodCount: 0, portalPairs: 2, orderedBoxes: true },
 };
 
 const DIRECTIONS: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
@@ -104,6 +105,16 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
     const allReachable = boxes.every(b => reach.has(`${b.x},${b.y}`));
     if (!allReachable) continue;
 
+    // Ordem de recolha: uma permutação de 1..N, sorteada com o mesmo gerador (mesma semente, mesma ordem).
+    let boxOrder: number[] | undefined;
+    if (spec.orderedBoxes) {
+      boxOrder = boxes.map((_, i) => i + 1);
+      for (let i = boxOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [boxOrder[i], boxOrder[j]] = [boxOrder[j], boxOrder[i]];
+      }
+    }
+
     return {
       gridSize: spec.gridSize,
       initialRobotPosition: start,
@@ -113,6 +124,7 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
       holes,
       wood,
       portals,
+      ...(boxOrder ? { boxOrder } : {}),
     };
   }
   throw new Error(`não foi possível gerar um layout jogável para o nível ${levelId}`);

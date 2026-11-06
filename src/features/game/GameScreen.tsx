@@ -27,6 +27,7 @@ import { level7 } from './levels/level7';
 import { level8 } from './levels/level8';
 import { level9 } from './levels/level9';
 import { level10 } from './levels/level10';
+import { level11 } from './levels/level11';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
@@ -47,7 +48,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playClickSound, playSound, soundForEvent } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10];
+const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11];
 
 interface GameScreenProps {
   onBack: () => void;

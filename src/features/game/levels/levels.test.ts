@@ -10,9 +10,10 @@ import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
 import { level10 } from './level10';
+import { level11 } from './level11';
 
-const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
-const metas = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10];
+const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+const metas = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10, level11];
 
 describe('especificação dos níveis', () => {
   it.each(ids)('nível %i tem grelha e nº de caixas definidos', id => {
@@ -21,12 +22,13 @@ describe('especificação dos níveis', () => {
   });
 
   it('grelha, caixas, paredes, buracos e madeira por nível', () => {
-    expect(ids.map(id => LEVEL_SPECS[id].gridSize)).toEqual([6, 8, 8, 10, 12, 10, 10, 10, 10, 10]);
-    expect(ids.map(id => LEVEL_SPECS[id].boxCount)).toEqual([6, 6, 8, 12, 16, 8, 8, 8, 10, 8]);
-    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6, 0, 3, 3]);
-    expect(ids.map(id => LEVEL_SPECS[id].holeCount)).toEqual([0, 0, 0, 0, 0, 2, 0, 0, 1, 0]);
-    expect(ids.map(id => LEVEL_SPECS[id].woodCount)).toEqual([0, 0, 0, 0, 0, 0, 0, 4, 1, 0]);
+    expect(ids.map(id => LEVEL_SPECS[id].gridSize)).toEqual([6, 8, 8, 10, 12, 10, 10, 10, 10, 10, 10]);
+    expect(ids.map(id => LEVEL_SPECS[id].boxCount)).toEqual([6, 6, 8, 12, 16, 8, 8, 8, 10, 8, 6]);
+    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6, 0, 3, 3, 3]);
+    expect(ids.map(id => LEVEL_SPECS[id].holeCount)).toEqual([0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 0]);
+    expect(ids.map(id => LEVEL_SPECS[id].woodCount)).toEqual([0, 0, 0, 0, 0, 0, 0, 4, 1, 0, 0]);
     expect(LEVEL_SPECS[10].portalPairs).toBe(2);
+    expect(LEVEL_SPECS[11].orderedBoxes).toBe(true);
   });
 });
 
@@ -52,6 +54,17 @@ describe('generateLayout', () => {
     }
   });
 
+  it('o nível 11 tem ordem de recolha: números 1..N, uma permutação por partida', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const l = generateLayout(11, seed);
+      expect([...(l.boxOrder ?? [])].sort((a, b) => a - b)).toEqual(l.boxes.map((_, i) => i + 1));
+    }
+  });
+
+  it('níveis sem ordem não têm boxOrder', () => {
+    expect(generateLayout(1, 5).boxOrder).toBeUndefined();
+  });
+
   it('a mesma semente dá sempre o mesmo layout (o servidor recalcula)', () => {
     expect(generateLayout(9, 12345)).toEqual(generateLayout(9, 12345));
   });
@@ -70,6 +83,6 @@ describe('generateLayout', () => {
   });
 
   it('nível desconhecido é erro', () => {
-    expect(() => generateLayout(11, 1)).toThrow();
+    expect(() => generateLayout(12, 1)).toThrow();
   });
 });

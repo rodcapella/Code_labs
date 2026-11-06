@@ -81,6 +81,10 @@ export const Grid: React.FC<GridProps> = ({
       >
         {cells.map((cell) => {
           const boxHere = boxes.find(b => b.position.x === cell.x && b.position.y === cell.y && !b.collected);
+          const boxObjHere = boxHere;
+          // Próxima caixa da ordem de recolha (menor número ainda por apanhar), se o nível tiver ordem.
+          const orderedLeft = boxes.filter(b => !b.collected && b.order !== undefined);
+          const nextOrderHere = orderedLeft.length > 0 ? Math.min(...orderedLeft.map(b => b.order as number)) : undefined;
           const isWall = walls.some(w => w.x === cell.x && w.y === cell.y);
 
           return (
@@ -133,7 +137,11 @@ export const Grid: React.FC<GridProps> = ({
               <AnimatePresence>
                 {boxHere && (
                   <div className="absolute inset-0 z-10" style={{ transform: 'rotateZ(45deg) rotateX(-45deg) translateZ(15px)' }}>
-                    <Box color={boxColor} />
+                    <Box
+                      color={boxColor}
+                      order={boxObjHere?.order}
+                      isNext={boxObjHere?.order !== undefined && boxObjHere.order === nextOrderHere}
+                    />
                   </div>
                 )}
               </AnimatePresence>

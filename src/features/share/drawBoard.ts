@@ -108,6 +108,16 @@ export const drawBoard = (
     ctx.fillStyle = level.colors.box;
     const pad = g.cell * 0.22;
     ctx.fillRect(g.x(b.position.x) + pad, g.y(b.position.y) + pad, g.cell - pad * 2, g.cell - pad * 2);
+    if (b.order !== undefined) {
+      // Número da ordem de recolha, legível sem cor.
+      ctx.fillStyle = '#001547';
+      ctx.font = `bold ${Math.round(g.cell * 0.4)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(b.order), g.x(b.position.x) + g.cell / 2, g.y(b.position.y) + g.cell / 2);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+    }
     ctx.globalAlpha = 1;
   }
 
