@@ -20,6 +20,9 @@ vi.mock('../../shared/utils/audio', () => ({
   playMoveSound: vi.fn(), playTurnSound: vi.fn(), playPickSound: vi.fn(),
   playErrorSound: vi.fn(), playVictorySound: vi.fn(), playClickSound: vi.fn(),
   playBeepBoopSound: vi.fn(),
+  playSound: vi.fn(),
+  soundForEvent: vi.fn(() => null),
+  setSoundsOn: vi.fn(),
 }));
 
 const t = TRANSLATIONS.pt;

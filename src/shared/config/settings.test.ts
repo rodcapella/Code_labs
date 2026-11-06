@@ -10,8 +10,8 @@ describe('preferências', () => {
   });
 
   it('guarda e lê de volta', () => {
-    saveSettings({ colorblind: true, reduceMotion: true, largeText: false, sound: false });
-    expect(loadSettings()).toEqual({ colorblind: true, reduceMotion: true, largeText: false, sound: false });
+    saveSettings({ theme: 'auto', colorblind: true, reduceMotion: true, largeText: false, sound: false });
+    expect(loadSettings()).toEqual({ theme: 'auto', colorblind: true, reduceMotion: true, largeText: false, sound: false });
   });
 
   it('valores inválidos ou em falta caem para o padrão', () => {
@@ -28,7 +28,7 @@ describe('preferências', () => {
 
   it('aplica as opções ao documento através de atributos data-*', () => {
     const root = document.createElement('html');
-    applySettings({ colorblind: true, reduceMotion: true, largeText: true, sound: true }, root);
+    applySettings({ theme: 'auto', colorblind: true, reduceMotion: true, largeText: true, sound: true }, root);
     expect(root.dataset.cvd).toBe('on');
     expect(root.dataset.reduceMotion).toBe('on');
     expect(root.style.fontSize).toBe('112%');

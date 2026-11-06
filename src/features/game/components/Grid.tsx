@@ -70,7 +70,7 @@ export const Grid: React.FC<GridProps> = ({
     <div className="relative perspective-1000 flex items-center justify-center p-12">
       <p className="sr-only" aria-live="polite">{summary}</p>
       <div 
-        className="relative grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8"
+        className="grid-board relative grid gap-2 bg-white/10 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-b-8"
         style={{
           ["--grid-accent" as string]: gridColor,
           borderBottomColor: gridColor,

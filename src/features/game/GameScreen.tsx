@@ -45,7 +45,7 @@ import { structureBonusFor } from './engine/structures';
 import { useAccount } from '../auth/AccountContext';
 import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
-import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
+import { playClickSound, playSound, soundForEvent } from '../../shared/utils/audio';
 
 const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10];
 
@@ -91,35 +91,27 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
 
   // Sons e falas reagem a cada passo da execução, fora de qualquer atualizador de estado.
   const handleStepEvent = (event: StepEvent) => {
+    const sound = soundForEvent(event);
+    if (sound) playSound(sound);
     switch (event) {
       case 'fall':
         // Queda com reinício automático: treme o robô e mostra um aviso breve (sem janela).
-        playErrorSound();
         setBumpKey(k => k + 1);
         showFall();
         break;
       case 'error':
-        playErrorSound();
         speak('error');
         // Embate do robô e janela com a dica para o erro.
         setBumpKey(k => k + 1);
         setErrorOpen(true);
         break;
       case 'victory':
-        playVictorySound();
         speak('victory');
         break;
-      case 'pick':
-        playPickSound();
-        break;
-      case 'move':
-        playMoveSound();
-        break;
-      case 'turn':
-        playTurnSound();
+      default:
         break;
     }
-    if ((event === 'move' || event === 'turn' || event === 'pick') && Math.random() > 0.7) {
+    if ((event === 'move' || event === 'turn' || event === 'pick' || event === 'portal') && Math.random() > 0.7) {
       speak('success');
     }
   };

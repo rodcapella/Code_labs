@@ -9,7 +9,7 @@ import { MAX_RUN_STEPS } from '../../../shared/config/rules';
 
 export { createInitialState, parseProgram };
 
-export type StepEvent = 'move' | 'turn' | 'pick' | 'step' | 'error' | 'fall' | 'victory' | 'gameover';
+export type StepEvent = 'move' | 'turn' | 'pick' | 'step' | 'error' | 'fall' | 'portal' | 'break' | 'victory' | 'gameover';
 type Status = 'idle' | 'running' | 'paused';
 
 interface Snapshot {
@@ -18,13 +18,21 @@ interface Snapshot {
   steps: number;
 }
 
-const classify = (prev: GameState, next: GameState): StepEvent => {
+/** Classifica o passo para o som e a reação do ecrã. Exportada para teste. */
+export const classify = (prev: GameState, next: GameState): StepEvent => {
   if (next.error) return 'error';
   if (next.victory) return 'victory';
   const picked = next.boxes.filter(b => b.collected).length > prev.boxes.filter(b => b.collected).length;
   if (picked) return 'pick';
+  if (next.wood.length < prev.wood.length) return 'break';
   const moved = next.robotPosition.x !== prev.robotPosition.x || next.robotPosition.y !== prev.robotPosition.y;
-  if (moved) return 'move';
+  if (moved) {
+    // Pousar numa ponta de portal significa que o robô foi teletransportado.
+    const onPortal = (next.portals ?? []).some(
+      p => (p.a.x === next.robotPosition.x && p.a.y === next.robotPosition.y) || (p.b.x === next.robotPosition.x && p.b.y === next.robotPosition.y),
+    );
+    return onPortal ? 'portal' : 'move';
+  }
   if (next.robotDirection !== prev.robotDirection) return 'turn';
   return 'step';
 };

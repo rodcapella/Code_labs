@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Portal } from './Portal';
-import { Settings } from '../config/settings';
+import { Settings, ThemeSetting } from '../config/settings';
 import { TRANSLATIONS } from '../i18n/translations';
 import { ROBOT_PALETTE } from '../config/robotPalette';
 
@@ -71,6 +71,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onChange
           className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-brand-cyan/40 bg-brand-navy p-6 shadow-2xl"
         >
           <h2 id="settings-title" className="text-lg font-bold text-brand-ice">{t.settingsTitle}</h2>
+
+          <section className="mt-4" aria-labelledby="settings-look">
+            <h3 id="settings-look" className="text-[11px] font-bold uppercase tracking-widest text-brand-cyan">
+              {t.settingsLook}
+            </h3>
+            <p id="settings-theme-label" className="mt-3 text-sm font-bold text-brand-ice">{t.settingsTheme}</p>
+            <div className="mt-2 grid grid-cols-3 gap-2" role="group" aria-labelledby="settings-theme-label">
+              {(['auto', 'day', 'night'] as ThemeSetting[]).map(opt => (
+                <button
+                  key={opt}
+                  type="button"
+                  aria-pressed={settings.theme === opt}
+                  onClick={() => onChange({ theme: opt })}
+                  className={`rounded-xl py-2 text-xs font-bold border ${
+                    settings.theme === opt ? 'bg-brand-blue border-brand-blue text-white' : 'bg-brand-ink border-white/15 text-brand-ice/80'
+                  }`}
+                >
+                  {opt === 'auto' ? t.themeAuto : opt === 'day' ? t.themeDay : t.themeNight}
+                </button>
+              ))}
+            </div>
+          </section>
 
           <section className="mt-4" aria-labelledby="settings-a11y">
             <h3 id="settings-a11y" className="text-[11px] font-bold uppercase tracking-widest text-brand-cyan">

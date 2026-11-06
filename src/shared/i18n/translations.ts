@@ -205,6 +205,11 @@ export const TRANSLATIONS = {
     shareError: 'Não foi possível criar o GIF neste dispositivo.',
     shareText: (level: number, score: number, stars: number) =>
       `Resolvi o nível ${level} do CodeBot Lab com ${score} pontos (${'★'.repeat(stars)}). Experimenta tu!`,
+    settingsLook: 'Aspeto',
+    settingsTheme: 'Tema do tabuleiro',
+    themeAuto: 'Automático',
+    themeDay: 'Laboratório',
+    themeNight: 'Noturno',
     settingsProfile: 'Perfil',
     settingsLanguage: 'Idioma',
     settingsRobotColor: 'Cor do robô',
@@ -438,6 +443,11 @@ export const TRANSLATIONS = {
     shareError: 'Could not create the GIF on this device.',
     shareText: (level: number, score: number, stars: number) =>
       `I solved level ${level} of CodeBot Lab with ${score} points (${'★'.repeat(stars)}). Try it!`,
+    settingsLook: 'Look',
+    settingsTheme: 'Board theme',
+    themeAuto: 'Automatic',
+    themeDay: 'Laboratory',
+    themeNight: 'Night',
     settingsProfile: 'Profile',
     settingsLanguage: 'Language',
     settingsRobotColor: 'Robot colour',
