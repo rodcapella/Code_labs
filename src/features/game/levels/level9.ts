@@ -4,16 +4,16 @@ export const level9: LevelMeta = {
   id: 9,
   intro: {
     pt: {
-      title: 'Revisão final',
+      title: 'Revisão',
       body: [
-        'Último nível: junta tudo o que aprendeste.',
+        'Revisão: junta tudo o que aprendeste até aqui.',
         'Combina repetir, se_caixa com senao, se_parede e enquanto_livre. Há paredes, um buraco e madeira: planeia antes de executar.',
       ],
     },
     en: {
-      title: 'Final review',
+      title: 'Review',
       body: [
-        'The last level: it brings everything together.',
+        'Review: it brings together everything you learned so far.',
         'Combine repeat, if_box with else, if_wall and while_free. Plan before you run: the path preview helps.',
       ],
     },

@@ -52,7 +52,8 @@ describe('validateSubmission', () => {
     expect(validateSubmission({ ...valid, levelId: 5 }).ok).toBe(true);
     expect(validateSubmission({ ...valid, levelId: 6 }).ok).toBe(true);
     expect(validateSubmission({ ...valid, levelId: 9 }).ok).toBe(true);
-    expect(validateSubmission({ ...valid, levelId: 10 }).ok).toBe(false);
+    expect(validateSubmission({ ...valid, levelId: 10 }).ok).toBe(true);
+    expect(validateSubmission({ ...valid, levelId: 11 }).ok).toBe(false);
     expect(validateSubmission({ ...valid, time: -1 }).ok).toBe(false);
     expect(validateSubmission({ ...valid, date: '26/10/2026' }).ok).toBe(false);
     expect(validateSubmission({ ...valid, robotColor: 'red' }).ok).toBe(false);

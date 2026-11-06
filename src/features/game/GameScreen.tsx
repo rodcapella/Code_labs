@@ -26,6 +26,7 @@ import { level6 } from './levels/level6';
 import { level7 } from './levels/level7';
 import { level8 } from './levels/level8';
 import { level9 } from './levels/level9';
+import { level10 } from './levels/level10';
 import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { useProgramRunner, StepEvent } from './hooks/useProgramRunner';
 import { submitEntry, fetchAttempt, fetchLeaderboard, AttemptTicket, AttemptContext } from '../leaderboard/leaderboardApi';
@@ -46,7 +47,7 @@ import { generateLayout } from './levels/generator';
 import { MAX_ERRORS_BY_LEVEL } from '../../shared/config/rules';
 import { playMoveSound, playTurnSound, playPickSound, playErrorSound, playVictorySound, playClickSound, playBeepBoopSound } from '../../shared/utils/audio';
 
-const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9];
+const LEVELS = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10];
 
 interface GameScreenProps {
   onBack: () => void;
@@ -182,6 +183,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       walls: level.walls,
       holes: level.holes,
       wood: level.wood,
+      portals: level.portals,
     };
     const result = previewPath(layout, parseProgram(code), userConfig.language, { allowLoops, allowConditionals }, maxErrors);
     setPreviewSteps(result.steps);
@@ -350,6 +352,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             walls={gameState.walls}
             holes={gameState.holes}
             wood={gameState.wood}
+            portals={gameState.portals}
             commandCount={gameState.commandCount}
             previewSteps={previewSteps}
             bumpKey={bumpKey}

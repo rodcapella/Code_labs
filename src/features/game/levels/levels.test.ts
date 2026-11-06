@@ -9,9 +9,10 @@ import { level6 } from './level6';
 import { level7 } from './level7';
 import { level8 } from './level8';
 import { level9 } from './level9';
+import { level10 } from './level10';
 
-const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-const metas = [level1, level2, level3, level4, level5, level6, level7, level8, level9];
+const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+const metas = [level1, level2, level3, level4, level5, level6, level7, level8, level9, level10];
 
 describe('especificação dos níveis', () => {
   it.each(ids)('nível %i tem grelha e nº de caixas definidos', id => {
@@ -20,11 +21,12 @@ describe('especificação dos níveis', () => {
   });
 
   it('grelha, caixas, paredes, buracos e madeira por nível', () => {
-    expect(ids.map(id => LEVEL_SPECS[id].gridSize)).toEqual([6, 8, 8, 10, 12, 10, 10, 10, 10]);
-    expect(ids.map(id => LEVEL_SPECS[id].boxCount)).toEqual([6, 6, 8, 12, 16, 8, 8, 8, 10]);
-    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6, 0, 3]);
-    expect(ids.map(id => LEVEL_SPECS[id].holeCount)).toEqual([0, 0, 0, 0, 0, 2, 0, 0, 1]);
-    expect(ids.map(id => LEVEL_SPECS[id].woodCount)).toEqual([0, 0, 0, 0, 0, 0, 0, 4, 1]);
+    expect(ids.map(id => LEVEL_SPECS[id].gridSize)).toEqual([6, 8, 8, 10, 12, 10, 10, 10, 10, 10]);
+    expect(ids.map(id => LEVEL_SPECS[id].boxCount)).toEqual([6, 6, 8, 12, 16, 8, 8, 8, 10, 8]);
+    expect(ids.map(id => LEVEL_SPECS[id].wallCount)).toEqual([0, 0, 0, 0, 2, 4, 6, 0, 3, 3]);
+    expect(ids.map(id => LEVEL_SPECS[id].holeCount)).toEqual([0, 0, 0, 0, 0, 2, 0, 0, 1, 0]);
+    expect(ids.map(id => LEVEL_SPECS[id].woodCount)).toEqual([0, 0, 0, 0, 0, 0, 0, 4, 1, 0]);
+    expect(LEVEL_SPECS[10].portalPairs).toBe(2);
   });
 });
 
@@ -36,7 +38,9 @@ describe('generateLayout', () => {
       expect(l.walls).toHaveLength(LEVEL_SPECS[id].wallCount);
       expect(l.holes).toHaveLength(LEVEL_SPECS[id].holeCount);
       expect(l.wood).toHaveLength(LEVEL_SPECS[id].woodCount);
-      const all = [l.initialRobotPosition, ...l.boxes, ...l.walls, ...l.holes, ...l.wood];
+      const portalCells = (l.portals ?? []).flatMap(p => [p.a, p.b]);
+      expect(portalCells).toHaveLength(2 * (LEVEL_SPECS[id].portalPairs ?? 0));
+      const all = [l.initialRobotPosition, ...l.boxes, ...l.walls, ...l.holes, ...l.wood, ...portalCells];
       const keys = all.map(p => `${p.x},${p.y}`);
       expect(new Set(keys).size).toBe(keys.length);
       for (const p of all) {
@@ -66,6 +70,6 @@ describe('generateLayout', () => {
   });
 
   it('nível desconhecido é erro', () => {
-    expect(() => generateLayout(10, 1)).toThrow();
+    expect(() => generateLayout(11, 1)).toThrow();
   });
 });

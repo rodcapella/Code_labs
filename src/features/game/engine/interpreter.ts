@@ -1,4 +1,4 @@
-import { GameState, Direction, Position, Language } from '../../../shared/types/game';
+import { GameState, Direction, Position, Language, PortalPair } from '../../../shared/types/game';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { MAX_MOVE_COUNT } from '../../../shared/config/rules';
 
@@ -10,6 +10,15 @@ export const samePosition = (a: Position, b: Position): boolean =>
 
 export const isWall = (walls: Position[], p: Position): boolean =>
   walls.some(w => samePosition(w, p));
+
+/** Casa ligada a `p` por um portal, ou null se `p` não for um portal. */
+export const portalPartner = (portals: PortalPair[] | undefined, p: Position): Position | null => {
+  for (const pair of portals ?? []) {
+    if (samePosition(pair.a, p)) return pair.b;
+    if (samePosition(pair.b, p)) return pair.a;
+  }
+  return null;
+};
 
 /** Casas que bloqueiam o movimento: paredes e madeira. Buracos não bloqueiam (fazem cair). */
 export const isSolidAt = (state: GameState, p: Position): boolean =>
@@ -74,7 +83,8 @@ export const executeCommand = (state: GameState, command: string, lang: Language
       if (next === null) return fail(t.errorOutOfBounds);
       if (isSolidAt(state, next)) return fail(blockedMessage(next));
       if (isWall(state.holes, next)) return fallInto(next);
-      pos = next;
+      // Portal: o robô aparece no par e continua na mesma direção.
+      pos = portalPartner(state.portals, next) ?? next;
     }
     return ok({ robotPosition: pos });
   }
@@ -84,7 +94,7 @@ export const executeCommand = (state: GameState, command: string, lang: Language
     if (next === null) return fail(t.errorOutOfBounds);
     if (isSolidAt(state, next)) return fail(blockedMessage(next));
     if (isWall(state.holes, next)) return fallInto(next);
-    return ok({ robotPosition: next });
+    return ok({ robotPosition: portalPartner(state.portals, next) ?? next });
   }
 
   // partir(): remove a madeira à frente. Conta como comando.

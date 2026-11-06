@@ -21,6 +21,7 @@ export interface GameState {
   walls: Position[];
   holes: Position[];
   wood: Position[];
+  portals: PortalPair[];
   /** true quando o último comando fez o robô cair num buraco. */
   fell?: boolean;
   /** Índice (0-based) da linha que acabou de ser executada, para destaque no editor. */
@@ -32,6 +33,12 @@ export interface GameState {
 }
 
 /** Geometria do nível: a parte que o servidor também precisa para validar jogadas. */
+/** Par de portais: entrar em `a` transporta o robô para `b` (e vice-versa). */
+export interface PortalPair {
+  a: Position;
+  b: Position;
+}
+
 export interface LayoutConfig {
   gridSize: number;
   initialRobotPosition: Position;
@@ -43,6 +50,8 @@ export interface LayoutConfig {
   holes: Position[];
   /** Madeira: bloqueia até ser partida com partir(). */
   wood: Position[];
+  /** Portais azuis: pares que se ligam entre si. Opcional (sem portais por defeito). */
+  portals?: PortalPair[];
 }
 
 /** Metadados do nível (estáticos). O layout (posições) é gerado por partida. */

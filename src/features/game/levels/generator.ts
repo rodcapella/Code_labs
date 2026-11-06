@@ -1,7 +1,7 @@
-import { Direction, LayoutConfig, Position } from '../../../shared/types/game';
+import { Direction, LayoutConfig, Position, PortalPair } from '../../../shared/types/game';
 
 /** Grelha, caixas e paredes de cada nível. Posições são geradas por partida. */
-export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number; holeCount: number; woodCount: number }> = {
+export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; wallCount: number; holeCount: number; woodCount: number; portalPairs?: number }> = {
   1: { gridSize: 6, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
   2: { gridSize: 8, boxCount: 6, wallCount: 0, holeCount: 0, woodCount: 0 },
   3: { gridSize: 8, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 0 },
@@ -11,6 +11,7 @@ export const LEVEL_SPECS: Record<number, { gridSize: number; boxCount: number; w
   7: { gridSize: 10, boxCount: 8, wallCount: 6, holeCount: 0, woodCount: 0 },
   8: { gridSize: 10, boxCount: 8, wallCount: 0, holeCount: 0, woodCount: 4 },
   9: { gridSize: 10, boxCount: 10, wallCount: 3, holeCount: 1, woodCount: 1 },
+  10: { gridSize: 10, boxCount: 8, wallCount: 3, holeCount: 0, woodCount: 0, portalPairs: 2 },
 };
 
 const DIRECTIONS: Direction[] = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
@@ -34,10 +35,16 @@ export const mulberry32 = (seed: number): (() => number) => {
  */
 /**
  * Casas alcançáveis a partir do robô sem atravessar paredes nem buracos.
- * A madeira é atravessável: pode ser partida com partir(), por isso não bloqueia o alcance.
+ * A madeira é atravessável (pode ser partida). Um portal teletransporta: ao alcançar uma ponta,
+ * a outra também fica alcançável.
  */
-const reachable = (start: Position, impassable: Position[], gridSize: number): Set<string> => {
+const reachable = (start: Position, impassable: Position[], gridSize: number, portals: PortalPair[]): Set<string> => {
   const blocked = new Set(impassable.map(w => `${w.x},${w.y}`));
+  const partnerOf = new Map<string, Position>();
+  for (const pair of portals) {
+    partnerOf.set(`${pair.a.x},${pair.a.y}`, pair.b);
+    partnerOf.set(`${pair.b.x},${pair.b.y}`, pair.a);
+  }
   const seen = new Set([`${start.x},${start.y}`]);
   const queue = [start];
   while (queue.length) {
@@ -50,6 +57,11 @@ const reachable = (start: Position, impassable: Position[], gridSize: number): S
       if (blocked.has(key) || seen.has(key)) continue;
       seen.add(key);
       queue.push({ x: nx, y: ny });
+      const partner = partnerOf.get(key);
+      if (partner && !seen.has(`${partner.x},${partner.y}`)) {
+        seen.add(`${partner.x},${partner.y}`);
+        queue.push(partner);
+      }
     }
   }
   return seen;
@@ -82,7 +94,13 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
     const holes = cells.slice(holeStart, holeStart + spec.holeCount);
     const woodStart = holeStart + spec.holeCount;
     const wood = cells.slice(woodStart, woodStart + spec.woodCount);
-    const reach = reachable(start, [...walls, ...holes], spec.gridSize);
+    const portalStart = woodStart + spec.woodCount;
+    const portalCells = cells.slice(portalStart, portalStart + 2 * (spec.portalPairs ?? 0));
+    const portals: PortalPair[] = [];
+    for (let i = 0; i + 1 < portalCells.length; i += 2) {
+      portals.push({ a: portalCells[i], b: portalCells[i + 1] });
+    }
+    const reach = reachable(start, [...walls, ...holes], spec.gridSize, portals);
     const allReachable = boxes.every(b => reach.has(`${b.x},${b.y}`));
     if (!allReachable) continue;
 
@@ -94,6 +112,7 @@ export const generateLayout = (levelId: number, seed: number): LayoutConfig => {
       walls,
       holes,
       wood,
+      portals,
     };
   }
   throw new Error(`não foi possível gerar um layout jogável para o nível ${levelId}`);

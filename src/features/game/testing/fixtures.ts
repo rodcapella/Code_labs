@@ -13,6 +13,7 @@ export const FIXED_LAYOUT: LayoutConfig = {
   walls: [],
   holes: [],
   wood: [],
+  portals: [],
 };
 
 export const fixedLevel: LevelConfig = { ...level1, ...FIXED_LAYOUT };

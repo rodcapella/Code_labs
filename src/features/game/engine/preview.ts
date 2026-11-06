@@ -2,7 +2,7 @@ import { LayoutConfig, Language, Position, GameState } from '../../../shared/typ
 import { MAX_RUN_STEPS } from '../../../shared/config/rules';
 import { TRANSLATIONS } from '../../../shared/i18n/translations';
 import { compileProgram, createInitialState, checkCondition, CompileOptions } from './program';
-import { executeCommand, getNextPosition, isWall, isSolidAt } from './interpreter';
+import { executeCommand, getNextPosition, isWall, isSolidAt, portalPartner } from './interpreter';
 
 export interface PreviewStep {
   x: number;
@@ -81,6 +81,12 @@ export const previewPath = (
         }
         cells.push(nxt);
         pos = nxt;
+        const partner = portalPartner(state.portals, nxt);
+        if (partner) {
+          // Portal: a casa do par entra no caminho e o movimento continua a partir dele.
+          cells.push(partner);
+          pos = partner;
+        }
         if (isWall(state.holes, nxt)) {
           fellAt = nxt;
           break;

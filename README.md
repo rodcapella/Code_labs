@@ -214,3 +214,11 @@ O token do Google nunca chega ao browser: o servidor troca o código e cria ou e
 - `se_parede()` é verdadeiro perante parede, madeira ou borda. Um buraco não bloqueia, por isso não é "parede".
 - A verificação de alcance do gerador trata buracos e paredes como bloqueados, por isso todo o layout tem solução sem cair.
 - A versão 3 dos níveis reinicia o progresso e o ranking (os números dos níveis mudaram de tema).
+
+## Portais (nível 10)
+
+- Os portais azuis vão em pares. Entrar numa ponta transporta o robô para a outra, na mesma direção.
+- `mover(n)` continua do lado do par com as casas que faltam.
+- Caixas e a posição inicial nunca ficam em portais. Portais não são paredes, buracos nem madeira.
+- A verificação de alcance do gerador considera o teletransporte.
+- O nível 10 é o mais alto. A revisão (nível 9) já não é o último nível.

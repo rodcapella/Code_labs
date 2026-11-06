@@ -88,6 +88,20 @@ export const drawBoard = (
     ctx.lineWidth = 1;
   }
 
+  // Portais: anel azul nas duas pontas
+  for (const pair of state.portals) {
+    for (const p of [pair.a, pair.b]) {
+      const cx = g.x(p.x) + g.cell / 2;
+      const cy = g.y(p.y) + g.cell / 2;
+      ctx.strokeStyle = '#0A84FF';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, g.cell * 0.36, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+    }
+  }
+
   // Caixas: quadrado da cor do nível; recolhidas ficam esbatidas
   for (const b of state.boxes) {
     ctx.globalAlpha = b.collected ? 0.25 : 1;

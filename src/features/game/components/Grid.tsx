@@ -1,5 +1,5 @@
 import React from 'react';
-import { Position, Box as BoxType, Direction } from '../../../shared/types/game';
+import { Position, Box as BoxType, Direction, PortalPair } from '../../../shared/types/game';
 import { Robot } from './Robot';
 import { Box } from './Box';
 import { AnimatePresence, motion } from 'motion/react';
@@ -17,6 +17,8 @@ interface GridProps {
   holes: Position[];
   /** Madeira: bloqueia até ser partida. */
   wood: Position[];
+  /** Portais: pares de casas que se ligam entre si. */
+  portals: PortalPair[];
   size: number;
   robotPosition: Position;
   robotDirection: Direction;
@@ -40,6 +42,7 @@ export const Grid: React.FC<GridProps> = ({
   walls,
   holes,
   wood,
+  portals,
   size,
   robotPosition,
   robotDirection,
@@ -86,6 +89,14 @@ export const Grid: React.FC<GridProps> = ({
               className="rounded-lg grid-cell flex items-center justify-center relative border-b-4"
               style={{ width: CELL, height: CELL, transformStyle: 'preserve-3d' }}
             >
+              {portals.some(pair => (pair.a.x === cell.x && pair.a.y === cell.y) || (pair.b.x === cell.x && pair.b.y === cell.y)) && (
+                // Portal: anel azul com brilho (forma e anel, não só a cor).
+                <div
+                  aria-label="portal"
+                  className="absolute inset-1 rounded-full border-4 border-brand-blue shadow-[0_0_14px_rgba(10,132,255,0.8)] pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, rgba(10,132,255,0.55) 0%, rgba(10,132,255,0.08) 70%)', transform: 'translateZ(4px)' }}
+                />
+              )}
               {holes.some(h => h.x === cell.x && h.y === cell.y) && (
                 // Buraco: poço escuro com contorno tracejado (não depende da cor).
                 <div

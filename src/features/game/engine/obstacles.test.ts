@@ -71,3 +71,36 @@ describe('madeira e partir()', () => {
     expect(r.steps).toEqual([{ x: 0, y: 1, step: 1 }]);
   });
 });
+
+import { portalPartner } from './interpreter';
+describe('portais', () => {
+  const pair = { a: { x: 2, y: 0 }, b: { x: 2, y: 4 } };
+  const withPortal = layout({ portals: [pair] });
+
+  it('o parceiro de cada ponta é a outra; casas fora dos portais não têm parceiro', () => {
+    expect(portalPartner([pair], { x: 2, y: 0 })).toEqual({ x: 2, y: 4 });
+    expect(portalPartner([pair], { x: 2, y: 4 })).toEqual({ x: 2, y: 0 });
+    expect(portalPartner([pair], { x: 0, y: 0 })).toBeNull();
+  });
+
+  it('mover() para um portal transporta o robô para o par, na mesma direção', () => {
+    const s0 = { ...createInitialState(withPortal), robotPosition: { x: 1, y: 0 } };
+    const r = executeCommand(s0, 'mover()', 'pt');
+    expect(r.robotPosition).toEqual({ x: 2, y: 4 });
+    expect(r.robotDirection).toBe('EAST');
+    expect(r.error).toBeNull();
+  });
+
+  it('mover(n) continua do lado do par com as casas que faltam', () => {
+    const s0 = { ...createInitialState(withPortal), robotPosition: { x: 1, y: 0 } };
+    // 1.ª casa: entra no portal (2,0) e sai em (2,4); 2.ª casa: (3,4) na mesma direção Este.
+    const r = executeCommand(s0, 'mover(2)', 'pt');
+    expect(r.robotPosition).toEqual({ x: 3, y: 4 });
+    expect(r.commandCount).toBe(1);
+  });
+
+  it('a pré-visualização mostra a casa de chegada do portal', () => {
+    const r = previewPath(withPortal, ['mover()', 'mover()'], 'pt', opts);
+    expect(r.steps.some(p => p.x === 2 && p.y === 4)).toBe(true);
+  });
+});

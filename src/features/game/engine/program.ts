@@ -15,6 +15,7 @@ export const createInitialState = (layout: LayoutConfig): GameState => ({
   walls: layout.walls,
   holes: layout.holes,
   wood: layout.wood,
+  portals: layout.portals ?? [],
   currentLine: 0,
   error: null,
   victory: false,
