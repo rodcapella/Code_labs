@@ -73,6 +73,8 @@ export interface LevelMeta {
   intro: Record<Language, { title: string; body: string[] }>;
   /** Imagem de fundo do nível (URL importada). Opcional. */
   backgroundImage?: string;
+  /** Fundo do tema diurno (mais claro). Opcional: sem ele, usa o fundo normal. */
+  backgroundImageDay?: string;
 }
 
 /** Nível pronto a jogar: metadados mais o layout gerado para esta partida. */

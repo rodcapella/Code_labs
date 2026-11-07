@@ -1,9 +1,11 @@
+import levelBackgroundDay from '../../../shared/assets/backgrounds/level8-day.jpg';
 import levelBackground from '../../../shared/assets/backgrounds/level8.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level8: LevelMeta = {
   id: 8,
   backgroundImage: levelBackground,
+  backgroundImageDay: levelBackgroundDay,
   intro: {
     pt: {
       title: 'Madeira',

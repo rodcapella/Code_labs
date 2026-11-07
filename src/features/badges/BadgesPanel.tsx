@@ -1,10 +1,13 @@
 import React from 'react';
-import { Zap, Target, ShieldCheck, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import sprintArt from '../../shared/assets/badges/badge-sprint.png';
+import efficiencyArt from '../../shared/assets/badges/badge-efficiency.png';
+import resilientArt from '../../shared/assets/badges/badge-resilient.png';
 import { TRANSLATIONS } from '../../shared/i18n/translations';
 
 type Translations = (typeof TRANSLATIONS)['pt'];
 
-const ICONS = { sprint: Zap, efficiency: Target, resilient: ShieldCheck } as const;
+const ART = { sprint: sprintArt, efficiency: efficiencyArt, resilient: resilientArt } as const;
 
 const LABELS = (t: Translations) => ({
   sprint: { name: t.badgeSprint, desc: t.badgeSprintDesc },
@@ -19,12 +22,13 @@ export const BadgesPanel: React.FC<{ t: Translations; unlocked: string[] }> = ({
     <section aria-labelledby="badges-title" className="rounded-2xl border border-white/10 bg-brand-navy/60 p-4">
       <h2 id="badges-title" className="text-[11px] font-bold uppercase tracking-widest text-brand-cyan">{t.badgesTitle}</h2>
       <ul className="mt-3 grid grid-cols-3 gap-3">
-        {(Object.keys(ICONS) as (keyof typeof ICONS)[]).map(id => {
-          const Icon = ICONS[id];
+        {(Object.keys(ART) as (keyof typeof ART)[]).map(id => {
           const on = unlocked.includes(id);
           return (
             <li key={id} className={`flex flex-col items-center gap-1 rounded-xl p-2 text-center ${on ? 'bg-brand-blue/20' : 'bg-brand-ink/60 opacity-60'}`}>
-              {on ? <Icon className="w-6 h-6 text-amber-300" aria-hidden="true" /> : <Lock className="w-6 h-6 text-brand-ice/50" aria-hidden="true" />}
+              {on
+                ? <img src={ART[id]} alt="" width={48} height={48} className="w-12 h-12" />
+                : <span className="relative w-12 h-12 flex items-center justify-center"><img src={ART[id]} alt="" width={48} height={48} className="w-12 h-12 grayscale opacity-30" /><Lock className="absolute w-5 h-5 text-brand-ice/70" aria-hidden="true" /></span>}
               <span className="text-[11px] font-bold text-brand-ice">{labels[id].name}</span>
               <span className="sr-only">{on ? '' : t.badgesLocked}</span>
               <span className="text-[10px] text-brand-ice/70">{labels[id].desc}</span>
@@ -45,10 +49,9 @@ export const BadgesStrip: React.FC<{ t: Translations; earned: string[] }> = ({ t
       <p className="text-[11px] font-bold uppercase tracking-widest text-amber-200">{t.badgesNew}</p>
       <ul className="mt-2 flex flex-wrap justify-center gap-2">
         {earned.filter(id => id in labels).map(id => {
-          const Icon = ICONS[id as keyof typeof ICONS];
           return (
             <li key={id} className="flex items-center gap-1 text-xs font-bold text-amber-100">
-              <Icon className="w-4 h-4" aria-hidden="true" />{labels[id as keyof typeof labels].name}
+              <img src={ART[id as keyof typeof ART]} alt="" width={20} height={20} className="w-5 h-5" />{labels[id as keyof typeof labels].name}
             </li>
           );
         })}

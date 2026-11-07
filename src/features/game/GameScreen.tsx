@@ -60,6 +60,8 @@ interface GameScreenProps {
 export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUpdateConfig }) => {
   const t = TRANSLATIONS[userConfig.language];
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
+  // Tema diurno: o fundo do nível muda com o tema (lido no arranque do nível).
+  const dayTheme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'day';
   // Tentativa do nível (semente, layout, janela de conceito): ver hooks/useAttempt.ts.
   const { level, round, ready, attemptId, newAttempt, introOpen, closeIntro } = useAttempt(LEVELS, currentLevelIdx);
   const [code, setCode] = useState('');
@@ -260,7 +262,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
       style={
         level.backgroundImage
           ? {
-              backgroundImage: `linear-gradient(rgba(0,21,71,0.9), rgba(0,21,71,0.96)), url(${level.backgroundImage})`,
+              backgroundImage: `linear-gradient(rgba(0,21,71,${dayTheme ? 0.82 : 0.9}), rgba(0,21,71,${dayTheme ? 0.88 : 0.96})), url(${dayTheme && level.backgroundImageDay ? level.backgroundImageDay : level.backgroundImage})`,
             }
           : undefined
       }

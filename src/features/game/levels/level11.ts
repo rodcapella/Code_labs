@@ -1,9 +1,11 @@
+import levelBackgroundDay from '../../../shared/assets/backgrounds/level11-day.jpg';
 import levelBackground from '../../../shared/assets/backgrounds/level11.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level11: LevelMeta = {
   id: 11,
   backgroundImage: levelBackground,
+  backgroundImageDay: levelBackgroundDay,
   intro: {
     pt: {
       title: 'Ordem de recolha',

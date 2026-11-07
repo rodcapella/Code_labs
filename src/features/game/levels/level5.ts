@@ -1,8 +1,10 @@
+import levelBackgroundDay from '../../../shared/assets/backgrounds/level4-day.jpg';
 import levelBackground from '../../../shared/assets/backgrounds/level4.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level5: LevelMeta = {
   backgroundImage: levelBackground,
+  backgroundImageDay: levelBackgroundDay,
   id: 5,
   intro: {
     pt: {
