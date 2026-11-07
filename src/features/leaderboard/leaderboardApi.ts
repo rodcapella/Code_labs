@@ -119,3 +119,37 @@ export const verifyBadges = async (
     return [];
   }
 };
+
+/** Desafio diário: tentativa do dia (ou já concluído). */
+export interface DailyPlay {
+  attemptId: string;
+  dateStr: string;
+  levelId: number;
+  seed: number;
+}
+
+export interface DailyFetch {
+  alreadyPlayed: boolean;
+  dateStr: string;
+  leaderboard: unknown[];
+  streak: { lastDate: string; count: number } | null;
+  /** Presentes só quando ainda não jogou hoje. */
+  attemptId?: string;
+  levelId?: number;
+  seed?: number;
+}
+
+/**
+ * Pede o desafio de hoje. Devolve null se não houver sessão (o desafio exige conta).
+ * O nível e a semente vêm do servidor: o cliente não os calcula.
+ */
+export const fetchDailyAttempt = async (knowledge: string): Promise<DailyFetch | null> => {
+  try {
+    const res = await fetch(`${API_URL}?daily=true&knowledge=${encodeURIComponent(knowledge)}`, { cache: 'no-store' });
+    if (res.status === 401) return null;
+    if (!res.ok) return null;
+    return (await res.json()) as DailyFetch;
+  } catch {
+    return null;
+  }
+};

@@ -5,6 +5,10 @@ export interface Account {
   email: string | null;
   /** Distintivos ganhos pela conta (ids de badgeRules). */
   badges?: string[];
+  /** Sequência de dias seguidos no desafio diário. */
+  streak?: { lastDate: string; count: number } | null;
+  /** Já concluiu o desafio de hoje (UTC). */
+  dailyDoneToday?: boolean;
 }
 
 export interface SessionState {

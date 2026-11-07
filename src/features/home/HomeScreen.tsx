@@ -7,18 +7,22 @@ import { Logo } from '../../shared/components/Logo';
 import { AccountPanel, ResetPasswordPanel, ConfirmSignupPanel } from '../auth/AccountPanel';
 import { useSettings } from '../../shared/components/SettingsContext';
 import { BadgesPanel } from '../badges/BadgesPanel';
+import { DailyCard } from '../daily/DailyCard';
 import { useAccount } from '../auth/AccountContext';
 import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
   onStart: () => void;
+  onStartDaily: () => void;
+  /** Mensagem do desafio (sem conta, ou já jogado hoje). */
+  dailyMessage: string | null;
   onLeaderboard: () => void;
   onResults: () => void;
   userConfig: UserConfig;
   onReset: () => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, onResults, userConfig, onReset }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onStartDaily, dailyMessage, onLeaderboard, onResults, userConfig, onReset }) => {
   const { openSettings } = useSettings();
   const { account } = useAccount();
   // Link de recuperação do email: ?reset=token abre o ecrã de nova palavra-passe.
@@ -156,6 +160,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               />
             </div>
           )}
+          <div className="mb-4">
+            <DailyCard
+              t={t}
+              loggedIn={account !== null}
+              streak={account?.streak?.count ?? 0}
+              doneToday={account?.dailyDoneToday === true}
+              message={dailyMessage}
+              onPlay={onStartDaily}
+            />
+          </div>
           <div className="mb-4">
             <BadgesPanel
               t={t}

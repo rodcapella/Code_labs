@@ -1180,6 +1180,19 @@ Estes três riscos foram analisados e aceites para o MVP. Não são bugs por cor
 
 Os riscos de segurança das contas (enumeração em `set-email`, logout sem invalidação em dispositivos sem Redis, nomes públicos no ranking) estão descritos na secção 18.2.
 
+## 23b. Desafio diário
+
+- **Quem joga:** só contas com sessão. Sem conta, o cartão mostra que é preciso entrar.
+- **Uma submissão por conta e por dia (UTC).** A primeira submissão é registada com `SET NX`; as seguintes respondem 409. Tentativas que não chegam à vitória não contam: o layout do dia mantém-se entre elas.
+- **Semente e nível no servidor.** `generateDailySeed(YYYY-MM-DD)` (SHA-256, 32 bits) e `dailyLevelFor(semente, conhecimento)` escolhem o nível dentro de um conjunto que o jogador consegue resolver (iniciante: níveis 1 a 3; intermédio: 2 a 4; avançado: 4 a 11). O cliente recebe o nível e a semente prontos.
+- **Sem reinício a meio.** O botão de reinício não tem efeito no desafio: erros e tempo continuam a contar. Só se volta a tentar depois de um *game over*, com o mesmo layout.
+- **Ranking do dia** em `leaderboard:v3:daily:{data}`, top 100. A submissão não depende de entrar no top: o servidor decide e responde.
+- **Sequência de dias** guardada na conta (`streak:{userId}`): soma 1 por cada dia consecutivo concluído; falhar um dia recomeça em 1.
+- **Conquista Fidelidade Diária** ao atingir 7 dias seguidos (`badges:{userId}`).
+- **Contador** até à meia-noite UTC no cartão do ecrã inicial.
+
+Decisões tomadas e a rever: o conjunto de níveis por conhecimento (um iniciante não recebe níveis com `repetir` ou decisões), e o facto de um dia só contar quando o desafio é concluído.
+
 ## 24. Pós-MVP (adiado)
 
 Itens acordados para depois do MVP, não implementados:

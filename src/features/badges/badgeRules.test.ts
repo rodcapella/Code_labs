@@ -37,3 +37,9 @@ describe('regras dos distintivos', () => {
     expect(isBadgeId(42)).toBe(false);
   });
 });
+
+describe('conquista de fidelidade', () => {
+  it('é um id válido de distintivo', () => {
+    expect(isBadgeId('fidelity')).toBe(true);
+  });
+});

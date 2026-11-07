@@ -9,6 +9,7 @@ import {
 import {
   UserRecord, validateEmail, emailKey, userIdKey, resultsKey, googleKey, newToken, tokenKey,
   createSession, revokeSession, revokeAllSessions, resolveAccount, RESET_TTL_SECONDS, PENDING_TTL_SECONDS, badgesKey,
+  readStreak, dailyDoneKey,
 } from '../src/features/auth/server/accounts';
 import { sendMail, mailConfigured, appUrl } from '../src/features/auth/server/mailer';
 import {
@@ -117,7 +118,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         configured: true,
         googleEnabled: googleConfigured(),
         account: account
-          ? { username: account.username, email, badges: await redis.smembers<string[]>(badgesKey(account.userId)) }
+          ? {
+              username: account.username,
+              email,
+              badges: await redis.smembers<string[]>(badgesKey(account.userId)),
+              streak: await readStreak(redis, account.userId),
+              dailyDoneToday: (await redis.get(dailyDoneKey(new Date().toISOString().slice(0, 10), account.userId))) !== null,
+            }
           : null,
       });
     }

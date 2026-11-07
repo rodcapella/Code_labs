@@ -23,6 +23,8 @@ type Base = {
 export interface VictoryInput {
   /** true quando a passagem atual recolheu todas as caixas. */
   victory: boolean;
+  /** Desafio diário: o nome é pedido sempre e o servidor decide a posição. */
+  daily: boolean;
   commandCount: number;
   errors: number;
   timer: number;
@@ -41,7 +43,7 @@ export interface VictoryInput {
  * e envio do resultado depois de o jogador confirmar o nome.
  */
 export function useVictory(input: VictoryInput) {
-  const { victory, commandCount, errors, timer, level, runs, attemptId, userConfig, onUpdateConfig, accountUsername } = input;
+  const { victory, daily, commandCount, errors, timer, level, runs, attemptId, userConfig, onUpdateConfig, accountUsername } = input;
   const [earnedStars, setEarnedStars] = useState(0);
   const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
   const [rankName, setRankName] = useState('');
@@ -90,9 +92,13 @@ export function useVictory(input: VictoryInput) {
     };
     setRankStatus('checking');
     setRankName(accountUsername ?? userConfig.name);
-    fetchLeaderboard().then(list => {
-      setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
-    });
+    if (daily) {
+      setRankStatus('enter');
+    } else {
+      fetchLeaderboard().then(list => {
+        setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
+      });
+    }
     // Distintivos: o servidor verifica as provas (tempo, mínimo de comandos, contratempos).
     setBadges([]);
     verifyBadges(

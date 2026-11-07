@@ -3,16 +3,18 @@ import { Lock } from 'lucide-react';
 import sprintArt from '../../shared/assets/badges/badge-sprint.png';
 import efficiencyArt from '../../shared/assets/badges/badge-efficiency.png';
 import resilientArt from '../../shared/assets/badges/badge-resilient.png';
+import fidelityArt from '../../shared/assets/badges/badge-fidelity.png';
 import { TRANSLATIONS } from '../../shared/i18n/translations';
 
 type Translations = (typeof TRANSLATIONS)['pt'];
 
-const ART = { sprint: sprintArt, efficiency: efficiencyArt, resilient: resilientArt } as const;
+const ART = { sprint: sprintArt, efficiency: efficiencyArt, resilient: resilientArt, fidelity: fidelityArt } as const;
 
 const LABELS = (t: Translations) => ({
   sprint: { name: t.badgeSprint, desc: t.badgeSprintDesc },
   efficiency: { name: t.badgeEfficiency, desc: t.badgeEfficiencyDesc },
   resilient: { name: t.badgeResilient, desc: t.badgeResilientDesc },
+  fidelity: { name: t.badgeFidelity, desc: t.badgeFidelityDesc },
 });
 
 /** Painel de conquistas do perfil: os três distintivos, desbloqueados ou por desbloquear. */
@@ -21,7 +23,7 @@ export const BadgesPanel: React.FC<{ t: Translations; unlocked: string[] }> = ({
   return (
     <section aria-labelledby="badges-title" className="rounded-2xl border border-white/10 bg-brand-navy/60 p-4">
       <h2 id="badges-title" className="text-[11px] font-bold uppercase tracking-widest text-brand-cyan">{t.badgesTitle}</h2>
-      <ul className="mt-3 grid grid-cols-3 gap-3">
+      <ul className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {(Object.keys(ART) as (keyof typeof ART)[]).map(id => {
           const on = unlocked.includes(id);
           return (

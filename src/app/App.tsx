@@ -3,10 +3,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { SettingsProvider } from '../shared/components/SettingsContext';
 import { HomeScreen } from '../features/home/HomeScreen';
 import { GameScreen } from '../features/game/GameScreen';
+import { fetchDailyAttempt, DailyPlay } from '../features/leaderboard/leaderboardApi';
+import { TRANSLATIONS } from '../shared/i18n/translations';
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen';
 import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen';
 import { MyResultsScreen } from '../features/auth/MyResultsScreen';
-import { TRANSLATIONS } from '../shared/i18n/translations';
 import { UserConfig } from '../shared/i18n/translations';
 import { AccountProvider } from '../features/auth/AccountContext';
 import { Footer } from '../shared/components/Footer';
@@ -18,6 +19,25 @@ const STORAGE_KEY = 'codebot_lab_user_config';
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('ONBOARDING');
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+  const [dailyPlay, setDailyPlay] = useState<DailyPlay | null>(null);
+  const [dailyMessage, setDailyMessage] = useState<string | null>(null);
+
+  // Desafio diário: o servidor emite a tentativa do dia (ou diz que já foi jogado).
+  const startDaily = async () => {
+    setDailyMessage(null);
+    if (!userConfig) return;
+    const res = await fetchDailyAttempt(userConfig.level);
+    if (res === null) {
+      setDailyMessage(TRANSLATIONS[userConfig.language].dailyLoginNeeded);
+      return;
+    }
+    if (res.alreadyPlayed || res.attemptId === undefined || res.levelId === undefined || res.seed === undefined) {
+      setDailyMessage(TRANSLATIONS[userConfig.language].dailyDone);
+      return;
+    }
+    setDailyPlay({ attemptId: res.attemptId, dateStr: res.dateStr, levelId: res.levelId, seed: res.seed });
+    setCurrentScreen('GAME');
+  };
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load config from localStorage on mount
@@ -91,7 +111,12 @@ export default function App() {
             className="h-full"
           >
             <HomeScreen 
-              onStart={() => setCurrentScreen('GAME')} 
+              onStart={() => {
+                setDailyPlay(null);
+                setCurrentScreen('GAME');
+              }}
+              onStartDaily={startDaily}
+              dailyMessage={dailyMessage}
               onLeaderboard={() => setCurrentScreen('LEADERBOARD')}
               onResults={() => setCurrentScreen('RESULTS')}
               userConfig={userConfig}
@@ -108,10 +133,14 @@ export default function App() {
             exit={{ opacity: 0, x: -100 }}
             className="h-full"
           >
-            <GameScreen 
-              onBack={() => setCurrentScreen('HOME')} 
+            <GameScreen
+              onBack={() => {
+                setDailyPlay(null);
+                setCurrentScreen('HOME');
+              }}
               userConfig={userConfig}
               onUpdateConfig={updateUserConfig}
+              daily={dailyPlay}
             />
           </motion.div>
         )}

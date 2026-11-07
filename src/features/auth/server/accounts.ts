@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Redis } from '@upstash/redis';
 import { newSessionId, sessionIdFromCookie } from './session';
+import type { Streak } from '../../daily/dailyRules';
 
 /** Dados de utilizador guardados no Redis em `user:{nome em minúsculas}`. */
 export interface UserRecord {
@@ -106,4 +107,22 @@ export const badgesKey = (userId: string): string => `badges:${userId}`;
 
 export const addBadges = async (redis: Redis, userId: string, badges: string[]): Promise<void> => {
   for (const badge of badges) await redis.sadd(badgesKey(userId), badge);
+};
+
+/** Desafio diário (ver src/features/daily). */
+export const DAILY_TTL_SECONDS = 24 * 60 * 60;
+export const DAILY_TOP_SIZE = 100;
+export const dailyRankingKey = (date: string): string => `leaderboard:v3:daily:${date}`;
+export const dailyDoneKey = (date: string, userId: string): string => `daily:done:${date}:${userId}`;
+export const dailyAttemptKey = (date: string, userId: string): string => `daily:attempt:${date}:${userId}`;
+export const streakKey = (userId: string): string => `streak:${userId}`;
+
+export const readStreak = async (redis: Redis, userId: string): Promise<Streak | null> => {
+  const raw = await redis.get<unknown>(streakKey(userId));
+  if (!raw) return null;
+  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as Streak;
+};
+
+export const writeStreak = async (redis: Redis, userId: string, streak: Streak): Promise<void> => {
+  await redis.set(streakKey(userId), JSON.stringify(streak));
 };

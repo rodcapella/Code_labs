@@ -40,6 +40,7 @@ import { useAttempt } from './hooks/useAttempt';
 import { useAvisos } from './hooks/useAvisos';
 import { ShareSolution } from '../share/ShareSolution';
 import { BadgesStrip } from '../badges/BadgesPanel';
+import type { DailyPlay } from '../leaderboard/leaderboardApi';
 import { scoreOf } from '../../shared/config/rules';
 import { useCronometro } from './hooks/useCronometro';
 import { TutorialOverlay } from './components/TutorialOverlay';
@@ -55,15 +56,17 @@ interface GameScreenProps {
   onBack: () => void;
   userConfig: UserConfig;
   onUpdateConfig: (config: Partial<UserConfig>) => void;
+  /** Desafio diário: nível e semente do dia, emitidos pelo servidor. Sem isto, é um nível normal. */
+  daily?: DailyPlay | null;
 }
 
-export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUpdateConfig }) => {
+export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUpdateConfig, daily = null }) => {
   const t = TRANSLATIONS[userConfig.language];
-  const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
+  const [currentLevelIdx, setCurrentLevelIdx] = useState(daily ? daily.levelId - 1 : 0);
   // Tema diurno: o fundo do nível muda com o tema (lido no arranque do nível).
   const dayTheme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'day';
   // Tentativa do nível (semente, layout, janela de conceito): ver hooks/useAttempt.ts.
-  const { level, round, ready, attemptId, newAttempt, introOpen, closeIntro } = useAttempt(LEVELS, currentLevelIdx);
+  const { level, round, ready, attemptId, newAttempt, introOpen, closeIntro } = useAttempt(LEVELS, currentLevelIdx, daily);
   const [code, setCode] = useState('');
   const [tutorialDone, setTutorialDone] = useState(() => Boolean(localStorage.getItem('tutorial_completed')));
 
@@ -154,6 +157,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   };
 
   const nextLevel = () => {
+    // No desafio diário há um só nível: o botão seguinte volta ao início.
+    if (daily) {
+      onBack();
+      return;
+    }
     if (currentLevelIdx < LEVELS.length - 1) {
       setCurrentLevelIdx(prev => prev + 1);
       setCode('');
@@ -219,6 +227,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const { openSettings } = useSettings();
   // Vitória: estrelas, progresso e ranking (ver hooks/useVictory.ts).
   const { earnedStars, rankStatus, rankName, setRankName, confirmRanking, badges: earnedBadges } = useVictory({
+    daily: daily !== null,
     victory: gameState.victory,
     commandCount: gameState.commandCount,
     errors,
@@ -278,6 +287,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
             playClick={playClickSound}
           />}
       </AnimatePresence>
+      {daily && (
+        <p className="fixed top-2 left-1/2 -translate-x-1/2 z-30 text-[11px] font-bold uppercase tracking-widest text-amber-200 bg-brand-ink/90 px-3 py-1 rounded-lg border border-amber-300/40">
+          {t.dailyBanner(daily.dateStr)}
+        </p>
+      )}
+
       {/* Header */}
       <GameHeader
         t={t}
@@ -302,6 +317,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
           undo();
         }}
         onReset={() => {
+          // No desafio diário não se reinicia a meio: erros e tempo continuam a contar.
+          if (daily) return;
           playClickSound();
           resetGame();
         }}
@@ -499,7 +516,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 title={t.victoryTitle}
                 description={`${t.victoryDesc(gameState.commandCount, timer)} ${t.victoryStars}: ${'★'.repeat(earnedStars)}${'☆'.repeat(3 - earnedStars)}`}
                 playAgainLabel={t.playAgain}
-                nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
+                nextLabel={!daily && currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
                 badgesSlot={<BadgesStrip t={t} earned={earnedBadges} />}
                 shareSlot={
                   runs.length > 0 ? (

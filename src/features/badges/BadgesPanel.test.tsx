@@ -13,7 +13,8 @@ describe('distintivos', () => {
     expect(screen.getByText(t.badgeSprint)).toBeTruthy();
     expect(screen.getByText(t.badgeEfficiency)).toBeTruthy();
     expect(screen.getByText(t.badgeResilient)).toBeTruthy();
-    expect(screen.getAllByText(t.badgesLocked)).toHaveLength(2);
+    expect(screen.getByText(t.badgeFidelity)).toBeTruthy();
+    expect(screen.getAllByText(t.badgesLocked)).toHaveLength(3);
   });
 
   it('a faixa de vitória só aparece quando há distintivos ganhos', () => {

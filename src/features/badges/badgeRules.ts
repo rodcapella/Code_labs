@@ -1,5 +1,5 @@
 /** Distintivos desbloqueáveis. Os ids são estáveis: são guardados no perfil e na conta. */
-export const BADGE_IDS = ['sprint', 'efficiency', 'resilient'] as const;
+export const BADGE_IDS = ['sprint', 'efficiency', 'resilient', 'fidelity'] as const;
 export type BadgeId = (typeof BADGE_IDS)[number];
 
 /** Velocista: completar o nível em menos de 30 segundos. */

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LevelConfig, LevelMeta } from '../../../shared/types/game';
-import { AttemptTicket, fetchAttempt } from '../../leaderboard/leaderboardApi';
+import { AttemptTicket, fetchAttempt, DailyPlay } from '../../leaderboard/leaderboardApi';
 import { generateLayout } from '../levels/generator';
 
 /**
@@ -10,7 +10,7 @@ import { generateLayout } from '../levels/generator';
  * - controla a janela de conceito, que abre sempre que se entra num nível.
  * Reiniciar não passa por aqui: mantém a tentativa e o layout.
  */
-export function useAttempt(levels: LevelMeta[], currentLevelIdx: number) {
+export function useAttempt(levels: LevelMeta[], currentLevelIdx: number, daily?: DailyPlay | null) {
   // `round` sobe ao tentar outra vez ou jogar de novo: o layout muda.
   const [round, setRound] = useState(0);
   const [ticket, setTicket] = useState<(AttemptTicket & { levelIdx: number; round: number }) | null>(null);
@@ -21,6 +21,8 @@ export function useAttempt(levels: LevelMeta[], currentLevelIdx: number) {
   }, [currentLevelIdx]);
 
   useEffect(() => {
+    // Desafio diário: a tentativa já foi pedida pelo ecrã inicial (o layout é o do dia).
+    if (daily) return;
     let active = true;
     fetchAttempt(levels[currentLevelIdx].id).then(tk => {
       if (active) setTicket({ ...tk, levelIdx: currentLevelIdx, round });
@@ -28,11 +30,11 @@ export function useAttempt(levels: LevelMeta[], currentLevelIdx: number) {
     return () => {
       active = false;
     };
-  }, [currentLevelIdx, round, levels]);
+  }, [currentLevelIdx, round, levels, daily]);
 
   // Só é válida a tentativa do nível e da rodada atuais; até lá o nível está "a preparar".
-  const ready = ticket !== null && ticket.levelIdx === currentLevelIdx && ticket.round === round;
-  const seed = ready && ticket ? ticket.seed : 0;
+  const ready = daily ? true : ticket !== null && ticket.levelIdx === currentLevelIdx && ticket.round === round;
+  const seed = daily ? daily.seed : ready && ticket ? ticket.seed : 0;
 
   const level: LevelConfig = useMemo(
     () => ({ ...levels[currentLevelIdx], ...generateLayout(levels[currentLevelIdx].id, seed) }),
@@ -47,7 +49,7 @@ export function useAttempt(levels: LevelMeta[], currentLevelIdx: number) {
     round,
     ready,
     /** Id da tentativa no servidor, ou null quando a tentativa é local (sem servidor). */
-    attemptId: ready && ticket ? ticket.attemptId : null,
+    attemptId: daily ? daily.attemptId : ready && ticket ? ticket.attemptId : null,
     newAttempt,
     introOpen,
     closeIntro,
