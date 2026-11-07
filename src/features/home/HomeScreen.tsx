@@ -6,6 +6,8 @@ import { UserConfig, TRANSLATIONS } from '../../shared/i18n/translations';
 import { Logo } from '../../shared/components/Logo';
 import { AccountPanel, ResetPasswordPanel, ConfirmSignupPanel } from '../auth/AccountPanel';
 import { useSettings } from '../../shared/components/SettingsContext';
+import { BadgesPanel } from '../badges/BadgesPanel';
+import { useAccount } from '../auth/AccountContext';
 import { LEVEL_IDS } from '../../shared/config/rules';
 
 interface HomeScreenProps {
@@ -18,6 +20,7 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, onResults, userConfig, onReset }) => {
   const { openSettings } = useSettings();
+  const { account } = useAccount();
   // Link de recuperação do email: ?reset=token abre o ecrã de nova palavra-passe.
   // Links do email usam o fragmento (#reset= / #confirm=): não vão ao servidor nem aos registos de acesso.
   const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -153,6 +156,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, onLeaderboard, 
               />
             </div>
           )}
+          <div className="mb-4">
+            <BadgesPanel
+              t={t}
+              unlocked={[...new Set([...(userConfig.badges ?? []), ...(account?.badges ?? [])])]}
+            />
+          </div>
           <div className="mb-4 flex justify-center">
             <button
               type="button"

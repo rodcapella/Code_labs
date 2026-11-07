@@ -13,6 +13,8 @@ export interface UserConfig {
   levelsVersion?: number;
   /** Melhor classificação (1 a 3 estrelas) de cada nível. */
   stars?: Record<number, number>;
+  /** Distintivos desbloqueados neste perfil (ids de badgeRules). */
+  badges?: string[];
 }
 
 export const TRANSLATIONS = {
@@ -212,6 +214,15 @@ export const TRANSLATIONS = {
     themeAuto: 'Automático',
     themeDay: 'Laboratório',
     themeNight: 'Noturno',
+    badgesTitle: 'Conquistas',
+    badgeSprint: 'Velocista',
+    badgeSprintDesc: 'Completa um nível em menos de 30 segundos.',
+    badgeEfficiency: 'Mestre da Eficiência',
+    badgeEfficiencyDesc: 'Vence com o número mínimo absoluto de comandos.',
+    badgeResilient: 'Explorador Resiliente',
+    badgeResilientDesc: 'Cai num buraco ou bate numa parede e, mesmo assim, vence.',
+    badgesLocked: 'Por desbloquear',
+    badgesNew: 'Desbloqueaste:',
     settingsProfile: 'Perfil',
     settingsLanguage: 'Idioma',
     settingsRobotColor: 'Cor do robô',
@@ -452,6 +463,15 @@ export const TRANSLATIONS = {
     themeAuto: 'Automatic',
     themeDay: 'Laboratory',
     themeNight: 'Night',
+    badgesTitle: 'Achievements',
+    badgeSprint: 'Sprinter',
+    badgeSprintDesc: 'Complete a level in under 30 seconds.',
+    badgeEfficiency: 'Efficiency Master',
+    badgeEfficiencyDesc: 'Win with the absolute minimum number of commands.',
+    badgeResilient: 'Resilient Explorer',
+    badgeResilientDesc: 'Fall into a hole or hit a wall and still win.',
+    badgesLocked: 'Locked',
+    badgesNew: 'You unlocked:',
     settingsProfile: 'Profile',
     settingsLanguage: 'Language',
     settingsRobotColor: 'Robot colour',

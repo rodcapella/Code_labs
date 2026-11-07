@@ -14,11 +14,13 @@ interface VictoryOverlayProps {
   rankingSlot?: React.ReactNode;
   /** Bloco opcional de partilha (GIF da solução). */
   shareSlot?: React.ReactNode;
+  /** Faixa com os distintivos ganhos nesta vitória. */
+  badgesSlot?: React.ReactNode;
 }
 
 /** Ecrã de nível concluído, com a animação de celebração. */
 export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
-  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext, rankingSlot, shareSlot,
+  title, description, playAgainLabel, nextLabel, onPlayAgain, onNext, rankingSlot, shareSlot, badgesSlot,
 }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -42,6 +44,7 @@ export const VictoryOverlay: React.FC<VictoryOverlayProps> = ({
       </motion.div>
       <h3 className="text-2xl font-bold text-brand-ice mb-2">{title}</h3>
       <p className="text-brand-ice/80 mb-6">{description}</p>
+      {badgesSlot && <div className="mt-4">{badgesSlot}</div>}
       {rankingSlot}
       {shareSlot && <div className="mt-6">{shareSlot}</div>}
       <div className="flex flex-col gap-3 mt-6">

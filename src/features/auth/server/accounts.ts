@@ -100,3 +100,10 @@ export const recordResult = async (redis: Redis, userId: string, result: Account
   await redis.lpush(resultsKey(userId), JSON.stringify(result));
   await redis.ltrim(resultsKey(userId), 0, RESULTS_MAX - 1);
 };
+
+/** Distintivos ganhos pela conta (conjunto de ids). */
+export const badgesKey = (userId: string): string => `badges:${userId}`;
+
+export const addBadges = async (redis: Redis, userId: string, badges: string[]): Promise<void> => {
+  for (const badge of badges) await redis.sadd(badgesKey(userId), badge);
+};

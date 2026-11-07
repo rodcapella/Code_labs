@@ -3,10 +3,21 @@ import { executeCommand } from './interpreter';
 import { createInitialState, compileProgram, checkCondition } from './program';
 import { MAX_ERRORS_BY_LEVEL, MIN_STEP_MS, MAX_RUN_STEPS } from '../../../shared/config/rules';
 import { structureBonusFor } from './structures';
-import { KnowledgeLevel } from '../../../shared/i18n/translations';
+import { KnowledgeLevel, TRANSLATIONS } from '../../../shared/i18n/translations';
+import { minimumCommands } from './optimal';
 
 export type ReplayResult =
-  | { ok: true; commands: number; errors: number; steps: number; structureBonus: number }
+  | {
+      ok: true;
+      commands: number;
+      errors: number;
+      steps: number;
+      structureBonus: number;
+      /** A tentativa teve uma queda num buraco ou uma batida numa parede (antes de vencer). */
+      resilient: boolean;
+      /** Mínimo absoluto de comandos do layout; null se a pesquisa não couber no limite. */
+      minimumCommands: number | null;
+    }
   | { ok: false; reason: string };
 
 /** Funcionalidades disponíveis por nível de conhecimento (espelha o cliente). */
@@ -37,6 +48,10 @@ export const replayAttempt = (
   const maxErrors = MAX_ERRORS_BY_LEVEL[knowledgeLevel];
   let errors = 0;
   let steps = 0;
+  // Contratempos da tentativa: quedas e batidas (paredes, madeira, borda).
+  let setback = false;
+  const t = TRANSLATIONS[language];
+  const blocked = [t.errorWall, t.errorWood, t.errorOutOfBounds];
 
   for (let r = 0; r < runs.length; r++) {
     const isLast = r === runs.length - 1;
@@ -73,6 +88,7 @@ export const replayAttempt = (
       const next = executeCommand(state, instr.text, language);
       // Queda num buraco: conta um erro e a execução reinicia do início (igual ao cliente).
       if (next.fell) {
+        setback = true;
         errors++;
         if (errors >= maxErrors) return { ok: false, reason: 'limite de erros excedido' };
         state = createInitialState(layout);
@@ -80,6 +96,7 @@ export const replayAttempt = (
         continue;
       }
       if (next.error) {
+        if (blocked.includes(next.error)) setback = true;
         failed = true;
         break;
       }
@@ -103,6 +120,8 @@ export const replayAttempt = (
         errors,
         steps,
         structureBonus: structureBonusFor(runs[r], language),
+        resilient: setback,
+        minimumCommands: minimumCommands(layout, language),
       };
     }
   }

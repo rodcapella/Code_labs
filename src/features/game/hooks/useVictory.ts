@@ -4,7 +4,7 @@ import { UserConfig, TRANSLATIONS } from '../../../shared/i18n/translations';
 
 type Translations = (typeof TRANSLATIONS)['pt'];
 import { starsFor } from '../../../shared/config/rules';
-import { submitEntry, fetchLeaderboard, AttemptContext } from '../../leaderboard/leaderboardApi';
+import { submitEntry, fetchLeaderboard, verifyBadges, AttemptContext } from '../../leaderboard/leaderboardApi';
 import { qualifiesForTop, formatPlayerName } from '../../leaderboard/domain/leaderboard';
 import { validatePlayerName } from '../../leaderboard/domain/leaderboardRules';
 import { RankingStatus } from '../../leaderboard/RankingNameEntry';
@@ -45,6 +45,7 @@ export function useVictory(input: VictoryInput) {
   const [earnedStars, setEarnedStars] = useState(0);
   const [rankStatus, setRankStatus] = useState<RankingStatus>('checking');
   const [rankName, setRankName] = useState('');
+  const [badges, setBadges] = useState<string[]>([]);
   const pendingRef = useRef<{ base: Base; attempt: AttemptContext } | null>(null);
   const savedRef = useRef(false);
 
@@ -92,6 +93,18 @@ export function useVictory(input: VictoryInput) {
     fetchLeaderboard().then(list => {
       setRankStatus(qualifiesForTop(list, base) ? 'enter' : 'out');
     });
+    // Distintivos: o servidor verifica as provas (tempo, mínimo de comandos, contratempos).
+    setBadges([]);
+    verifyBadges(
+      { levelId: base.levelId, time: base.time, date: base.date, robotColor: base.robotColor },
+      { knowledgeLevel: userConfig.level, language: userConfig.language, runs, attemptId },
+    ).then(earned => {
+      setBadges(earned);
+      if (earned.length > 0) {
+        const unlocked = new Set([...(userConfig.badges ?? []), ...earned]);
+        onUpdateConfig({ badges: [...unlocked] });
+      }
+    });
     // Dispara apenas na transição para vitória (como antes da extração).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [victory]);
@@ -109,7 +122,7 @@ export function useVictory(input: VictoryInput) {
     else setRankStatus('error');
   }, [rankName]);
 
-  return { earnedStars, rankStatus, rankName, setRankName, confirmRanking };
+  return { earnedStars, rankStatus, rankName, setRankName, confirmRanking, badges };
 }
 
 /** Textos do bloco de ranking no ecrã de vitória (a partir das traduções). */

@@ -8,7 +8,7 @@ import {
 } from '../src/features/auth/server/session';
 import {
   UserRecord, validateEmail, emailKey, userIdKey, resultsKey, googleKey, newToken, tokenKey,
-  createSession, revokeSession, revokeAllSessions, resolveAccount, RESET_TTL_SECONDS, PENDING_TTL_SECONDS,
+  createSession, revokeSession, revokeAllSessions, resolveAccount, RESET_TTL_SECONDS, PENDING_TTL_SECONDS, badgesKey,
 } from '../src/features/auth/server/accounts';
 import { sendMail, mailConfigured, appUrl } from '../src/features/auth/server/mailer';
 import {
@@ -116,7 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         configured: true,
         googleEnabled: googleConfigured(),
-        account: account ? { username: account.username, email } : null,
+        account: account
+          ? { username: account.username, email, badges: await redis.smembers<string[]>(badgesKey(account.userId)) }
+          : null,
       });
     }
 

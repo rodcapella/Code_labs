@@ -9,7 +9,10 @@ import { replayAttempt, isTimePlausible } from '../src/features/game/engine/repl
 import { generateLayout } from '../src/features/game/levels/generator';
 import { formatPlayerName } from '../src/features/leaderboard/domain/leaderboard';
 import { scoreOf } from '../src/shared/config/rules';
-import { resolveAccount, recordResult } from '../src/features/auth/server/accounts';
+import { resolveAccount, recordResult, addBadges } from '../src/features/auth/server/accounts';
+import { evaluateBadges } from '../src/features/badges/badgeRules';
+import type { ReplayResult } from '../src/features/game/engine/replay';
+import type { Submission } from '../src/features/leaderboard/domain/leaderboardRules';
 
 /**
  * GET  /api/leaderboard              → top de todos os níveis
@@ -28,6 +31,37 @@ const clientIp = (req: VercelRequest): string => {
   const fwd = req.headers['x-forwarded-for'];
   const first = Array.isArray(fwd) ? fwd[0] : fwd?.split(',')[0];
   return first?.trim() || 'unknown';
+};
+
+
+/**
+ * Valida a tentativa e re-executa as jogadas. Com `consume`, a tentativa é gasta (uma submissão
+ * por tentativa). Sem `consume`, só é lida: serve para verificar distintivos sem gastar o direito
+ * de submeter o resultado ao ranking.
+ */
+type Verified = { ok: true; replay: Extract<ReplayResult, { ok: true }> } | { ok: false; status: number; error: string };
+
+const verifyAttempt = async (redis: Redis, sub: Submission, consume: boolean): Promise<Verified> => {
+  const stored = consume
+    ? await redis.getdel<unknown>(attemptKey(sub.attemptId))
+    : await redis.get<unknown>(attemptKey(sub.attemptId));
+  if (!stored) return { ok: false, status: 422, error: 'tentativa inválida ou expirada' };
+  const record = (typeof stored === 'string' ? JSON.parse(stored) : stored) as { levelId: number; seed: number; createdAt: number };
+  if (record.levelId !== sub.levelId) return { ok: false, status: 422, error: 'nível não corresponde à tentativa' };
+  // O tempo declarado não pode ser maior do que o tempo real desde que a tentativa começou.
+  const elapsed = (Date.now() - Number(record.createdAt)) / 1000;
+  if (!fitsElapsed(sub.time, elapsed)) {
+    return { ok: false, status: 422, error: 'tempo maior do que o decorrido desde o início da tentativa' };
+  }
+  // Re-executar as jogadas sobre o layout que o servidor gerou para essa semente.
+  const layout = generateLayout(record.levelId, record.seed);
+  const replay = replayAttempt(layout, sub.runs, sub.language, sub.knowledgeLevel);
+  if (replay.ok === false) return { ok: false, status: 422, error: replay.reason };
+  // O tempo declarado tem de ser possível para os passos executados.
+  if (!isTimePlausible(sub.time, replay.steps)) {
+    return { ok: false, status: 422, error: 'tempo impossível para as jogadas enviadas' };
+  }
+  return { ok: true, replay };
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -66,6 +100,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ entries });
     }
 
+    if (req.method === 'POST' && req.query.action === 'badges') {
+      // Verifica distintivos sem gastar a tentativa (o resultado pode ser submetido depois).
+      const limit = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(20, '1 m'), prefix: 'rl:badges' });
+      if (!(await limit.limit(clientIp(req))).success) return res.status(429).json({ error: 'demasiados pedidos, tenta mais tarde' });
+      // O nome não é usado aqui: a validação exige um, por isso usa-se um placeholder.
+      const parsed = validateSubmission({ ...(typeof req.body === 'object' && req.body !== null ? req.body : {}), name: 'AA' });
+      if (parsed.ok === false) return res.status(400).json({ error: parsed.error });
+      const check = await verifyAttempt(redis, parsed.submission, false);
+      if (check.ok === false) return res.status(check.status).json({ error: check.error });
+      const badges = evaluateBadges({
+        won: true,
+        time: parsed.submission.time,
+        commands: check.replay.commands,
+        minimumCommands: check.replay.minimumCommands,
+        resilient: check.replay.resilient,
+      });
+      const account = await resolveAccount(redis, req.headers.cookie);
+      if (account) await addBadges(redis, account.userId, badges);
+      return res.status(200).json({ ok: true, badges });
+    }
+
     if (req.method === 'POST') {
       // Limite de submissões por IP: 5 por minuto.
       const limit = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(5, '1 m'), prefix: 'rl:post' });
@@ -76,26 +131,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (parsed.ok === false) return res.status(400).json({ error: parsed.error });
       const sub = parsed.submission;
 
-      // 1) Consumir a tentativa (uma só submissão por tentativa) e recuperar a semente.
-      const stored = await redis.getdel<unknown>(attemptKey(sub.attemptId));
-      if (!stored) return res.status(422).json({ error: 'tentativa inválida ou expirada' });
-      const record = (typeof stored === 'string' ? JSON.parse(stored) : stored) as { levelId: number; seed: number; createdAt: number };
-      if (record.levelId !== sub.levelId) return res.status(422).json({ error: 'nível não corresponde à tentativa' });
-      // O tempo declarado não pode ser maior do que o tempo real desde que a tentativa começou.
-      const elapsed = (Date.now() - Number(record.createdAt)) / 1000;
-      if (!fitsElapsed(sub.time, elapsed)) {
-        return res.status(422).json({ error: 'tempo maior do que o decorrido desde o início da tentativa' });
-      }
-
-      // 2) Re-executar as jogadas sobre o layout que o servidor gerou para essa semente.
-      const layout = generateLayout(record.levelId, record.seed);
-      const replay = replayAttempt(layout, sub.runs, sub.language, sub.knowledgeLevel);
-      if (replay.ok === false) return res.status(422).json({ error: replay.reason });
-
-      // 3) O tempo declarado tem de ser possível para os passos executados.
-      if (!isTimePlausible(sub.time, replay.steps)) {
-        return res.status(422).json({ error: 'tempo impossível para as jogadas enviadas' });
-      }
+      // 1-3) Validar e re-executar (consome a tentativa: uma só submissão por tentativa).
+      const check = await verifyAttempt(redis, sub, true);
+      if (check.ok === false) return res.status(check.status).json({ error: check.error });
+      const replay = check.replay;
 
       // 4) Gravar o resultado calculado aqui, nunca o que veio do cliente.
       // Com sessão válida, o nome é o da conta (o que o cliente envia é ignorado).
@@ -139,8 +178,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      if (!qualified) return res.status(200).json({ ok: true, qualified: false, score });
-      return res.status(201).json({ ok: true, qualified: true, rank: (rank as number) + 1, score });
+      // Distintivos: provas calculadas aqui (mesmo quando o resultado não entra no top).
+      const badges = evaluateBadges({
+        won: true,
+        time: sub.time,
+        commands: replay.commands,
+        minimumCommands: replay.minimumCommands,
+        resilient: replay.resilient,
+      });
+      if (account) await addBadges(redis, account.userId, badges);
+
+      if (!qualified) return res.status(200).json({ ok: true, qualified: false, score, badges });
+      return res.status(201).json({ ok: true, qualified: true, rank: (rank as number) + 1, score, badges });
     }
 
     res.setHeader('Allow', 'GET, POST');

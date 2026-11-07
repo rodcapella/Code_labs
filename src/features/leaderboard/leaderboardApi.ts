@@ -89,3 +89,33 @@ export const submitEntry = async (entry: EntryInput, attempt: AttemptContext): P
     return { saved: false, qualified: null };
   }
 };
+
+/**
+ * Pede ao servidor os distintivos desta vitória. Não gasta a tentativa: o resultado pode ser
+ * submetido ao ranking depois. Sem servidor (ou se falhar), devolve []: nada é atribuído às cegas.
+ */
+export const verifyBadges = async (
+  entry: { levelId: number; time: number; date: string; robotColor: string },
+  attempt: AttemptContext,
+): Promise<string[]> => {
+  if (attempt.attemptId === null) return [];
+  try {
+    const res = await fetch(`${API_URL}?action=badges`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...entry,
+        name: 'AA',
+        attemptId: attempt.attemptId,
+        knowledgeLevel: attempt.knowledgeLevel,
+        language: attempt.language,
+        runs: attempt.runs,
+      }),
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { badges?: string[] };
+    return Array.isArray(data.badges) ? data.badges : [];
+  } catch {
+    return [];
+  }
+};

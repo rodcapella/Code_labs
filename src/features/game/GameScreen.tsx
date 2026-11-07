@@ -39,6 +39,7 @@ import { useVictory, rankingMessages } from './hooks/useVictory';
 import { useAttempt } from './hooks/useAttempt';
 import { useAvisos } from './hooks/useAvisos';
 import { ShareSolution } from '../share/ShareSolution';
+import { BadgesStrip } from '../badges/BadgesPanel';
 import { scoreOf } from '../../shared/config/rules';
 import { useCronometro } from './hooks/useCronometro';
 import { TutorialOverlay } from './components/TutorialOverlay';
@@ -215,7 +216,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
   const { account } = useAccount();
   const { openSettings } = useSettings();
   // Vitória: estrelas, progresso e ranking (ver hooks/useVictory.ts).
-  const { earnedStars, rankStatus, rankName, setRankName, confirmRanking } = useVictory({
+  const { earnedStars, rankStatus, rankName, setRankName, confirmRanking, badges: earnedBadges } = useVictory({
     victory: gameState.victory,
     commandCount: gameState.commandCount,
     errors,
@@ -497,6 +498,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onBack, userConfig, onUp
                 description={`${t.victoryDesc(gameState.commandCount, timer)} ${t.victoryStars}: ${'★'.repeat(earnedStars)}${'☆'.repeat(3 - earnedStars)}`}
                 playAgainLabel={t.playAgain}
                 nextLabel={currentLevelIdx < LEVELS.length - 1 ? t.nextLevel : t.back}
+                badgesSlot={<BadgesStrip t={t} earned={earnedBadges} />}
                 shareSlot={
                   runs.length > 0 ? (
                     <ShareSolution

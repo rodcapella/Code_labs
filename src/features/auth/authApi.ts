@@ -3,6 +3,8 @@ const API_URL = '/api/auth';
 export interface Account {
   username: string;
   email: string | null;
+  /** Distintivos ganhos pela conta (ids de badgeRules). */
+  badges?: string[];
 }
 
 export interface SessionState {

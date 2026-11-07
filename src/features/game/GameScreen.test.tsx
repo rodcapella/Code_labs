@@ -13,6 +13,7 @@ vi.mock('../leaderboard/leaderboardApi', () => ({
   fetchAttempt: vi.fn(async () => ({ attemptId: null, seed: 0 })),
   submitEntry: vi.fn(async () => ({ saved: true, qualified: true })),
   fetchLeaderboard: vi.fn(async () => []),
+  verifyBadges: vi.fn(async () => []),
 }));
 
 // Áudio não existe no jsdom: os sons viram no-ops.
