@@ -1,7 +1,9 @@
+import levelBackground from '../../../shared/assets/backgrounds/level9.jpg';
 import { LevelMeta } from '../../../shared/types/game';
 
 export const level9: LevelMeta = {
   id: 9,
+  backgroundImage: levelBackground,
   intro: {
     pt: {
       title: 'Revisão',
